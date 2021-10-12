@@ -174,6 +174,8 @@ Ref: https://github.com/equinox-io/equinox/issues/13
 
 ### Generate signing keys
 
+Should error if keys already exist.
+
 ```bash
 $ keygen genkey --algorithm ed25519
 

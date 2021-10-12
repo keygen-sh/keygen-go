@@ -22,7 +22,7 @@ type UpgradeParams struct {
 
 func Upgrade(currentVersion string) (*Release, error) {
 	cli := &client{account: Account, token: Token}
-	params := &UpgradeParams{Product: Product, Version: currentVersion, Platform: runtime.GOOS + "-" + runtime.GOARCH, Channel: "stable", Filetype: "binary"}
+	params := &UpgradeParams{Product: Product, Version: currentVersion, Platform: runtime.GOOS + "_" + runtime.GOARCH, Channel: "stable", Filetype: "binary"}
 	res, err := cli.Get("releases/actions/upgrade", params)
 	if err != nil {
 		return nil, err

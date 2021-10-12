@@ -135,14 +135,16 @@ func (c *Client) send(method string, path string, params interface{}) (*Response
 	}
 
 	if len(doc.Errors) > 0 {
+		err := doc.Errors[0]
+
 		switch {
-		case doc.Errors[0].Code == ErrorCodeFingerprintTaken:
+		case err.Code == ErrorCodeFingerprintTaken:
 			return response, ErrMachineAlreadyActivated
-		case doc.Errors[0].Code == ErrorCodeTokenInvalid:
+		case err.Code == ErrorCodeTokenInvalid:
 			return response, ErrLicenseTokenInvalid
-		case doc.Errors[0].Code == ErrorCodeMachineDead:
+		case err.Code == ErrorCodeMachineDead:
 			return response, ErrMachineDead
-		case doc.Errors[0].Code == ErrorCodeNotFound:
+		case err.Code == ErrorCodeNotFound:
 			return response, ErrNotFound
 		default:
 			return response, fmt.Errorf("an error occurred (id=%s status=%d response='%s')", res.Header.Get("x-request-id"), res.StatusCode, out)

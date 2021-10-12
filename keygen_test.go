@@ -48,14 +48,12 @@ func TestValidate(t *testing.T) {
 			t.Fatalf("Should not fail to list entitlements: err=%v", err)
 		}
 
-		t.Logf("INFO: license=%v machines=%v entitlements=%v", license, machines, entitlements)
+		t.Logf("license=%v machines=%v entitlements=%v", license, machines, entitlements)
 	case err != nil:
 		t.Fatalf("Should not fail validation: err=%v", err)
 	case err == nil:
 		t.Fatalf("Should not be activated: err=%v", err)
 	}
-
-	t.Logf("INFO: license=%v", license)
 }
 
 func TestUpgrade(t *testing.T) {
@@ -75,5 +73,5 @@ func TestUpgrade(t *testing.T) {
 		t.Fatalf("Should have a download URL: upgrade=%v", upgrade)
 	}
 
-	t.Logf("INFO: upgrade=%v", upgrade)
+	t.Logf("upgrade=%v", upgrade)
 }

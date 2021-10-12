@@ -43,7 +43,7 @@ func TestValidate(t *testing.T) {
 		err = license.Deactivate(fingerprint)
 		switch {
 		case err == nil:
-			t.Fatalf("Should not be deactivated again: license=%v fingerprint=%v", license, fingerprint)
+			t.Fatalf("Should not be deactivated again: license=%v fingerprint=%s", license, fingerprint)
 		case err != ErrNotFound:
 			t.Fatalf("Should already be deactivated: err=%v", err)
 		}
@@ -53,7 +53,7 @@ func TestValidate(t *testing.T) {
 			t.Fatalf("Should not fail to list entitlements: err=%v", err)
 		}
 
-		err = license.Genuine()
+		dataset, err := license.Genuine()
 		switch {
 		case err == ErrLicenseNotGenuine:
 			t.Fatalf("Should be a genuine license key: err=%v", err)
@@ -61,7 +61,7 @@ func TestValidate(t *testing.T) {
 			t.Fatalf("Should not fail genuine check: err=%v", err)
 		}
 
-		t.Logf("license=%v machines=%v entitlements=%v", license, machines, entitlements)
+		t.Logf("license=%v machines=%v entitlements=%v dataset=%s", license, machines, entitlements, dataset)
 	case err != nil:
 		t.Fatalf("Should not fail validation: err=%v", err)
 	case err == nil:

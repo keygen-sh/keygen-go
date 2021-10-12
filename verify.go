@@ -19,27 +19,29 @@ var (
 	ErrPublicKeyInvalid          = errors.New("public key is invalid")
 )
 
-func Genuine(signedKey string, scheme string) error {
+func Genuine(signedKey string, scheme string) ([]byte, error) {
 	if PublicKey == "" {
-		return ErrPublicKeyMissing
+		return nil, ErrPublicKeyMissing
 	}
 
 	switch {
 	case scheme == SchemeCodeEd25519:
-		return verifyEd25519SignedKey(signedKey)
+		dataset, err := verifyEd25519SignedKey(signedKey)
+
+		return dataset, err
 	default:
-		return ErrLicenseSchemeNotSupported
+		return nil, ErrLicenseSchemeNotSupported
 	}
 }
 
-func verifyEd25519SignedKey(signedKey string) error {
+func verifyEd25519SignedKey(signedKey string) ([]byte, error) {
 	pubKey, err := hex.DecodeString(PublicKey)
 	if err != nil {
-		return ErrPublicKeyInvalid
+		return nil, ErrPublicKeyInvalid
 	}
 
 	if l := len(pubKey); l != ed25519.PublicKeySize {
-		return ErrPublicKeyInvalid
+		return nil, ErrPublicKeyInvalid
 	}
 
 	parts := strings.SplitN(signedKey, ".", 2)
@@ -48,21 +50,26 @@ func verifyEd25519SignedKey(signedKey string) error {
 
 	parts = strings.SplitN(signingData, "/", 2)
 	signingPrefix := parts[0]
-	encData := parts[1]
+	encDataset := parts[1]
 
 	if signingPrefix != "key" {
-		return ErrLicenseNotGenuine
+		return nil, ErrLicenseNotGenuine
 	}
 
-	data := []byte("key/" + encData)
+	message := []byte("key/" + encDataset)
 	sig, err := base64.URLEncoding.DecodeString(encSig)
 	if err != nil {
-		return ErrLicenseNotGenuine
+		return nil, ErrLicenseNotGenuine
 	}
 
-	if ok := ed25519.Verify(pubKey, data, sig); !ok {
-		return ErrLicenseNotGenuine
+	dataset, err := base64.URLEncoding.DecodeString(encDataset)
+	if err != nil {
+		return nil, ErrLicenseNotGenuine
 	}
 
-	return nil
+	if ok := ed25519.Verify(pubKey, message, sig); !ok {
+		return nil, ErrLicenseNotGenuine
+	}
+
+	return dataset, nil
 }

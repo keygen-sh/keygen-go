@@ -89,7 +89,7 @@ func (l *License) Validate(fingerprints ...string) error {
 	}
 }
 
-func (l *License) Genuine() error {
+func (l *License) Genuine() ([]byte, error) {
 	return Genuine(l.Key, l.Scheme)
 }
 

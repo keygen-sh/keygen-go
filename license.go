@@ -51,7 +51,10 @@ func (l *License) Validate(fingerprints ...string) error {
 	params := &Validation{fingerprints}
 
 	res, err := cli.Post("licenses/"+l.ID+"/actions/validate", params)
-	if err != nil {
+	switch {
+	case err == ErrNotFound:
+		return ErrLicenseInvalid
+	case err != nil:
 		return err
 	}
 

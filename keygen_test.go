@@ -15,6 +15,8 @@ func TestValidate(t *testing.T) {
 	fingerprint := uuid.New().String()
 	license, err := Validate(fingerprint)
 	switch {
+	case err == ErrLicenseInvalid:
+		t.Fatalf("Should be a valid license: err=%v", err)
 	case err == ErrLicenseNotActivated:
 		machine, err := license.Activate(fingerprint)
 		if err != nil {

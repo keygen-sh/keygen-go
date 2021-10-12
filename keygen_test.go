@@ -51,6 +51,8 @@ func TestValidate(t *testing.T) {
 		t.Logf("INFO: license=%v machines=%v entitlements=%v", license, machines, entitlements)
 	case err != nil:
 		t.Fatalf("Should not fail validation: err=%v", err)
+	case err == nil:
+		t.Fatalf("Should not be activated: err=%v", err)
 	}
 
 	t.Logf("INFO: license=%v", license)

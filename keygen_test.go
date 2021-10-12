@@ -35,6 +35,14 @@ func TestValidate(t *testing.T) {
 			}
 		}
 
+		err = license.Deactivate(fingerprint)
+		switch {
+		case err == nil:
+			t.Fatalf("Should not be deactivated again: license=%v fingerprint=%v", license, fingerprint)
+		case err != ErrNotFound:
+			t.Fatalf("Should already be deactivated: err=%v", err)
+		}
+
 		entitlements, err := license.Entitlements()
 		if err != nil {
 			t.Fatalf("Should not fail to list entitlements: err=%v", err)

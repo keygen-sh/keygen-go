@@ -5,9 +5,9 @@ Will consist of 2 packages, written in Go:
 - keygen/sdk
 - keygen/cli
 
-The SDK will be export a C API that can be used in other langages: https://golang.org/doc/go1.5#link
+The SDK could export a C API to be used in other languages: https://golang.org/doc/go1.5#link
 
-Use equinox as inspiration for the SDK and CLI: https://equinox.io/docs#release-tool
+Use `equinox` as inspiration for the SDK and CLI: https://equinox.io/docs#release-tool
 
 Create homebrew tap: https://docs.brew.sh/How-to-Create-and-Maintain-a-Tap
 
@@ -197,6 +197,8 @@ $ keygen releases new ./dist/app-1.0.0.dmg \
 ### Release from GitHub
 
 Pull releases from GitHub Releases and upload to Dist.
+
+Or use GH Actions for this?
 
 ```bash
 $ keygen releases new github.com/acme/rocket \

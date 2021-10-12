@@ -25,6 +25,7 @@ type License struct {
 	Name          string                 `json:"name"`
 	Key           string                 `json:"key"`
 	Expiry        *time.Time             `json:"expiry"`
+	Scheme        string                 `json:"scheme"`
 	LastValidated *time.Time             `json:"lastValidated"`
 	Created       time.Time              `json:"created"`
 	Updated       time.Time              `json:"updated"`
@@ -86,6 +87,10 @@ func (l *License) Validate(fingerprints ...string) error {
 	default:
 		return ErrLicenseInvalid
 	}
+}
+
+func (l *License) Genuine() error {
+	return Genuine(l.Key, l.Scheme)
 }
 
 func (l *License) Activate(fingerprint string) (*Machine, error) {

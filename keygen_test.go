@@ -8,6 +8,7 @@ import (
 )
 
 func TestValidate(t *testing.T) {
+	PublicKey = os.Getenv("KEYGEN_PUBLIC_KEY")
 	Account = os.Getenv("KEYGEN_ACCOUNT")
 	Product = os.Getenv("KEYGEN_PRODUCT")
 	Token = os.Getenv("KEYGEN_TOKEN")
@@ -50,6 +51,14 @@ func TestValidate(t *testing.T) {
 		entitlements, err := license.Entitlements()
 		if err != nil {
 			t.Fatalf("Should not fail to list entitlements: err=%v", err)
+		}
+
+		err = license.Genuine()
+		switch {
+		case err == ErrLicenseNotGenuine:
+			t.Fatalf("Should be a genuine license key: err=%v", err)
+		case err != nil:
+			t.Fatalf("Should not fail genuine check: err=%v", err)
 		}
 
 		t.Logf("license=%v machines=%v entitlements=%v", license, machines, entitlements)

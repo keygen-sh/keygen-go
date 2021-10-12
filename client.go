@@ -21,7 +21,7 @@ const (
 
 var (
 	userAgent = "keygen/" + APIVersion + " sdk/" + sdkVersion + " go/" + runtime.Version() + " " + runtime.GOOS + "/" + runtime.GOARCH
-	cli       = &http.Client{
+	client    = &http.Client{
 		// We don't want to automatically follow redirects
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
@@ -43,7 +43,7 @@ var (
 	ErrNotFound                = errors.New("resource does not exist")
 )
 
-type client struct {
+type Client struct {
 	account string
 	token   string
 }
@@ -54,27 +54,27 @@ type Response struct {
 	Status  int
 }
 
-func (c *client) Post(path string, params interface{}) (*Response, error) {
+func (c *Client) Post(path string, params interface{}) (*Response, error) {
 	return c.send("POST", path, params)
 }
 
-func (c *client) Get(path string, params interface{}) (*Response, error) {
+func (c *Client) Get(path string, params interface{}) (*Response, error) {
 	return c.send("GET", path, params)
 }
 
-func (c *client) Put(path string, params interface{}) (*Response, error) {
+func (c *Client) Put(path string, params interface{}) (*Response, error) {
 	return c.send("PUT", path, params)
 }
 
-func (c *client) Patch(path string, params interface{}) (*Response, error) {
+func (c *Client) Patch(path string, params interface{}) (*Response, error) {
 	return c.send("PATCH", path, params)
 }
 
-func (c *client) Delete(path string, params interface{}) (*Response, error) {
+func (c *Client) Delete(path string, params interface{}) (*Response, error) {
 	return c.send("DELETE", path, params)
 }
 
-func (c *client) send(method string, path string, params interface{}) (*Response, error) {
+func (c *Client) send(method string, path string, params interface{}) (*Response, error) {
 	url := fmt.Sprintf("%s/%s/accounts/%s/%s", APIURL, APIVersion, c.account, path)
 	var in bytes.Buffer
 
@@ -107,7 +107,7 @@ func (c *client) send(method string, path string, params interface{}) (*Response
 	req.Header.Add("Accept", jsonapi.ContentType)
 	req.Header.Add("User-Agent", userAgent)
 
-	res, err := cli.Do(req)
+	res, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}

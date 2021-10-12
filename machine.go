@@ -99,9 +99,9 @@ func (m *Machines) SetData(to func(target interface{}) error) error {
 }
 
 func (m *Machine) Deactivate() error {
-	cli := &client{account: Account, token: Token}
+	client := &Client{account: Account, token: Token}
 
-	_, err := cli.Delete("machines/"+m.ID, nil)
+	_, err := client.Delete("machines/"+m.ID, nil)
 	if err != nil {
 		return err
 	}
@@ -110,23 +110,23 @@ func (m *Machine) Deactivate() error {
 }
 
 func (m *Machine) Monitor() chan error {
-	cli := &client{account: Account, token: Token}
+	client := &Client{account: Account, token: Token}
 	errs := make(chan error)
 	t := time.Duration(m.HeartbeatDuration) * time.Second / 2
 
 	go func() {
-		m.ping(cli, errs)
+		m.ping(client, errs)
 
 		for range time.Tick(t) {
-			m.ping(cli, errs)
+			m.ping(client, errs)
 		}
 	}()
 
 	return errs
 }
 
-func (m *Machine) ping(cli *client, errs chan error) {
-	res, err := cli.Post("machines/"+m.ID+"/actions/ping-heartbeat", nil)
+func (m *Machine) ping(client *Client, errs chan error) {
+	res, err := client.Post("machines/"+m.ID+"/actions/ping-heartbeat", nil)
 	if err != nil {
 		errs <- err
 	}

@@ -47,10 +47,10 @@ func (l *License) SetData(to func(target interface{}) error) error {
 }
 
 func (l *License) Validate(fingerprints ...string) error {
-	cli := &client{account: Account, token: Token}
+	client := &Client{account: Account, token: Token}
 	params := &Validation{fingerprints}
 
-	res, err := cli.Post("licenses/"+l.ID+"/actions/validate", params)
+	res, err := client.Post("licenses/"+l.ID+"/actions/validate", params)
 	switch {
 	case err == ErrNotFound:
 		return ErrLicenseInvalid
@@ -89,7 +89,7 @@ func (l *License) Validate(fingerprints ...string) error {
 }
 
 func (l *License) Activate(fingerprint string) (*Machine, error) {
-	cli := &client{account: Account, token: Token}
+	client := &Client{account: Account, token: Token}
 	hostname, _ := os.Hostname()
 	params := &Machine{
 		Fingerprint: fingerprint,
@@ -99,7 +99,7 @@ func (l *License) Activate(fingerprint string) (*Machine, error) {
 		LicenseID:   l.ID,
 	}
 
-	res, err := cli.Post("machines", params)
+	res, err := client.Post("machines", params)
 	if err != nil {
 		return nil, err
 	}
@@ -114,9 +114,9 @@ func (l *License) Activate(fingerprint string) (*Machine, error) {
 }
 
 func (l *License) Deactivate(id string) error {
-	cli := &client{account: Account, token: Token}
+	client := &Client{account: Account, token: Token}
 
-	_, err := cli.Delete("machines/"+id, nil)
+	_, err := client.Delete("machines/"+id, nil)
 	if err != nil {
 		return err
 	}
@@ -125,9 +125,9 @@ func (l *License) Deactivate(id string) error {
 }
 
 func (l *License) Machines() (Machines, error) {
-	cli := &client{account: Account, token: Token}
+	client := &Client{account: Account, token: Token}
 
-	res, err := cli.Get("licenses/"+l.ID+"/machines", nil)
+	res, err := client.Get("licenses/"+l.ID+"/machines", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -142,9 +142,9 @@ func (l *License) Machines() (Machines, error) {
 }
 
 func (l *License) Entitlements() (Entitlements, error) {
-	cli := &client{account: Account, token: Token}
+	client := &Client{account: Account, token: Token}
 
-	res, err := cli.Get("licenses/"+l.ID+"/entitlements", nil)
+	res, err := client.Get("licenses/"+l.ID+"/entitlements", nil)
 	if err != nil {
 		return nil, err
 	}

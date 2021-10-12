@@ -48,8 +48,8 @@ type ValidationResult struct {
 }
 
 func Validate(fingerprints ...string) (*License, error) {
-	cli := &client{account: Account, token: Token}
-	res, err := cli.Get("me", nil)
+	client := &Client{account: Account, token: Token}
+	res, err := client.Get("me", nil)
 	if err != nil {
 		return nil, err
 	}

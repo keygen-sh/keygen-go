@@ -39,8 +39,8 @@ func (a *Artifact) SetRelationships(relationships map[string]interface{}) error 
 }
 
 func (a *Artifact) Release() (*Release, error) {
-	cli := &client{account: Account, token: Token}
-	res, err := cli.Get("releases/"+a.ReleaseId, nil)
+	client := &Client{account: Account, token: Token}
+	res, err := client.Get("releases/"+a.ReleaseId, nil)
 	if err != nil {
 		return nil, err
 	}

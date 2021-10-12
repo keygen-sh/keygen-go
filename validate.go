@@ -1,5 +1,7 @@
 package keygen
 
+import "github.com/pieoneers/jsonapi-go"
+
 const (
 	ValidationCodeValid                    = "VALID"
 	ValidationCodeNotFound                 = "NOT_FOUND"
@@ -43,4 +45,25 @@ func (v Validation) GetMeta() interface{} {
 type ValidationResult struct {
 	Code  string `json:"constant"`
 	Valid bool   `json:"valid"`
+}
+
+func Validate(fingerprints ...string) (*License, error) {
+	cli := &client{account: Account, token: Token}
+	res, err := cli.Get("me", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	license := &License{}
+	_, err = jsonapi.Unmarshal(res.Body, license)
+	if err != nil {
+		return nil, err
+	}
+
+	err = license.Validate(fingerprints...)
+	if err != nil {
+		return license, err
+	}
+
+	return license, nil
 }

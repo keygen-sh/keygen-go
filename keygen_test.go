@@ -1,9 +1,6 @@
 package keygen
 
 import (
-	"crypto/rand"
-	"encoding/hex"
-	"math"
 	"os"
 	"testing"
 )
@@ -13,7 +10,7 @@ func TestValidate(t *testing.T) {
 	Product = os.Getenv("KEYGEN_PRODUCT")
 	Token = os.Getenv("KEYGEN_TOKEN")
 
-	fingerprint := randomString(32)
+	fingerprint := "fingerprint"
 	license, err := Validate(fingerprint)
 	switch {
 	case err == ErrLicenseNotActivated:
@@ -49,9 +46,22 @@ func TestValidate(t *testing.T) {
 	t.Logf("INFO: license=%v", license)
 }
 
-func randomString(l int) string {
-	buff := make([]byte, int(math.Ceil(float64(l)/2)))
-	rand.Read(buff)
-	str := hex.EncodeToString(buff)
-	return str[:l]
+func TestUpgrade(t *testing.T) {
+	Account = os.Getenv("KEYGEN_ACCOUNT")
+	Product = os.Getenv("KEYGEN_PRODUCT")
+	Token = os.Getenv("KEYGEN_TOKEN")
+
+	upgrade, err := Upgrade("1.0.0")
+	switch {
+	case err == ErrUpgradeNotAvailable:
+		t.Fatalf("Should have an upgrade available: err=%v", err)
+	case err != nil:
+		t.Fatalf("Should not fail upgrade: err=%v", err)
+	}
+
+	if upgrade.Location == "" {
+		t.Fatalf("Should have a download URL: upgrade=%v", upgrade)
+	}
+
+	t.Logf("INFO: upgrade=%v", upgrade)
 }

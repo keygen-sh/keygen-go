@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"runtime"
 
+	"github.com/google/go-querystring/query"
 	"github.com/pieoneers/jsonapi-go"
 )
 
@@ -15,11 +16,17 @@ const (
 	APIURL     = "https://api.keygen.sh"
 	APIVersion = "v1"
 
-	clientVersion = "1.0.0"
+	sdkVersion = "1.0.0"
 )
 
 var (
-	userAgent = "keygen/" + APIVersion + " sdk/" + clientVersion + " go/" + runtime.Version() + " " + runtime.GOOS + "/" + runtime.GOARCH
+	userAgent = "keygen/" + APIVersion + " sdk/" + sdkVersion + " go/" + runtime.Version() + " " + runtime.GOOS + "/" + runtime.GOARCH
+	cli       = &http.Client{
+		// We don't want to automatically follow redirects
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 )
 
 const (
@@ -72,21 +79,22 @@ func (c *client) send(method string, path string, params interface{}) (*Response
 	var in bytes.Buffer
 
 	if params != nil {
-		var serialized []byte
-		var err error
-
 		switch {
-		case method == "GET":
-			// TODO(ezekg) Serialize into URL params for GET requests
+		case method == http.MethodGet:
+			values, err := query.Values(params)
+			if err != nil {
+				return nil, err
+			}
+
+			url += "?" + values.Encode()
 		default:
-			serialized, err = jsonapi.Marshal(params)
-		}
+			serialized, err := jsonapi.Marshal(params)
+			if err != nil {
+				return nil, err
+			}
 
-		if err != nil {
-			return nil, err
+			in = *bytes.NewBuffer(serialized)
 		}
-
-		in = *bytes.NewBuffer(serialized)
 	}
 
 	req, err := http.NewRequest(method, url, &in)
@@ -99,7 +107,6 @@ func (c *client) send(method string, path string, params interface{}) (*Response
 	req.Header.Add("Accept", jsonapi.ContentType)
 	req.Header.Add("User-Agent", userAgent)
 
-	cli := new(http.Client)
 	res, err := cli.Do(req)
 	if err != nil {
 		return nil, err

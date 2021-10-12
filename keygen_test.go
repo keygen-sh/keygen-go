@@ -3,6 +3,8 @@ package keygen
 import (
 	"os"
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 func TestValidate(t *testing.T) {
@@ -10,7 +12,7 @@ func TestValidate(t *testing.T) {
 	Product = os.Getenv("KEYGEN_PRODUCT")
 	Token = os.Getenv("KEYGEN_TOKEN")
 
-	fingerprint := "fingerprint"
+	fingerprint := uuid.New().String()
 	license, err := Validate(fingerprint)
 	switch {
 	case err == ErrLicenseNotActivated:

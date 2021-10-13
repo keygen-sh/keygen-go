@@ -1,4 +1,4 @@
-module github.com/keygen-sh/sdk
+module github.com/keygen-sh/keygen-go
 
 go 1.17
 

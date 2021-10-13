@@ -6,7 +6,7 @@ with the keygen.sh service.
 ## License activation example
 
 ```go
-import "github.com/keygen-sh/sdk"
+import "github.com/keygen-sh/keygen-go"
 
 keygen.Account = os.Getenv("KEYGEN_ACCOUNT")
 keygen.Product = os.Getenv("KEYGEN_PRODUCT")
@@ -50,7 +50,7 @@ func activate() error {
 ## Automatic upgrade example
 
 ```go
-import "github.com/keygen-sh/sdk"
+import "github.com/keygen-sh/keygen-go"
 
 keygen.Account = os.Getenv("KEYGEN_ACCOUNT")
 keygen.Product = os.Getenv("KEYGEN_PRODUCT")

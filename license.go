@@ -48,7 +48,7 @@ func (l *License) SetData(to func(target interface{}) error) error {
 
 func (l *License) Validate(fingerprints ...string) error {
 	client := &Client{Account: Account, Token: Token}
-	params := &Validation{fingerprints}
+	params := &validate{fingerprints}
 
 	res, err := client.Post("licenses/"+l.ID+"/actions/validate", params, &l)
 	switch {

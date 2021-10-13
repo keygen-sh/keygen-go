@@ -25,21 +25,21 @@ const (
 	ValidationCodeEntitlementsEmpty        ValidationCode = "ENTITLEMENTS_SCOPE_EMPTY"
 )
 
-type Validation struct {
+type validate struct {
 	fingerprints []string
 }
 
-type ValidationMeta struct {
-	Scope ValidationScope `json:"scope"`
+type meta struct {
+	Scope scope `json:"scope"`
 }
 
-type ValidationScope struct {
+type scope struct {
 	Fingerprints []string `json:"fingerprints"`
 	Product      string   `json:"product"`
 }
 
-func (v Validation) GetMeta() interface{} {
-	return ValidationMeta{Scope: ValidationScope{Fingerprints: v.fingerprints, Product: Product}}
+func (v validate) GetMeta() interface{} {
+	return meta{Scope: scope{Fingerprints: v.fingerprints, Product: Product}}
 }
 
 type ValidationResult struct {

@@ -1,4 +1,4 @@
-# Keygen Go SDK
+# Keygen Go SDK [![godoc reference](https://godoc.org/github.com/keygen-sh/keygen-go?status.png)](https://godoc.org/github.com/keygen-sh/keygen-go)
 
 Package [`keygen`](https://pkg.go.dev/github.com/keygen-sh/keygen-go) allows Go programs
 to license and remotely update themselves using the keygen.sh service.

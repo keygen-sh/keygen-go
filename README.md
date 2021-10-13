@@ -19,11 +19,11 @@ func activate() error {
   // Validate the license for the current fingerprint
   license, err := keygen.Validate(fingerprint)
   switch {
-  case err == ErrLicenseNotActivated:
+  case err == keygen.ErrLicenseNotActivated:
     // Activate the current fingerprint
     machine, err := license.Activate(fingerprint)
     switch {
-    case err == ErrMachineLimitExceeded:
+    case err == keygen.ErrMachineLimitExceeded:
       fmt.Println("Machine limit has been exceeded!")
 
       return err
@@ -32,7 +32,7 @@ func activate() error {
 
       return err
     }
-  case err == ErrLicenseExpired:
+  case err == keygen.ErrLicenseExpired:
     fmt.Println("License is expired!")
 
     return err
@@ -62,7 +62,7 @@ func upgrade() error {
   // Check for upgrade
   release, err := keygen.Upgrade(currentVersion)
   switch {
-  case err == ErrUpgradeNotAvailable:
+  case err == keygen.ErrUpgradeNotAvailable:
     fmt.Println("No upgrade available, already at the latest version!")
 
     return nil

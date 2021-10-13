@@ -14,19 +14,29 @@ const (
 
 var (
 	ErrLicenseSchemeNotSupported = errors.New("license scheme is not supported")
+	ErrLicenseSchemeMissing      = errors.New("license scheme is missing")
+	ErrLicenseKeyMissing         = errors.New("license key is missing")
 	ErrLicenseNotGenuine         = errors.New("license is not genuine")
 	ErrPublicKeyMissing          = errors.New("public key is missing")
 	ErrPublicKeyInvalid          = errors.New("public key is invalid")
 )
 
-func Genuine(signedKey string, signingScheme string) ([]byte, error) {
+func Genuine(licenseKey string, signingScheme string) ([]byte, error) {
 	if PublicKey == "" {
 		return nil, ErrPublicKeyMissing
 	}
 
+	if licenseKey == "" {
+		return nil, ErrLicenseKeyMissing
+	}
+
+	if signingScheme == "" {
+		return nil, ErrLicenseSchemeMissing
+	}
+
 	switch {
 	case signingScheme == SchemeCodeEd25519:
-		dataset, err := verifyEd25519SignedKey(signedKey)
+		dataset, err := verifyEd25519SignedKey(licenseKey)
 
 		return dataset, err
 	default:

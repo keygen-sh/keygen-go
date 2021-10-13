@@ -59,7 +59,7 @@ func (l *License) Validate(fingerprints ...string) error {
 	}
 
 	// FIXME(ezekg) The jsonapi lib doesn't know how to unmarshal document meta
-	validation := &ValidationResult{}
+	validation := &validation{}
 	if err := json.Unmarshal(res.Document.Meta, validation); err != nil {
 		return err
 	}

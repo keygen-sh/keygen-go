@@ -42,7 +42,7 @@ func (v validate) GetMeta() interface{} {
 	return meta{Scope: scope{Fingerprints: v.fingerprints, Product: Product}}
 }
 
-type ValidationResult struct {
+type validation struct {
 	Code  ValidationCode `json:"constant"`
 	Valid bool           `json:"valid"`
 }

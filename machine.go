@@ -16,6 +16,7 @@ type machine struct {
 	LicenseID   string `json:"-"`
 }
 
+// Implement jsonapi.MarshalData interface
 func (m machine) GetID() string {
 	return m.ID
 }
@@ -40,6 +41,7 @@ func (m machine) GetRelationships() map[string]interface{} {
 	return relationships
 }
 
+// Machine represents an Keygen machine object.
 type Machine struct {
 	ID                string                 `json:"-"`
 	Type              string                 `json:"-"`
@@ -91,6 +93,7 @@ func (m *Machine) SetData(to func(target interface{}) error) error {
 	return to(m)
 }
 
+// Machines represents an array of machine objects.
 type Machines []Machine
 
 // Implement jsonapi.UnmarshalData interface
@@ -98,6 +101,8 @@ func (m *Machines) SetData(to func(target interface{}) error) error {
 	return to(m)
 }
 
+// Deactivate performs a machine deactivation for the current Machine. An error
+// will be returned if the machine deactivation fails.
 func (m *Machine) Deactivate() error {
 	client := &Client{Account: Account, Token: Token}
 
@@ -108,6 +113,9 @@ func (m *Machine) Deactivate() error {
 	return nil
 }
 
+// Monitor performs, on a loop, a machine hearbeat ping for the current Machine. An
+// error channel will be returned, where any ping errors will be emitted. Pings are
+// sent according to the machine's required heartbeat window.
 func (m *Machine) Monitor() chan error {
 	client := &Client{Account: Account, Token: Token}
 	errs := make(chan error)

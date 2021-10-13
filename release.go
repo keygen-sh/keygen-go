@@ -12,6 +12,7 @@ var (
 	ErrReleaseLocationMissing = errors.New("release has no download URL")
 )
 
+// Release represents an Keygen release object.
 type Release struct {
 	ID       string    `json:"-"`
 	Type     string    `json:"-"`
@@ -41,6 +42,7 @@ func (r *Release) SetData(to func(target interface{}) error) error {
 	return to(r)
 }
 
+// Install performs an update of the current executable to the new Release.
 func (r *Release) Install() error {
 	if r.Location == "" {
 		return ErrReleaseLocationMissing

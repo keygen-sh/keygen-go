@@ -22,6 +22,7 @@ var (
 	ErrProductMissing         = errors.New("product scope is missing")
 )
 
+// License represents an Keygen license object.
 type License struct {
 	ID            string                 `json:"-"`
 	Type          string                 `json:"-"`
@@ -59,6 +60,13 @@ func (l *License) SetRelationships(relationships map[string]interface{}) error {
 	return nil
 }
 
+type limit struct {
+	Limit int `url:"limit"`
+}
+
+// Validate performs a license validation, scoped to any provided fingerprints. It
+// returns an error if the license is invalid, e.g. ErrLicenseNotActivated,
+// ErrLicenseExpired or ErrLicenseTooManyMachines.
 func (l *License) Validate(fingerprints ...string) error {
 	client := &Client{Account: Account, Token: Token}
 	params := &validate{fingerprints}
@@ -101,6 +109,10 @@ func (l *License) Validate(fingerprints ...string) error {
 	}
 }
 
+// Genuine checks if the license's key is genuine by cryptographically verifying the
+// key using your PublicKey. If the license is genuine, the decoded dataset from the
+// key will be returned. An error will be returned if the license is not genuine, or
+// if the key is not signed, e.g. ErrLicenseNotGenuine or ErrLicenseNotSigned.
 func (l *License) Genuine() ([]byte, error) {
 	if l.Scheme == "" {
 		return nil, ErrLicenseNotSigned
@@ -109,6 +121,10 @@ func (l *License) Genuine() ([]byte, error) {
 	return Genuine(l.Key, l.Scheme)
 }
 
+// Activate performs a machine activation for the license, identified by the provided
+// fingerprint. If the activation is successful, the new machine will be returned. An
+// error will be returned if the activation fails, e.g. ErrMachineLimitExceeded
+// or ErrMachineAlreadyActivated.
 func (l *License) Activate(fingerprint string) (*Machine, error) {
 	client := &Client{Account: Account, Token: Token}
 	hostname, _ := os.Hostname()
@@ -128,6 +144,9 @@ func (l *License) Activate(fingerprint string) (*Machine, error) {
 	return machine, nil
 }
 
+// Deactivate performs a machine deactivation, identified by the provided ID. The ID
+// can be the machine's UUID or the machine's fingerprint. An error will be returned
+// if the machine deactivation fails.
 func (l *License) Deactivate(id string) error {
 	client := &Client{Account: Account, Token: Token}
 
@@ -139,22 +158,24 @@ func (l *License) Deactivate(id string) error {
 	return nil
 }
 
+// Machines lists up to 100 machines for the license.
 func (l *License) Machines() (Machines, error) {
 	client := &Client{Account: Account, Token: Token}
 	machines := Machines{}
 
-	if _, err := client.Get("licenses/"+l.ID+"/machines", nil, &machines); err != nil {
+	if _, err := client.Get("licenses/"+l.ID+"/machines", limit{100}, &machines); err != nil {
 		return nil, err
 	}
 
 	return machines, nil
 }
 
+// Machines lists up to 100 entitlements for the license.
 func (l *License) Entitlements() (Entitlements, error) {
 	client := &Client{Account: Account, Token: Token}
 	entitlements := Entitlements{}
 
-	if _, err := client.Get("licenses/"+l.ID+"/entitlements", nil, &entitlements); err != nil {
+	if _, err := client.Get("licenses/"+l.ID+"/entitlements", limit{100}, &entitlements); err != nil {
 		return nil, err
 	}
 

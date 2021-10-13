@@ -9,7 +9,7 @@ var (
 	ErrUpgradeNotAvailable = errors.New("no upgrades available (already up-to-date)")
 )
 
-type UpgradeParams struct {
+type upgrade struct {
 	Product  string `url:"product"`
 	Version  string `url:"version"`
 	Platform string `url:"platform"`
@@ -19,7 +19,7 @@ type UpgradeParams struct {
 
 func Upgrade(currentVersion string) (*Release, error) {
 	client := &Client{Account: Account, Token: Token}
-	params := &UpgradeParams{Product: Product, Version: currentVersion, Platform: Platform, Channel: Channel, Filetype: Filetype}
+	params := &upgrade{Product: Product, Version: currentVersion, Platform: Platform, Channel: Channel, Filetype: Filetype}
 	artifact := &Artifact{}
 
 	res, err := client.Get("releases/actions/upgrade", params, artifact)
@@ -31,7 +31,7 @@ func Upgrade(currentVersion string) (*Release, error) {
 		return nil, ErrUpgradeNotAvailable
 	}
 
-	release, err := artifact.Release()
+	release, err := artifact.release()
 	if err != nil {
 		return nil, err
 	}

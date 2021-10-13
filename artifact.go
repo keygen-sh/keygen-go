@@ -6,6 +6,7 @@ import (
 	"github.com/pieoneers/jsonapi-go"
 )
 
+// Artifact represents an Keygen artifact object.
 type Artifact struct {
 	ID        string    `json:"-"`
 	Type      string    `json:"-"`
@@ -38,7 +39,7 @@ func (a *Artifact) SetRelationships(relationships map[string]interface{}) error 
 	return nil
 }
 
-func (a *Artifact) Release() (*Release, error) {
+func (a *Artifact) release() (*Release, error) {
 	client := &Client{Account: Account, Token: Token}
 	release := &Release{}
 

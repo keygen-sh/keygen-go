@@ -47,6 +47,9 @@ type validation struct {
 	Valid bool           `json:"valid"`
 }
 
+// Validate performs a license validation using the current Token, scoped to any
+// provided fingerprints. It returns a License, and an error if the license is
+// invalid, e.g. ErrLicenseNotActivated or ErrLicenseExpired.
 func Validate(fingerprints ...string) (*License, error) {
 	client := &Client{Account: Account, Token: Token}
 	license := &License{}

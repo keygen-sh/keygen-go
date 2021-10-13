@@ -2,6 +2,7 @@ package keygen
 
 import "time"
 
+// Entitlement represents an Keygen entitlement object.
 type Entitlement struct {
 	ID       string                 `json:"-"`
 	Type     string                 `json:"-"`
@@ -26,6 +27,7 @@ func (e *Entitlement) SetData(to func(target interface{}) error) error {
 	return to(e)
 }
 
+// Entitlements represents an array of entitlement objects.
 type Entitlements []Entitlement
 
 // Implement jsonapi.UnmarshalData interface

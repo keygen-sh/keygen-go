@@ -26,6 +26,23 @@ func TestValidate(t *testing.T) {
 			t.Fatalf("Should not fail activation: err=%v", err)
 		}
 
+		// _, err = license.Activate(fingerprint)
+		// switch {
+		// case err == nil:
+		// 	t.Fatalf("Should not be activated again: license=%v fingerprint=%s", license, fingerprint)
+		// case err != ErrMachineAlreadyActivated:
+		// 	t.Fatalf("Should fail duplicate activation: err=%v", err)
+		// }
+
+		another := uuid.New().String()
+		_, err = license.Activate(another)
+		switch {
+		case err == nil:
+			t.Fatalf("Should not allow a second activation: license=%v fingerprint=%s", license, another)
+		case err != ErrMachineLimitExceeded:
+			t.Fatalf("Should fail second activation: err=%v", err)
+		}
+
 		go machine.Monitor()
 
 		machines, err := license.Machines()

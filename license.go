@@ -6,6 +6,8 @@ import (
 	"os"
 	"runtime"
 	"time"
+
+	"github.com/pieoneers/jsonapi-go"
 )
 
 var (
@@ -31,6 +33,7 @@ type License struct {
 	Created       time.Time              `json:"created"`
 	Updated       time.Time              `json:"updated"`
 	Metadata      map[string]interface{} `json:"metadata"`
+	PolicyId      string                 `json:"-"`
 }
 
 // Implement jsonapi.UnmarshalData interface
@@ -46,6 +49,14 @@ func (l *License) SetType(t string) error {
 
 func (l *License) SetData(to func(target interface{}) error) error {
 	return to(l)
+}
+
+func (l *License) SetRelationships(relationships map[string]interface{}) error {
+	if relationship, ok := relationships["policy"]; ok {
+		l.PolicyId = relationship.(*jsonapi.ResourceObjectIdentifier).ID
+	}
+
+	return nil
 }
 
 func (l *License) Validate(fingerprints ...string) error {

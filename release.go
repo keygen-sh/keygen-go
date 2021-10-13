@@ -14,17 +14,18 @@ var (
 
 // Release represents an Keygen release object.
 type Release struct {
-	ID       string    `json:"-"`
-	Type     string    `json:"-"`
-	Version  string    `json:"version"`
-	Filename string    `json:"filename"`
-	Filetype string    `json:"filetype"`
-	Filesize string    `json:"filesize"`
-	Platform string    `json:"platform"`
-	Channel  string    `json:"channel"`
-	Created  time.Time `json:"created"`
-	Updated  time.Time `json:"updated"`
-	Location string    `json:"-"`
+	ID       string                 `json:"-"`
+	Type     string                 `json:"-"`
+	Version  string                 `json:"version"`
+	Filename string                 `json:"filename"`
+	Filetype string                 `json:"filetype"`
+	Filesize string                 `json:"filesize"`
+	Platform string                 `json:"platform"`
+	Channel  string                 `json:"channel"`
+	Created  time.Time              `json:"created"`
+	Updated  time.Time              `json:"updated"`
+	Metadata map[string]interface{} `json:"metadata"`
+	Location string                 `json:"-"`
 }
 
 // Implement jsonapi.UnmarshalData interface

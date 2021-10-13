@@ -29,11 +29,13 @@ var (
 	}
 )
 
+type ErrorCode string
+
 const (
-	ErrorCodeTokenInvalid     = "TOKEN_INVALID"
-	ErrorCodeNotFound         = "NOT_FOUND"
-	ErrorCodeMachineDead      = "MACHINE_DEAD"
-	ErrorCodeFingerprintTaken = "FINGERPRINT_TAKEN"
+	ErrorCodeNotFound         ErrorCode = "NOT_FOUND"
+	ErrorCodeTokenInvalid     ErrorCode = "TOKEN_INVALID"
+	ErrorCodeMachineDead      ErrorCode = "MACHINE_DEAD"
+	ErrorCodeFingerprintTaken ErrorCode = "FINGERPRINT_TAKEN"
 )
 
 var (
@@ -44,38 +46,39 @@ var (
 )
 
 type Client struct {
-	account string
-	token   string
+	Account string
+	Token   string
 }
 
 type Response struct {
-	Headers http.Header
-	Body    []byte
-	Status  int
+	Headers  http.Header
+	Document *jsonapi.Document
+	Body     []byte
+	Status   int
 }
 
-func (c *Client) Post(path string, params interface{}) (*Response, error) {
-	return c.send("POST", path, params)
+func (c *Client) Post(path string, params interface{}, model interface{}) (*Response, error) {
+	return c.send("POST", path, params, model)
 }
 
-func (c *Client) Get(path string, params interface{}) (*Response, error) {
-	return c.send("GET", path, params)
+func (c *Client) Get(path string, params interface{}, model interface{}) (*Response, error) {
+	return c.send("GET", path, params, model)
 }
 
-func (c *Client) Put(path string, params interface{}) (*Response, error) {
-	return c.send("PUT", path, params)
+func (c *Client) Put(path string, params interface{}, model interface{}) (*Response, error) {
+	return c.send("PUT", path, params, model)
 }
 
-func (c *Client) Patch(path string, params interface{}) (*Response, error) {
-	return c.send("PATCH", path, params)
+func (c *Client) Patch(path string, params interface{}, model interface{}) (*Response, error) {
+	return c.send("PATCH", path, params, model)
 }
 
-func (c *Client) Delete(path string, params interface{}) (*Response, error) {
-	return c.send("DELETE", path, params)
+func (c *Client) Delete(path string, params interface{}, model interface{}) (*Response, error) {
+	return c.send("DELETE", path, params, model)
 }
 
-func (c *Client) send(method string, path string, params interface{}) (*Response, error) {
-	url := fmt.Sprintf("%s/%s/accounts/%s/%s", APIURL, APIVersion, c.account, path)
+func (c *Client) send(method string, path string, params interface{}, model interface{}) (*Response, error) {
+	url := fmt.Sprintf("%s/%s/accounts/%s/%s", APIURL, APIVersion, c.Account, path)
 	var in bytes.Buffer
 
 	if params != nil {
@@ -102,7 +105,7 @@ func (c *Client) send(method string, path string, params interface{}) (*Response
 		return nil, err
 	}
 
-	req.Header.Add("Authorization", "Bearer "+c.token)
+	req.Header.Add("Authorization", "Bearer "+c.Token)
 	req.Header.Add("Content-Type", jsonapi.ContentType)
 	req.Header.Add("Accept", jsonapi.ContentType)
 	req.Header.Add("User-Agent", userAgent)
@@ -129,22 +132,24 @@ func (c *Client) send(method string, path string, params interface{}) (*Response
 		return response, nil
 	}
 
-	doc, err := jsonapi.Unmarshal(out, nil)
+	doc, err := jsonapi.Unmarshal(out, model)
 	if err != nil {
 		return nil, err
 	}
 
+	response.Document = doc
+
 	if len(doc.Errors) > 0 {
-		err := doc.Errors[0]
+		code := ErrorCode(doc.Errors[0].Code)
 
 		switch {
-		case err.Code == ErrorCodeFingerprintTaken:
+		case code == ErrorCodeFingerprintTaken:
 			return response, ErrMachineAlreadyActivated
-		case err.Code == ErrorCodeTokenInvalid:
+		case code == ErrorCodeTokenInvalid:
 			return response, ErrLicenseTokenInvalid
-		case err.Code == ErrorCodeMachineDead:
+		case code == ErrorCodeMachineDead:
 			return response, ErrMachineDead
-		case err.Code == ErrorCodeNotFound:
+		case code == ErrorCodeNotFound:
 			return response, ErrNotFound
 		default:
 			return response, fmt.Errorf("an error occurred (id=%s status=%d response='%s')", res.Header.Get("x-request-id"), res.StatusCode, out)

@@ -4,38 +4,34 @@ import (
 	"errors"
 	"net/http"
 	"runtime"
-
-	"github.com/pieoneers/jsonapi-go"
 )
 
 var (
 	ErrUpgradeNotAvailable = errors.New("no upgrades available (already up-to-date)")
 )
 
+type SemanticVersion string
+
 type UpgradeParams struct {
-	Product  string `url:"product"`
-	Version  string `url:"version"`
-	Platform string `url:"platform"`
-	Channel  string `url:"channel"`
-	Filetype string `url:"filetype"`
+	Product  string          `url:"product"`
+	Version  SemanticVersion `url:"version"`
+	Platform string          `url:"platform"`
+	Channel  string          `url:"channel"`
+	Filetype string          `url:"filetype"`
 }
 
-func Upgrade(currentVersion string) (*Release, error) {
-	client := &Client{account: Account, token: Token}
-	params := &UpgradeParams{Product: Product, Version: currentVersion, Platform: runtime.GOOS + "_" + runtime.GOARCH, Channel: "stable", Filetype: "binary"}
-	res, err := client.Get("releases/actions/upgrade", params)
+func Upgrade(current SemanticVersion) (*Release, error) {
+	client := &Client{Account: Account, Token: Token}
+	params := &UpgradeParams{Product: Product, Version: current, Platform: runtime.GOOS + "_" + runtime.GOARCH, Channel: "stable", Filetype: "binary"}
+	artifact := &Artifact{}
+
+	res, err := client.Get("releases/actions/upgrade", params, artifact)
 	if err != nil {
 		return nil, err
 	}
 
 	if res.Status == http.StatusNoContent {
 		return nil, ErrUpgradeNotAvailable
-	}
-
-	artifact := &Artifact{}
-	_, err = jsonapi.Unmarshal(res.Body, artifact)
-	if err != nil {
-		return nil, err
 	}
 
 	release, err := artifact.Release()

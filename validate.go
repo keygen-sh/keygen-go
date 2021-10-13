@@ -1,28 +1,28 @@
 package keygen
 
-import "github.com/pieoneers/jsonapi-go"
+type ValidationCode string
 
 const (
-	ValidationCodeValid                    = "VALID"
-	ValidationCodeNotFound                 = "NOT_FOUND"
-	ValidationCodeSuspended                = "SUSPENDED"
-	ValidationCodeExpired                  = "EXPIRED"
-	ValidationCodeOverdue                  = "OVERDUE"
-	ValidationCodeNoMachine                = "NO_MACHINE"
-	ValidationCodeNoMachines               = "NO_MACHINES"
-	ValidationCodeTooManyMachines          = "TOO_MANY_MACHINES"
-	ValidationCodeTooManyCores             = "TOO_MANY_CORES"
-	ValidationCodeFingerprintScopeRequired = "FINGERPRINT_SCOPE_REQUIRED"
-	ValidationCodeFingerprintScopeMismatch = "FINGERPRINT_SCOPE_MISMATCH"
-	ValidationCodeFingerprintScopeEmpty    = "FINGERPRINT_SCOPE_EMPTY"
-	ValidationCodeProductScopeRequired     = "PRODUCT_SCOPE_REQUIRED"
-	ValidationCodeProductScopeEmpty        = "PRODUCT_SCOPE_MISMATCH"
-	ValidationCodePolicyScopeRequired      = "POLICY_SCOPE_REQUIRED"
-	ValidationCodePolicyScopeMismatch      = "POLICY_SCOPE_MISMATCH"
-	ValidationCodeMachineScopeRequired     = "MACHINE_SCOPE_REQUIRED"
-	ValidationCodeMachineScopeMismatch     = "MACHINE_SCOPE_MISMATCH"
-	ValidationCodeEntitlementsMissing      = "ENTITLEMENTS_MISSING"
-	ValidationCodeEntitlementsEmpty        = "ENTITLEMENTS_SCOPE_EMPTY"
+	ValidationCodeValid                    ValidationCode = "VALID"
+	ValidationCodeNotFound                 ValidationCode = "NOT_FOUND"
+	ValidationCodeSuspended                ValidationCode = "SUSPENDED"
+	ValidationCodeExpired                  ValidationCode = "EXPIRED"
+	ValidationCodeOverdue                  ValidationCode = "OVERDUE"
+	ValidationCodeNoMachine                ValidationCode = "NO_MACHINE"
+	ValidationCodeNoMachines               ValidationCode = "NO_MACHINES"
+	ValidationCodeTooManyMachines          ValidationCode = "TOO_MANY_MACHINES"
+	ValidationCodeTooManyCores             ValidationCode = "TOO_MANY_CORES"
+	ValidationCodeFingerprintScopeRequired ValidationCode = "FINGERPRINT_SCOPE_REQUIRED"
+	ValidationCodeFingerprintScopeMismatch ValidationCode = "FINGERPRINT_SCOPE_MISMATCH"
+	ValidationCodeFingerprintScopeEmpty    ValidationCode = "FINGERPRINT_SCOPE_EMPTY"
+	ValidationCodeProductScopeRequired     ValidationCode = "PRODUCT_SCOPE_REQUIRED"
+	ValidationCodeProductScopeEmpty        ValidationCode = "PRODUCT_SCOPE_MISMATCH"
+	ValidationCodePolicyScopeRequired      ValidationCode = "POLICY_SCOPE_REQUIRED"
+	ValidationCodePolicyScopeMismatch      ValidationCode = "POLICY_SCOPE_MISMATCH"
+	ValidationCodeMachineScopeRequired     ValidationCode = "MACHINE_SCOPE_REQUIRED"
+	ValidationCodeMachineScopeMismatch     ValidationCode = "MACHINE_SCOPE_MISMATCH"
+	ValidationCodeEntitlementsMissing      ValidationCode = "ENTITLEMENTS_MISSING"
+	ValidationCodeEntitlementsEmpty        ValidationCode = "ENTITLEMENTS_SCOPE_EMPTY"
 )
 
 type Validation struct {
@@ -43,25 +43,19 @@ func (v Validation) GetMeta() interface{} {
 }
 
 type ValidationResult struct {
-	Code  string `json:"constant"`
-	Valid bool   `json:"valid"`
+	Code  ValidationCode `json:"constant"`
+	Valid bool           `json:"valid"`
 }
 
 func Validate(fingerprints ...string) (*License, error) {
-	client := &Client{account: Account, token: Token}
-	res, err := client.Get("me", nil)
-	if err != nil {
-		return nil, err
-	}
-
+	client := &Client{Account: Account, Token: Token}
 	license := &License{}
-	_, err = jsonapi.Unmarshal(res.Body, license)
-	if err != nil {
+
+	if _, err := client.Get("me", nil, license); err != nil {
 		return nil, err
 	}
 
-	err = license.Validate(fingerprints...)
-	if err != nil {
+	if err := license.Validate(fingerprints...); err != nil {
 		return license, err
 	}
 

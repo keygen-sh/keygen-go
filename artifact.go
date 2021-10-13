@@ -39,15 +39,10 @@ func (a *Artifact) SetRelationships(relationships map[string]interface{}) error 
 }
 
 func (a *Artifact) Release() (*Release, error) {
-	client := &Client{account: Account, token: Token}
-	res, err := client.Get("releases/"+a.ReleaseId, nil)
-	if err != nil {
-		return nil, err
-	}
-
+	client := &Client{Account: Account, Token: Token}
 	release := &Release{}
-	_, err = jsonapi.Unmarshal(res.Body, release)
-	if err != nil {
+
+	if _, err := client.Get("releases/"+a.ReleaseId, nil, release); err != nil {
 		return nil, err
 	}
 

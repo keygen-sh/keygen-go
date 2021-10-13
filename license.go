@@ -6,8 +6,6 @@ import (
 	"os"
 	"runtime"
 	"time"
-
-	"github.com/pieoneers/jsonapi-go"
 )
 
 var (
@@ -49,10 +47,10 @@ func (l *License) SetData(to func(target interface{}) error) error {
 }
 
 func (l *License) Validate(fingerprints ...string) error {
-	client := &Client{account: Account, token: Token}
+	client := &Client{Account: Account, Token: Token}
 	params := &Validation{fingerprints}
 
-	res, err := client.Post("licenses/"+l.ID+"/actions/validate", params)
+	res, err := client.Post("licenses/"+l.ID+"/actions/validate", params, &l)
 	switch {
 	case err == ErrNotFound:
 		return ErrLicenseInvalid
@@ -60,15 +58,9 @@ func (l *License) Validate(fingerprints ...string) error {
 		return err
 	}
 
-	doc, err := jsonapi.Unmarshal(res.Body, &l)
-	if err != nil {
-		return err
-	}
-
 	// FIXME(ezekg) The jsonapi lib doesn't know how to unmarshal document meta
 	validation := &ValidationResult{}
-	err = json.Unmarshal(doc.Meta, validation)
-	if err != nil {
+	if err := json.Unmarshal(res.Document.Meta, validation); err != nil {
 		return err
 	}
 
@@ -99,7 +91,7 @@ func (l *License) Genuine() ([]byte, error) {
 }
 
 func (l *License) Activate(fingerprint string) (*Machine, error) {
-	client := &Client{account: Account, token: Token}
+	client := &Client{Account: Account, Token: Token}
 	hostname, _ := os.Hostname()
 	params := &Machine{
 		Fingerprint: fingerprint,
@@ -109,14 +101,8 @@ func (l *License) Activate(fingerprint string) (*Machine, error) {
 		LicenseID:   l.ID,
 	}
 
-	res, err := client.Post("machines", params)
-	if err != nil {
-		return nil, err
-	}
-
 	machine := &Machine{}
-	_, err = jsonapi.Unmarshal(res.Body, machine)
-	if err != nil {
+	if _, err := client.Post("machines", params, machine); err != nil {
 		return nil, err
 	}
 
@@ -124,9 +110,9 @@ func (l *License) Activate(fingerprint string) (*Machine, error) {
 }
 
 func (l *License) Deactivate(id string) error {
-	client := &Client{account: Account, token: Token}
+	client := &Client{Account: Account, Token: Token}
 
-	_, err := client.Delete("machines/"+id, nil)
+	_, err := client.Delete("machines/"+id, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -135,16 +121,10 @@ func (l *License) Deactivate(id string) error {
 }
 
 func (l *License) Machines() (Machines, error) {
-	client := &Client{account: Account, token: Token}
-
-	res, err := client.Get("licenses/"+l.ID+"/machines", nil)
-	if err != nil {
-		return nil, err
-	}
-
+	client := &Client{Account: Account, Token: Token}
 	machines := Machines{}
-	_, err = jsonapi.Unmarshal(res.Body, &machines)
-	if err != nil {
+
+	if _, err := client.Get("licenses/"+l.ID+"/machines", nil, &machines); err != nil {
 		return nil, err
 	}
 
@@ -152,16 +132,10 @@ func (l *License) Machines() (Machines, error) {
 }
 
 func (l *License) Entitlements() (Entitlements, error) {
-	client := &Client{account: Account, token: Token}
-
-	res, err := client.Get("licenses/"+l.ID+"/entitlements", nil)
-	if err != nil {
-		return nil, err
-	}
-
+	client := &Client{Account: Account, Token: Token}
 	entitlements := Entitlements{}
-	_, err = jsonapi.Unmarshal(res.Body, &entitlements)
-	if err != nil {
+
+	if _, err := client.Get("licenses/"+l.ID+"/entitlements", nil, &entitlements); err != nil {
 		return nil, err
 	}
 

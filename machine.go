@@ -99,10 +99,9 @@ func (m *Machines) SetData(to func(target interface{}) error) error {
 }
 
 func (m *Machine) Deactivate() error {
-	client := &Client{account: Account, token: Token}
+	client := &Client{Account: Account, Token: Token}
 
-	_, err := client.Delete("machines/"+m.ID, nil)
-	if err != nil {
+	if _, err := client.Delete("machines/"+m.ID, nil, nil); err != nil {
 		return err
 	}
 
@@ -110,7 +109,7 @@ func (m *Machine) Deactivate() error {
 }
 
 func (m *Machine) Monitor() chan error {
-	client := &Client{account: Account, token: Token}
+	client := &Client{Account: Account, Token: Token}
 	errs := make(chan error)
 	t := time.Duration(m.HeartbeatDuration) * time.Second / 2
 
@@ -126,10 +125,7 @@ func (m *Machine) Monitor() chan error {
 }
 
 func (m *Machine) ping(client *Client, errs chan error) {
-	res, err := client.Post("machines/"+m.ID+"/actions/ping-heartbeat", nil)
-	if err != nil {
+	if _, err := client.Post("machines/"+m.ID+"/actions/ping-heartbeat", nil, &m); err != nil {
 		errs <- err
 	}
-
-	jsonapi.Unmarshal(res.Body, &m)
 }

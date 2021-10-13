@@ -33,10 +33,6 @@ func activate() error {
       return err
     }
   }
-  case err == ErrLicenseInvalid:
-    fmt.Println("License is not valid!")
-
-    return err
   case err == ErrLicenseExpired:
     fmt.Println("License is expired!")
 

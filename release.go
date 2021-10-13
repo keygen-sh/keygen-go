@@ -16,6 +16,7 @@ var (
 type Release struct {
 	ID       string                 `json:"-"`
 	Type     string                 `json:"-"`
+	Name     string                 `json:"name"`
 	Version  string                 `json:"version"`
 	Filename string                 `json:"filename"`
 	Filetype string                 `json:"filetype"`

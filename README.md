@@ -63,9 +63,9 @@ func upgrade() error {
   release, err := keygen.Upgrade(currentVersion)
   switch {
   case err == ErrUpgradeNotAvailable:
-     fmt.Println("No upgrade available, already at the latest version!")
+    fmt.Println("No upgrade available, already at the latest version!")
 
-     return nil
+    return nil
   case err != nil:
     fmt.Println("Upgrade check failed!")
 
@@ -75,7 +75,7 @@ func upgrade() error {
   // Download the upgrade and apply it
   err = release.Install()
   if err != nil {
-      return err
+    return err
   }
 }
 ```

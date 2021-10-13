@@ -16,6 +16,7 @@ var (
 	ErrLicenseSuspended       = errors.New("license is suspended")
 	ErrLicenseTooManyMachines = errors.New("license has too many machines")
 	ErrLicenseTooManyCores    = errors.New("license has too many cores")
+	ErrLicenseNotSigned       = errors.New("license is not signed")
 	ErrLicenseInvalid         = errors.New("license is invalid")
 )
 
@@ -90,6 +91,10 @@ func (l *License) Validate(fingerprints ...string) error {
 }
 
 func (l *License) Genuine() ([]byte, error) {
+	if l.Scheme == "" {
+		return nil, ErrLicenseNotSigned
+	}
+
 	return Genuine(l.Key, l.Scheme)
 }
 

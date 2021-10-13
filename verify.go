@@ -19,13 +19,13 @@ var (
 	ErrPublicKeyInvalid          = errors.New("public key is invalid")
 )
 
-func Genuine(signedKey string, scheme string) ([]byte, error) {
+func Genuine(signedKey string, signingScheme string) ([]byte, error) {
 	if PublicKey == "" {
 		return nil, ErrPublicKeyMissing
 	}
 
 	switch {
-	case scheme == SchemeCodeEd25519:
+	case signingScheme == SchemeCodeEd25519:
 		dataset, err := verifyEd25519SignedKey(signedKey)
 
 		return dataset, err

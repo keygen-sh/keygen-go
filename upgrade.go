@@ -20,9 +20,9 @@ type UpgradeParams struct {
 	Filetype string          `url:"filetype"`
 }
 
-func Upgrade(current SemanticVersion) (*Release, error) {
+func Upgrade(currentVersion SemanticVersion) (*Release, error) {
 	client := &Client{Account: Account, Token: Token}
-	params := &UpgradeParams{Product: Product, Version: current, Platform: runtime.GOOS + "_" + runtime.GOARCH, Channel: "stable", Filetype: "binary"}
+	params := &UpgradeParams{Product: Product, Version: currentVersion, Platform: runtime.GOOS + "_" + runtime.GOARCH, Channel: "stable", Filetype: "binary"}
 	artifact := &Artifact{}
 
 	res, err := client.Get("releases/actions/upgrade", params, artifact)

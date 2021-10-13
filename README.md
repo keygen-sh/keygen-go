@@ -71,7 +71,7 @@ func upgrade() error {
   }
 
   // Download the upgrade and apply it
-  err = release.Apply()
+  err = release.Install()
   if err != nil {
       return err
   }

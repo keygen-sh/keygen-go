@@ -115,7 +115,7 @@ func (l *License) Activate(fingerprint string) (*Machine, error) {
 	params := &Machine{
 		Fingerprint: fingerprint,
 		Hostname:    hostname,
-		Platform:    runtime.GOOS + "_" + runtime.GOARCH,
+		Platform:    Platform,
 		Cores:       runtime.NumCPU(),
 		LicenseID:   l.ID,
 	}

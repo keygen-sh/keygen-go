@@ -1,14 +1,25 @@
 package keygen
 
-// Account is the Keygen account ID used globally in the binding.
-var Account string
+import "runtime"
 
-// Product is the Keygen product ID used globally in the binding.
-var Product string
+var (
+	// Account is the Keygen account ID used globally in the binding.
+	Account string
 
-// Token is the Keygen API token used globally in the binding.
-var Token string
+	// Product is the Keygen product ID used globally in the binding.
+	Product string
 
-// PublicKey is the Keygen public key used for verifying license keys
-// and API response signatures.
-var PublicKey string
+	// Token is the Keygen API token used globally in the binding.
+	Token string
+
+	// PublicKey is the Keygen public key used for verifying license keys
+	// and API response signatures.
+	PublicKey string
+
+	// Channel is the release channel used when checking for upgrades.
+	Channel = "stable"
+
+	// Platform is the release platform used when checking for upgrades
+	// and when activating machines.
+	Platform = runtime.GOOS + "_" + runtime.GOARCH
+)

@@ -22,7 +22,7 @@ func activate() error {
     // Activate the current fingerprint
     machine, err := license.Activate(fingerprint)
     switch {
-    case err != ErrMachineLimitExceeded:
+    case err == ErrMachineLimitExceeded:
       fmt.Println("Machine limit has been exceeded!")
 
       return err

@@ -22,7 +22,7 @@ var (
 	ErrProductMissing         = errors.New("product scope is missing")
 )
 
-// License represents an Keygen license object.
+// License represents a Keygen license object.
 type License struct {
 	ID            string                 `json:"-"`
 	Type          string                 `json:"-"`

@@ -12,7 +12,7 @@ var (
 	ErrReleaseLocationMissing = errors.New("release has no download URL")
 )
 
-// Release represents an Keygen release object.
+// Release represents a Keygen release object.
 type Release struct {
 	ID       string                 `json:"-"`
 	Type     string                 `json:"-"`

@@ -57,8 +57,10 @@ keygen.Product = os.Getenv("KEYGEN_PRODUCT")
 keygen.Token = os.Getenv("KEYGEN_TOKEN")
 
 func upgrade() error {
+  currentVersion := "1.0.0"
+
   // Check for upgrade
-  release, err := keygen.Upgrade("1.0.0")
+  release, err := keygen.Upgrade(currentVersion)
   switch {
   case err == ErrUpgradeNotAvailable:
      fmt.Println("No upgrade available, already at the latest version!")

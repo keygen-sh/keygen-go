@@ -8,11 +8,12 @@ to license and remotely update themselves using the keygen.sh service.
 ```go
 import "github.com/keygen-sh/keygen-go"
 
-keygen.Account = os.Getenv("KEYGEN_ACCOUNT")
-keygen.Product = os.Getenv("KEYGEN_PRODUCT")
-keygen.Token = os.Getenv("KEYGEN_TOKEN")
-
 func activate() error {
+  keygen.Account = os.Getenv("KEYGEN_ACCOUNT")
+  keygen.Product = os.Getenv("KEYGEN_PRODUCT")
+  keygen.Token = os.Getenv("KEYGEN_TOKEN")
+
+  // The current device's fingerprint (could e.g. MAC, mobo ID, GUID, etc.)
   fingerprint := uuid.New().String()
 
   // Validate the license for the current fingerprint
@@ -52,11 +53,12 @@ func activate() error {
 ```go
 import "github.com/keygen-sh/keygen-go"
 
-keygen.Account = os.Getenv("KEYGEN_ACCOUNT")
-keygen.Product = os.Getenv("KEYGEN_PRODUCT")
-keygen.Token = os.Getenv("KEYGEN_TOKEN")
-
 func upgrade() error {
+  keygen.Account = os.Getenv("KEYGEN_ACCOUNT")
+  keygen.Product = os.Getenv("KEYGEN_PRODUCT")
+  keygen.Token = os.Getenv("KEYGEN_TOKEN")
+
+  // The current version of the program
   currentVersion := "1.0.0"
 
   // Check for upgrade

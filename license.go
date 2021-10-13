@@ -16,6 +16,8 @@ var (
 	ErrLicenseTooManyCores    = errors.New("license has too many cores")
 	ErrLicenseNotSigned       = errors.New("license is not signed")
 	ErrLicenseInvalid         = errors.New("license is invalid")
+	ErrFingerprintMissing     = errors.New("fingerprint scope is missing")
+	ErrProductMissing         = errors.New("product scope is missing")
 )
 
 type License struct {
@@ -77,6 +79,12 @@ func (l *License) Validate(fingerprints ...string) error {
 		return ErrLicenseTooManyMachines
 	case validation.Code == ValidationCodeTooManyCores:
 		return ErrLicenseTooManyCores
+	case validation.Code == ValidationCodeFingerprintScopeRequired ||
+		validation.Code == ValidationCodeFingerprintScopeEmpty:
+		return ErrFingerprintMissing
+	case validation.Code == ValidationCodeProductScopeRequired ||
+		validation.Code == ValidationCodeProductScopeEmpty:
+		return ErrProductMissing
 	default:
 		return ErrLicenseInvalid
 	}

@@ -41,7 +41,7 @@ func (m machine) GetRelationships() map[string]interface{} {
 	return relationships
 }
 
-// Machine represents an Keygen machine object.
+// Machine represents a Keygen machine object.
 type Machine struct {
 	ID                string                 `json:"-"`
 	Type              string                 `json:"-"`

@@ -6,7 +6,7 @@ import (
 	"github.com/pieoneers/jsonapi-go"
 )
 
-// Artifact represents an Keygen artifact object.
+// Artifact represents a Keygen artifact object.
 type Artifact struct {
 	ID        string    `json:"-"`
 	Type      string    `json:"-"`

@@ -2,7 +2,7 @@ package keygen
 
 import "time"
 
-// Entitlement represents an Keygen entitlement object.
+// Entitlement represents a Keygen entitlement object.
 type Entitlement struct {
 	ID       string                 `json:"-"`
 	Type     string                 `json:"-"`

@@ -16,7 +16,7 @@ var (
 	ErrLicenseSchemeNotSupported = errors.New("license scheme is not supported")
 	ErrLicenseSchemeMissing      = errors.New("license scheme is missing")
 	ErrLicenseKeyMissing         = errors.New("license key is missing")
-	ErrLicenseNotGenuine         = errors.New("license is not genuine")
+	ErrLicenseNotGenuine         = errors.New("license key is not genuine")
 	ErrPublicKeyMissing          = errors.New("public key is missing")
 	ErrPublicKeyInvalid          = errors.New("public key is invalid")
 )

@@ -3,6 +3,64 @@
 Package [`keygen`](https://pkg.go.dev/github.com/keygen-sh/keygen-go) allows Go programs to
 license and remotely update themselves using the [keygen.sh](https://keygen.sh) service.
 
+## `keygen.Validate(fingerprint)`
+
+To validate a license, configure `keygen.Account` and `keygen.Product` with your Keygen account
+details. Then prompt the user for their license token and set `keygen.Token`.
+
+The `Validate` method accepts zero or more fingerprints, which can be used to scope a license
+validation to a particular fingerprint. It will return a `License` object as well as any
+validation errors that occur.
+
+```go
+license, err := keygen.Validate(fingerprint)
+switch {
+case err == keygen.ErrLicenseNotActivated:
+  fmt.Println("License is not activated!")
+
+  return
+case err == keygen.ErrLicenseExpired:
+  fmt.Println("License is expired!")
+
+  return
+case err != nil:
+  fmt.Println("License is invalid!")
+
+  return
+}
+
+fmt.Println("License is valid!")
+```
+
+## `keygen.Upgrade(currentVersion)`
+
+Check for an upgrade. When an upgrade is available, a `Release` will be returned which will
+allow the update to be installed, replacing the currently running binary. When an upgrade
+is not available, an `ErrUpgradeNotAvailable` error will be returned indicating the current
+version is up-to-date.
+
+```go
+release, err := keygen.Upgrade(currentVersion)
+switch {
+case err == keygen.ErrUpgradeNotAvailable:
+  fmt.Println("No upgrade available, already at the latest version!")
+
+  return
+case err != nil:
+  fmt.Println("Upgrade check failed!")
+
+  return
+}
+
+if err := release.Install(); err != nil {
+  fmt.Println("Upgrade install failed!")
+
+  return
+}
+
+fmt.Println("Upgrade complete! Please restart.")
+```
+
 ## License activation example
 
 ```go

@@ -8,8 +8,10 @@ import (
 	"strings"
 )
 
+type SchemeCode string
+
 const (
-	SchemeCodeEd25519 = "ED25519_SIGN"
+	SchemeCodeEd25519 SchemeCode = "ED25519_SIGN"
 )
 
 var (
@@ -25,7 +27,7 @@ var (
 // key using your PublicKey. If the key is genuine, the decoded dataset from the
 // key will be returned. An error will be returned if the key is not genuine or
 // otherwise invalid, e.g. ErrLicenseNotGenuine.
-func Genuine(licenseKey string, signingScheme string) ([]byte, error) {
+func Genuine(licenseKey string, signingScheme SchemeCode) ([]byte, error) {
 	if PublicKey == "" {
 		return nil, ErrPublicKeyMissing
 	}

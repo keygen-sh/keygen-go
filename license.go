@@ -29,7 +29,7 @@ type License struct {
 	Name          string                 `json:"name"`
 	Key           string                 `json:"key"`
 	Expiry        *time.Time             `json:"expiry"`
-	Scheme        string                 `json:"scheme"`
+	Scheme        SchemeCode             `json:"scheme"`
 	LastValidated *time.Time             `json:"lastValidated"`
 	Created       time.Time              `json:"created"`
 	Updated       time.Time              `json:"updated"`

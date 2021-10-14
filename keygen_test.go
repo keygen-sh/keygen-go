@@ -43,7 +43,15 @@ func TestValidate(t *testing.T) {
 			t.Fatalf("Should fail second activation: err=%v", err)
 		}
 
-		go machine.Monitor()
+		errs := machine.Monitor()
+		select {
+		case err := <-errs:
+			t.Fatalf("Should not fail to send first hearbeat ping: err=%v", err)
+		default:
+			if machine.HeartbeatStatus != HeartbeatStatusCodeAlive {
+				t.Fatalf("Should have a heartbeat that is alive: license=%v machine=%v", license, machine)
+			}
+		}
 
 		machines, err := license.Machines()
 		if err != nil {

@@ -71,7 +71,7 @@ func (l *License) Validate(fingerprints ...string) error {
 	client := &Client{Account: Account, Token: Token}
 	params := &validate{fingerprints}
 
-	res, err := client.Post("licenses/"+l.ID+"/actions/validate", params, &l)
+	res, err := client.Post("licenses/"+l.ID+"/actions/validate", params, l)
 	switch {
 	case err == ErrNotFound:
 		return ErrLicenseInvalid

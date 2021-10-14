@@ -6,6 +6,14 @@ import (
 	"github.com/pieoneers/jsonapi-go"
 )
 
+type HeartbeatStatusCode string
+
+const (
+	HeartbeatStatusCodeNotStarted HeartbeatStatusCode = "NOT_STARTED"
+	HeartbeatStatusCodeAlive      HeartbeatStatusCode = "ALIVE"
+	HeartbeatStatusCodeDead       HeartbeatStatusCode = "DEAD"
+)
+
 type machine struct {
 	ID          string `json:"-"`
 	Type        string `json:"-"`
@@ -50,7 +58,7 @@ type Machine struct {
 	Hostname          string                 `json:"hostname"`
 	Platform          string                 `json:"platform"`
 	Cores             int                    `json:"cores"`
-	HeartbeatStatus   string                 `json:"heartbeatStatus"`
+	HeartbeatStatus   HeartbeatStatusCode    `json:"heartbeatStatus"`
 	HeartbeatDuration int                    `json:"heartbeatDuration"`
 	Created           time.Time              `json:"created"`
 	Updated           time.Time              `json:"updated"`
@@ -121,9 +129,9 @@ func (m *Machine) Monitor() chan error {
 	errs := make(chan error)
 	t := time.Duration(m.HeartbeatDuration) * time.Second / 2
 
-	go func() {
-		m.ping(client, errs)
+	m.ping(client, errs)
 
+	go func() {
 		for range time.Tick(t) {
 			m.ping(client, errs)
 		}
@@ -133,7 +141,7 @@ func (m *Machine) Monitor() chan error {
 }
 
 func (m *Machine) ping(client *Client, errs chan error) {
-	if _, err := client.Post("machines/"+m.ID+"/actions/ping-heartbeat", nil, &m); err != nil {
+	if _, err := client.Post("machines/"+m.ID+"/actions/ping-heartbeat", nil, m); err != nil {
 		errs <- err
 	}
 }

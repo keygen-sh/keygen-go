@@ -35,7 +35,7 @@ const (
 	ErrorCodeTokenInvalid         ErrorCode = "TOKEN_INVALID"
 	ErrorCodeFingerprintTaken     ErrorCode = "FINGERPRINT_TAKEN"
 	ErrorCodeMachineLimitExceeded ErrorCode = "MACHINE_LIMIT_EXCEEDED"
-	ErrorCodeMachineDead          ErrorCode = "MACHINE_DEAD"
+	ErrorCodeMachineHeartbeatDead ErrorCode = "MACHINE_HEARTBEAT_DEAD"
 	ErrorCodeNotFound             ErrorCode = "NOT_FOUND"
 )
 
@@ -43,7 +43,7 @@ var (
 	ErrLicenseTokenInvalid     = errors.New("authentication token is invalid")
 	ErrMachineAlreadyActivated = errors.New("machine is already activated")
 	ErrMachineLimitExceeded    = errors.New("machine limit has been exceeded")
-	ErrMachineDead             = errors.New("machine does not exist")
+	ErrMachineHeartbeatDead    = errors.New("machine heartbeat is dead")
 	ErrNotFound                = errors.New("resource does not exist")
 )
 
@@ -151,8 +151,8 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 			return response, ErrMachineLimitExceeded
 		case code == ErrorCodeTokenInvalid:
 			return response, ErrLicenseTokenInvalid
-		case code == ErrorCodeMachineDead:
-			return response, ErrMachineDead
+		case code == ErrorCodeMachineHeartbeatDead:
+			return response, ErrMachineHeartbeatDead
 		case code == ErrorCodeNotFound:
 			return response, ErrNotFound
 		default:

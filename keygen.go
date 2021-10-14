@@ -18,9 +18,7 @@ var (
 
 	// Channel is the release channel used when checking for upgrades.
 	Channel = "stable"
-)
 
-const (
 	// Platform is the release platform used when checking for upgrades
 	// and when activating machines.
 	Platform = runtime.GOOS + "_" + runtime.GOARCH

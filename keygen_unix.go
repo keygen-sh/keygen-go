@@ -3,7 +3,7 @@
 
 package keygen
 
-const (
+var (
 	// Filetype is the release filetype used when checking for upgrades.
 	Filetype = "bin"
 )

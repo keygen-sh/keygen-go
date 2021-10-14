@@ -10,7 +10,8 @@ details. Then prompt the user for their license token and set `keygen.Token`.
 
 The `Validate` method accepts zero or more fingerprints, which can be used to scope a license
 validation to a particular fingerprint. It will return a `License` object as well as any
-validation errors that occur.
+validation errors that occur. The `License` object can be used to perform additional actions,
+such as `license.Activate(fingerprint)`.
 
 ```go
 license, err := keygen.Validate(fingerprint)
@@ -131,8 +132,7 @@ func upgrade() error {
   }
 
   // Download the upgrade and install it
-  err = release.Install()
-  if err != nil {
+  if err := release.Install(); err != nil {
     return err
   }
 

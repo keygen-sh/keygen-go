@@ -62,6 +62,30 @@ if err := release.Install(); err != nil {
 fmt.Println("Upgrade complete! Please restart.")
 ```
 
+## `keygen.Genuine(licenseKey, schemeCode)`
+
+Cryptographically verify and decode a signed license key. This is useful for checking if a license
+key is genuine in offline or air-gapped environments. Returns the key's decoded dataset and any
+errors that occurred during verification, e.g. `ErrLicenseNotGenuine`.
+
+```go
+dataset, err := keygen.Genuine(licenseKey, keygen.SchemeCodeEd25519)
+switch {
+case err == keygen.ErrLicenseNotGenuine:
+  fmt.Println("License key is not genuine!")
+
+  return
+case err != nil:
+  fmt.Println("Genuine check failed!")
+
+  return
+}
+
+fmt.Printf("Decoded dataset: %s\n", dataset)
+```
+
+---
+
 ## License activation example
 
 ```go

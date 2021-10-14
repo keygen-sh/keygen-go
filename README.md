@@ -70,6 +70,8 @@ Cryptographically verify and decode a signed license key. This is useful for che
 key is genuine in offline or air-gapped environments. Returns the key's decoded dataset and any
 errors that occurred during cryptographic verification, e.g. `ErrLicenseNotGenuine`.
 
+Requires that `keygen.PublicKey` is set.
+
 ```go
 dataset, err := keygen.Genuine(licenseKey, keygen.SchemeCodeEd25519)
 switch {

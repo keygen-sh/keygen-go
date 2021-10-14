@@ -3,7 +3,9 @@
 Package [`keygen`](https://pkg.go.dev/github.com/keygen-sh/keygen-go) allows Go programs to
 license and remotely update themselves using the [keygen.sh](https://keygen.sh) service.
 
-## `keygen.Validate(fingerprint)`
+## Usage
+
+### `keygen.Validate(fingerprint)`
 
 To validate a license, configure `keygen.Account` and `keygen.Product` with your Keygen account
 details. Then prompt the user for their license token and set `keygen.Token`.
@@ -33,7 +35,7 @@ case err != nil:
 fmt.Println("License is valid!")
 ```
 
-## `keygen.Upgrade(currentVersion)`
+### `keygen.Upgrade(currentVersion)`
 
 Check for an upgrade. When an upgrade is available, a `Release` will be returned which will
 allow the update to be installed, replacing the currently running binary. When an upgrade
@@ -62,11 +64,11 @@ if err := release.Install(); err != nil {
 fmt.Println("Upgrade complete! Please restart.")
 ```
 
-## `keygen.Genuine(licenseKey, schemeCode)`
+### `keygen.Genuine(licenseKey, schemeCode)`
 
 Cryptographically verify and decode a signed license key. This is useful for checking if a license
 key is genuine in offline or air-gapped environments. Returns the key's decoded dataset and any
-errors that occurred during verification, e.g. `ErrLicenseNotGenuine`.
+errors that occurred during cryptographic verification, e.g. `ErrLicenseNotGenuine`.
 
 ```go
 dataset, err := keygen.Genuine(licenseKey, keygen.SchemeCodeEd25519)
@@ -86,7 +88,9 @@ fmt.Printf("Decoded dataset: %s\n", dataset)
 
 ---
 
-## License activation example
+## Examples
+
+### License activation
 
 ```go
 import "github.com/keygen-sh/keygen-go"
@@ -129,7 +133,7 @@ func activate() error {
 }
 ```
 
-## Automatic upgrade example
+### Automatic upgrade example
 
 ```go
 import "github.com/keygen-sh/keygen-go"

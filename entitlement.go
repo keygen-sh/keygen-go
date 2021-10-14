@@ -2,11 +2,13 @@ package keygen
 
 import "time"
 
+type EntitlementCode string
+
 // Entitlement represents a Keygen entitlement object.
 type Entitlement struct {
 	ID       string                 `json:"-"`
 	Type     string                 `json:"-"`
-	Code     string                 `json:"code"`
+	Code     EntitlementCode        `json:"code"`
 	Created  time.Time              `json:"created"`
 	Updated  time.Time              `json:"updated"`
 	Metadata map[string]interface{} `json:"metadata"`

@@ -2,9 +2,12 @@ package keygen
 
 import (
 	"crypto/ed25519"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
+	"fmt"
+	"net/url"
 	"strings"
 )
 
@@ -19,6 +22,8 @@ var (
 	ErrLicenseSchemeMissing      = errors.New("license scheme is missing")
 	ErrLicenseKeyMissing         = errors.New("license key is missing")
 	ErrLicenseNotGenuine         = errors.New("license key is not genuine")
+	ErrResponseSignatureInvalid  = errors.New("response signature was invalid")
+	ErrResponseDigestInvalid     = errors.New("response digest was invalid")
 	ErrPublicKeyMissing          = errors.New("public key is missing")
 	ErrPublicKeyInvalid          = errors.New("public key is invalid")
 )
@@ -28,10 +33,6 @@ var (
 // key will be returned. An error will be returned if the key is not genuine or
 // otherwise invalid, e.g. ErrLicenseNotGenuine.
 func Genuine(licenseKey string, signingScheme SchemeCode) ([]byte, error) {
-	if PublicKey == "" {
-		return nil, ErrPublicKeyMissing
-	}
-
 	if licenseKey == "" {
 		return nil, ErrLicenseKeyMissing
 	}
@@ -51,6 +52,10 @@ func Genuine(licenseKey string, signingScheme SchemeCode) ([]byte, error) {
 }
 
 func verifyEd25519SignedKey(signedKey string) ([]byte, error) {
+	if PublicKey == "" {
+		return nil, ErrPublicKeyMissing
+	}
+
 	pubKey, err := hex.DecodeString(PublicKey)
 	if err != nil {
 		return nil, ErrPublicKeyInvalid
@@ -72,7 +77,7 @@ func verifyEd25519SignedKey(signedKey string) ([]byte, error) {
 		return nil, ErrLicenseNotGenuine
 	}
 
-	message := []byte("key/" + encDataset)
+	msg := []byte("key/" + encDataset)
 	sig, err := base64.URLEncoding.DecodeString(encSig)
 	if err != nil {
 		return nil, ErrLicenseNotGenuine
@@ -83,9 +88,82 @@ func verifyEd25519SignedKey(signedKey string) ([]byte, error) {
 		return nil, ErrLicenseNotGenuine
 	}
 
-	if ok := ed25519.Verify(pubKey, message, sig); !ok {
+	if ok := ed25519.Verify(pubKey, msg, sig); !ok {
 		return nil, ErrLicenseNotGenuine
 	}
 
 	return dataset, nil
+}
+
+func verifyResponseSignature(response *Response) error {
+	if PublicKey == "" {
+		return ErrPublicKeyMissing
+	}
+
+	pubKey, err := hex.DecodeString(PublicKey)
+	if err != nil {
+		return ErrPublicKeyInvalid
+	}
+
+	if l := len(pubKey); l != ed25519.PublicKeySize {
+		return ErrPublicKeyInvalid
+	}
+
+	url, err := url.Parse(response.URL)
+	if err != nil {
+		return err
+	}
+
+	shasum := sha256.Sum256(response.Body)
+	digest := "sha-256=" + base64.StdEncoding.EncodeToString(shasum[:])
+
+	if digest != response.Headers.Get("Digest") {
+		return ErrResponseDigestInvalid
+	}
+
+	date := response.Headers.Get("Date")
+	method := strings.ToLower(response.Method)
+	host := url.Host
+	path := url.Path
+	if url.RawQuery != "" {
+		path += "?" + url.RawQuery
+	}
+
+	sigHeader := response.Headers.Get("Keygen-Signature")
+	sigParams := parseSignatureHeader(sigHeader)
+	sig := sigParams["signature"]
+	msg := fmt.Sprintf(
+		"(request-target): %s %s\nhost: %s\ndate: %s\ndigest: %s",
+		method,
+		path,
+		host,
+		date,
+		digest,
+	)
+
+	msgBytes := []byte(msg)
+	sigBytes, err := base64.StdEncoding.DecodeString(sig)
+	if err != nil {
+		return err
+	}
+
+	if ok := ed25519.Verify(pubKey, msgBytes, sigBytes); !ok {
+		return ErrResponseSignatureInvalid
+	}
+
+	return nil
+}
+
+func parseSignatureHeader(header string) map[string]string {
+	params := make(map[string]string)
+
+	for _, param := range strings.Split(header, ",") {
+		kv := strings.SplitN(param, "=", 2)
+		k := strings.TrimLeft(kv[0], " ")
+		v := strings.Trim(kv[1], `"`)
+
+		params[k] = v
+	}
+
+	return params
 }

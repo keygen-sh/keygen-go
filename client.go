@@ -47,6 +47,8 @@ type Client struct {
 }
 
 type Response struct {
+	Method   string
+	URL      string
 	Headers  http.Header
 	Document *jsonapi.Document
 	Body     []byte
@@ -119,9 +121,17 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 	}
 
 	response := &Response{
+		Method:  method,
+		URL:     url,
 		Status:  res.StatusCode,
 		Headers: res.Header,
 		Body:    out,
+	}
+
+	if PublicKey != "" {
+		if err := verifyResponseSignature(response); err != nil {
+			return nil, err
+		}
 	}
 
 	if response.Status == http.StatusNoContent || len(out) == 0 {

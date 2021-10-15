@@ -44,6 +44,7 @@ var (
 	ErrMachineAlreadyActivated = errors.New("machine is already activated")
 	ErrMachineLimitExceeded    = errors.New("machine limit has been exceeded")
 	ErrMachineHeartbeatDead    = errors.New("machine heartbeat is dead")
+	ErrNotAuthorized           = errors.New("token is not authorized to perform the request")
 	ErrNotFound                = errors.New("resource does not exist")
 )
 
@@ -141,6 +142,10 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 
 	response.Document = doc
 
+	if response.Status == http.StatusForbidden {
+		return response, ErrNotAuthorized
+	}
+
 	if len(doc.Errors) > 0 {
 		code := ErrorCode(doc.Errors[0].Code)
 
@@ -156,7 +161,7 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 		case code == ErrorCodeNotFound:
 			return response, ErrNotFound
 		default:
-			return response, fmt.Errorf("an error occurred (id=%s status=%d response='%s')", res.Header.Get("x-request-id"), res.StatusCode, out)
+			return response, fmt.Errorf("an error occurred: id=%s status=%d response='%s'", res.Header.Get("x-request-id"), res.StatusCode, out)
 		}
 	}
 

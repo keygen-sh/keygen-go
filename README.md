@@ -92,12 +92,19 @@ fmt.Printf("Decoded dataset: %s\n", dataset)
 
 ## Examples
 
-### License activation
+### License activation example
 
 ```go
-import "github.com/keygen-sh/keygen-go"
+package main
 
-func activate() error {
+import (
+  "fmt"
+
+  "github.com/google/uuid"
+  "github.com/keygen-sh/keygen-go"
+)
+
+func main() {
   keygen.Account = os.Getenv("KEYGEN_ACCOUNT")
   keygen.Product = os.Getenv("KEYGEN_PRODUCT")
   keygen.Token = os.Getenv("KEYGEN_TOKEN")
@@ -115,20 +122,20 @@ func activate() error {
     case err == keygen.ErrMachineLimitExceeded:
       fmt.Println("Machine limit has been exceeded!")
 
-      return err
+      return
     case err != nil:
       fmt.Println("Machine activation failed!")
 
-      return err
+      return
     }
   case err == keygen.ErrLicenseExpired:
     fmt.Println("License is expired!")
 
-    return err
+    return
   case err != nil:
     fmt.Println("License is invalid!")
 
-    return err
+    return
   }
 
   fmt.Println("License is activated!")
@@ -138,15 +145,27 @@ func activate() error {
 ### Automatic upgrade example
 
 ```go
-import "github.com/keygen-sh/keygen-go"
+package main
 
-func upgrade() error {
+import (
+  "fmt"
+  "os"
+
+  "github.com/keygen-sh/keygen-go"
+)
+
+const (
+  // The current version of the program
+  currentVersion = "1.0.0"
+)
+
+func main() {
   keygen.Account = os.Getenv("KEYGEN_ACCOUNT")
   keygen.Product = os.Getenv("KEYGEN_PRODUCT")
   keygen.Token = os.Getenv("KEYGEN_TOKEN")
 
-  // The current version of the program
-  currentVersion := "1.0.0"
+  fmt.Printf("Current version: %s\n", currentVersion)
+  fmt.Println("Checking for upgrades...")
 
   // Check for upgrade
   release, err := keygen.Upgrade(currentVersion)
@@ -154,18 +173,111 @@ func upgrade() error {
   case err == keygen.ErrUpgradeNotAvailable:
     fmt.Println("No upgrade available, already at the latest version!")
 
-    return nil
+    return
   case err != nil:
     fmt.Println("Upgrade check failed!")
 
-    return err
+    return
   }
 
   // Download the upgrade and install it
-  if err := release.Install(); err != nil {
-    return err
+  err = release.Install()
+  if err != nil {
+    fmt.Println("Upgrade install failed!")
+
+    return
   }
 
-  fmt.Println("Upgrade complete! Please restart.")
+  fmt.Printf("Upgrade complete! Now on version: %s\n", release.Version)
+  fmt.Println("Restart to finish installation...")
 }
+```
+
+### Machine heartbeats example
+
+```go
+package main
+
+import (
+  "fmt"
+  "os"
+  "os/signal"
+
+  "github.com/google/uuid"
+  "github.com/keygen-sh/keygen-go"
+)
+
+func main() {
+  keygen.Account = os.Getenv("KEYGEN_ACCOUNT")
+  keygen.Product = os.Getenv("KEYGEN_PRODUCT")
+  keygen.Token = os.Getenv("KEYGEN_TOKEN")
+
+  // The current device's fingerprint (could be e.g. MAC, mobo ID, GUID, etc.)
+  fingerprint := uuid.New().String()
+
+  // Keep our example process alive
+  done := make(chan bool, 1)
+
+  // Validate the license for the current fingerprint
+  license, err := keygen.Validate(fingerprint)
+  switch {
+  case err == keygen.ErrLicenseNotActivated:
+    // Activate the current fingerprint
+    machine, err := license.Activate(fingerprint)
+    switch {
+    case err != nil:
+      fmt.Println("Machine activation failed!")
+
+      panic(err)
+    }
+
+    fmt.Println("Machine was activated!")
+
+    // Handle SIGINT and SIGTERM events and gracefully deactivate the machine
+    sigs := make(chan os.Signal, 1)
+
+    signal.Notify(sigs, os.Interrupt)
+
+    go func() {
+      for sig := range sigs {
+        fmt.Printf("Caught %v, deactivating machine and gracefully exiting...\n", sig)
+
+        if err := machine.Deactivate(); err != nil {
+          fmt.Println("Machine deactivation failed!")
+
+          panic(err)
+        }
+
+        fmt.Println("Machine was deactivated!")
+        fmt.Println("Exiting...")
+
+        done <- true
+      }
+    }()
+
+    // Start a heartbeat monitor for the current machine
+    errs := machine.Monitor()
+
+    go func() {
+      for {
+        select {
+        case err := <-errs:
+          // We want to kill the current process if our heartbeat ping fails
+          panic(err)
+        default:
+          continue
+        }
+      }
+    }()
+  case err != nil:
+    fmt.Println("License is invalid!")
+
+    return
+  }
+
+  fmt.Println("License is activated!")
+
+  <-done
+}
+
 ```

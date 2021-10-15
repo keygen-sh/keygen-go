@@ -98,9 +98,6 @@ fmt.Printf("Decoded dataset: %s\n", dataset)
 package main
 
 import (
-  "fmt"
-
-  "github.com/google/uuid"
   "github.com/keygen-sh/keygen-go"
 )
 
@@ -148,9 +145,6 @@ func main() {
 package main
 
 import (
-  "fmt"
-  "os"
-
   "github.com/keygen-sh/keygen-go"
 )
 
@@ -199,11 +193,6 @@ func main() {
 package main
 
 import (
-  "fmt"
-  "os"
-  "os/signal"
-
-  "github.com/google/uuid"
   "github.com/keygen-sh/keygen-go"
 )
 
@@ -259,15 +248,10 @@ func main() {
     errs := machine.Monitor()
 
     go func() {
-      for {
-        select {
-        case err := <-errs:
-          // We want to kill the current process if our heartbeat ping fails
-          panic(err)
-        default:
-          continue
-        }
-      }
+      err := <-errs
+
+      // We want to kill the current process if our heartbeat ping fails
+      panic(err)
     }()
   case err != nil:
     fmt.Println("License is invalid!")
@@ -279,5 +263,4 @@ func main() {
 
   <-done
 }
-
 ```

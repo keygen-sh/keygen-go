@@ -129,34 +129,45 @@ func (m *Machine) Deactivate() error {
 
 // Monitor performs, on a loop, a machine hearbeat ping for the current Machine. An
 // error channel will be returned, where any ping errors will be emitted. Pings are
-// sent according to the machine's required heartbeat window.
+// sent according to the machine's required heartbeat window, minus 30 seconds to
+// account for any network lag.
 func (m *Machine) Monitor() chan error {
-	client := &Client{Account: Account, Token: Token}
 	errs := make(chan error)
-	t := time.Duration(m.HeartbeatDuration) * time.Second / 2
+	t := (time.Duration(m.HeartbeatDuration) * time.Second) - (30 * time.Second)
 
-	m.ping(client, errs)
+	err := m.ping()
+	switch {
+	case err == ErrLicenseTokenInvalid || err == ErrNotAuthorized:
+		errs <- err
+	case err == ErrNotFound:
+		errs <- ErrMachineNotFound
+	case err == ErrMachineHeartbeatDead:
+		errs <- ErrMachineHeartbeatDead
+	case err != nil:
+		errs <- ErrHeartbeatPingFailed
+	}
 
 	go func() {
 		for range time.Tick(t) {
-			m.ping(client, errs)
+			err := m.ping()
+			switch {
+			case err == ErrMachineHeartbeatDead:
+				errs <- ErrMachineHeartbeatDead
+			case err != nil:
+				errs <- ErrHeartbeatPingFailed
+			}
 		}
 	}()
 
 	return errs
 }
 
-func (m *Machine) ping(client *Client, errs chan error) {
+func (m *Machine) ping() error {
+	client := &Client{Account: Account, Token: Token}
+
 	if _, err := client.Post("machines/"+m.ID+"/actions/ping-heartbeat", nil, m); err != nil {
-		switch {
-		case err == ErrLicenseTokenInvalid || err == ErrNotAuthorized:
-			errs <- err
-		case err == ErrNotFound:
-			errs <- ErrMachineNotFound
-		case err == ErrMachineHeartbeatDead:
-			errs <- ErrMachineHeartbeatDead
-		default:
-			errs <- ErrHeartbeatPingFailed
-		}
+		return err
 	}
+
+	return nil
 }

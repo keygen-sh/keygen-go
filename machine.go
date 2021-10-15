@@ -151,6 +151,8 @@ func (m *Machine) Monitor() chan error {
 		for range time.Tick(t) {
 			err := m.ping()
 			switch {
+			case err == ErrNotFound:
+				errs <- ErrMachineNotFound
 			case err == ErrMachineHeartbeatDead:
 				errs <- ErrMachineHeartbeatDead
 			case err != nil:

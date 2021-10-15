@@ -1,6 +1,7 @@
 package keygen
 
 import (
+	"errors"
 	"time"
 
 	"github.com/pieoneers/jsonapi-go"
@@ -12,6 +13,11 @@ const (
 	HeartbeatStatusCodeNotStarted HeartbeatStatusCode = "NOT_STARTED"
 	HeartbeatStatusCodeAlive      HeartbeatStatusCode = "ALIVE"
 	HeartbeatStatusCodeDead       HeartbeatStatusCode = "DEAD"
+)
+
+var (
+	ErrHeartbeatPingFailed = errors.New("heartbeat ping failed")
+	ErrMachineNotFound     = errors.New("machine no longer exists")
 )
 
 type machine struct {
@@ -142,6 +148,15 @@ func (m *Machine) Monitor() chan error {
 
 func (m *Machine) ping(client *Client, errs chan error) {
 	if _, err := client.Post("machines/"+m.ID+"/actions/ping-heartbeat", nil, m); err != nil {
-		errs <- err
+		switch {
+		case err == ErrLicenseTokenInvalid || err == ErrNotAuthorized:
+			errs <- err
+		case err == ErrNotFound:
+			errs <- ErrMachineNotFound
+		case err == ErrMachineHeartbeatDead:
+			errs <- ErrMachineHeartbeatDead
+		default:
+			errs <- ErrHeartbeatPingFailed
+		}
 	}
 }

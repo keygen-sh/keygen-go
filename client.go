@@ -152,6 +152,7 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 	if len(doc.Errors) > 0 {
 		code := ErrorCode(doc.Errors[0].Code)
 
+		// TODO(ezekg) Handle additional error codes
 		switch {
 		case code == ErrorCodeFingerprintTaken:
 			return response, ErrMachineAlreadyActivated

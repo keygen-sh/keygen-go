@@ -12,15 +12,8 @@ import (
 	"github.com/pieoneers/jsonapi-go"
 )
 
-const (
-	APIURL     = "https://api.keygen.sh"
-	APIVersion = "v1"
-
-	sdkVersion = "1.0.0"
-)
-
 var (
-	userAgent = "keygen/" + APIVersion + " sdk/" + sdkVersion + " go/" + runtime.Version() + " " + runtime.GOOS + "/" + runtime.GOARCH
+	userAgent = "keygen/" + APIVersion + " sdk/" + SDKVersion + " go/" + runtime.Version() + " " + runtime.GOOS + "/" + runtime.GOARCH
 	client    = &http.Client{
 		// We don't want to automatically follow redirects
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {

@@ -2,7 +2,18 @@ package keygen
 
 import "runtime"
 
+const (
+	// The current version of the SDK.
+	SDKVersion = "1.3.0"
+)
+
 var (
+	// APIURL is the URL of the API service backend.
+	APIURL = "https://api.keygen.sh"
+
+	// APIVersion is the currently supported API version.
+	APIVersion = "v1"
+
 	// Account is the Keygen account ID used globally in the binding.
 	Account string
 

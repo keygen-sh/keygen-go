@@ -16,7 +16,7 @@ const (
 )
 
 var (
-	ErrHeartbeatPingFailed = errors.New("heartbeat ping failed")
+	ErrHeartbeatPingFailed = errors.New("machine heartbeat ping failed")
 	ErrMachineNotFound     = errors.New("machine no longer exists")
 )
 
@@ -138,6 +138,7 @@ func (m *Machine) Monitor() chan error {
 	err := m.ping()
 	switch {
 	case err == ErrLicenseTokenInvalid || err == ErrNotAuthorized:
+		// Emit these errors only on first ping, for debugging purposes.
 		errs <- err
 	case err == ErrNotFound:
 		errs <- ErrMachineNotFound

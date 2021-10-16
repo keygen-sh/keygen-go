@@ -63,6 +63,11 @@ func TestValidate(t *testing.T) {
 			t.Fatalf("Should not fail to list machines: err=%v", err)
 		}
 
+		_, err = Validate(fingerprint)
+		if err != nil {
+			t.Fatalf("Should not fail revalidation: err=%v", err)
+		}
+
 		for _, machine := range machines {
 			err = machine.Deactivate()
 			if err != nil {

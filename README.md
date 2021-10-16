@@ -85,6 +85,7 @@ case err != nil:
   return
 }
 
+fmt.Println("License is valid!")
 fmt.Printf("Decoded dataset: %s\n", dataset)
 ```
 
@@ -97,9 +98,7 @@ fmt.Printf("Decoded dataset: %s\n", dataset)
 ```go
 package main
 
-import (
-  "github.com/keygen-sh/keygen-go"
-)
+import "github.com/keygen-sh/keygen-go"
 
 func main() {
   keygen.Account = os.Getenv("KEYGEN_ACCOUNT")
@@ -144,14 +143,10 @@ func main() {
 ```go
 package main
 
-import (
-  "github.com/keygen-sh/keygen-go"
-)
+import "github.com/keygen-sh/keygen-go"
 
-const (
-  // The current version of the program
-  currentVersion = "1.0.0"
-)
+// The current version of the program
+const currentVersion = "1.0.0"
 
 func main() {
   keygen.Account = os.Getenv("KEYGEN_ACCOUNT")
@@ -182,7 +177,7 @@ func main() {
     return
   }
 
-  fmt.Printf("Upgrade complete! Now on version: %s\n", release.Version)
+  fmt.Printf("Upgrade complete! Installed version: %s\n", release.Version)
   fmt.Println("Restart to finish installation...")
 }
 ```
@@ -192,9 +187,7 @@ func main() {
 ```go
 package main
 
-import (
-  "github.com/keygen-sh/keygen-go"
-)
+import "github.com/keygen-sh/keygen-go"
 
 func main() {
   keygen.Account = os.Getenv("KEYGEN_ACCOUNT")
@@ -213,16 +206,13 @@ func main() {
   case err == keygen.ErrLicenseNotActivated:
     // Activate the current fingerprint
     machine, err := license.Activate(fingerprint)
-    switch {
-    case err != nil:
+    if err != nil {
       fmt.Println("Machine activation failed!")
 
       panic(err)
     }
 
-    fmt.Println("Machine was activated!")
-
-    // Handle SIGINT and SIGTERM events and gracefully deactivate the machine
+    // Handle SIGINT and gracefully deactivate the machine
     sigs := make(chan os.Signal, 1)
 
     signal.Notify(sigs, os.Interrupt)
@@ -253,13 +243,15 @@ func main() {
       // We want to kill the current process if our heartbeat ping fails
       panic(err)
     }()
+
+    fmt.Println("Machine is activated and monitored!")
   case err != nil:
     fmt.Println("License is invalid!")
 
-    return
+    panic(err)
   }
 
-  fmt.Println("License is activated!")
+  fmt.Println("License is valid!")
 
   <-done
 }

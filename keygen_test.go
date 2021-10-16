@@ -53,6 +53,11 @@ func TestValidate(t *testing.T) {
 			}
 		}
 
+		_, err = license.Machine(fingerprint)
+		if err != nil {
+			t.Fatalf("Should not fail to retrieve the current machine: err=%v", err)
+		}
+
 		machines, err := license.Machines()
 		if err != nil {
 			t.Fatalf("Should not fail to list machines: err=%v", err)

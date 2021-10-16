@@ -158,6 +158,19 @@ func (l *License) Deactivate(id string) error {
 	return nil
 }
 
+// Machine retreives a machine, identified by the provided ID. The ID can be the machine's
+// UUID or the machine's fingerprint. An error will be returned if it does not exist.
+func (l *License) Machine(id string) (*Machine, error) {
+	client := &Client{Account: Account, Token: Token}
+	machine := &Machine{}
+
+	if _, err := client.Get("machines/"+id, nil, machine); err != nil {
+		return nil, err
+	}
+
+	return machine, nil
+}
+
 // Machines lists up to 100 machines for the license.
 func (l *License) Machines() (Machines, error) {
 	client := &Client{Account: Account, Token: Token}

@@ -85,6 +85,10 @@ func (l *License) Validate(fingerprints ...string) error {
 		return err
 	}
 
+	if validation.Code == ValidationCodeValid {
+		return nil
+	}
+
 	switch {
 	case validation.Code == ValidationCodeFingerprintScopeMismatch ||
 		validation.Code == ValidationCodeNoMachines ||

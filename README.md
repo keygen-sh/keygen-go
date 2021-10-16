@@ -85,7 +85,7 @@ case err != nil:
   return
 }
 
-fmt.Println("License is valid!")
+fmt.Println("License is genuine!")
 fmt.Printf("Decoded dataset: %s\n", dataset)
 ```
 

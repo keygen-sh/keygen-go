@@ -102,7 +102,9 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 	}
 
 	Logger.Infof("Request: method=%s url=%s size=%d", method, url, in.Len())
-	Logger.Debugf("        body=%s", in.Bytes())
+	if in.Len() > 0 {
+		Logger.Debugf("        body=%s", in.Bytes())
+	}
 
 	req, err := http.NewRequest(method, url, &in)
 	if err != nil {
@@ -144,7 +146,9 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 	}
 
 	Logger.Infof("Response: id=%s status=%d size=%d", response.ID, response.Status, response.Size)
-	Logger.Debugf("         body=%s", response.Body)
+	if response.Size > 0 {
+		Logger.Debugf("         body=%s", response.Body)
+	}
 
 	if PublicKey != "" {
 		if err := verifyResponseSignature(response); err != nil {
@@ -163,7 +167,7 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 		// Truncate the response if it's too large, just in case this is some sort of
 		// unexpected response format. (Seeing as we should always be responding with
 		// JSON, regardless of any errors that occur.)
-		tldr := string(out)
+		tldr := string(response.Body)
 		if len(tldr) > 500 {
 			tldr = tldr[0:500] + "..."
 		}

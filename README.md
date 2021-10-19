@@ -35,7 +35,7 @@ keygen.Token = "activ-d66e044ddd7dcc4169ca9492888435d3v3"
 ### `keygen.PublicKey`
 
 `PublicKey` is your account's hex-encoded Ed25519 public key, used for verifying signed license keys
-and API response signatures. When set, API reponse signatures will automatically be verified. You may
+and API response signatures. When set, API response signatures will automatically be verified. You may
 leave it blank to skip verifying response signatures. This should be hard-coded into your app.
 
 ```go

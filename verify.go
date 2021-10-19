@@ -23,8 +23,10 @@ var (
 	ErrLicenseSchemeMissing      = errors.New("license scheme is missing")
 	ErrLicenseKeyMissing         = errors.New("license key is missing")
 	ErrLicenseNotGenuine         = errors.New("license key is not genuine")
-	ErrResponseSignatureInvalid  = errors.New("response signature was invalid")
-	ErrResponseDigestInvalid     = errors.New("response digest was invalid")
+	ErrResponseSignatureMissing  = errors.New("response signature is missing")
+	ErrResponseSignatureInvalid  = errors.New("response signature is invalid")
+	ErrResponseDigestMissing     = errors.New("response digest is missing")
+	ErrResponseDigestInvalid     = errors.New("response digest is invalid")
 	ErrResponseDateInvalid       = errors.New("response date is invalid")
 	ErrResponseDateTooOld        = errors.New("response date is too old")
 	ErrPublicKeyMissing          = errors.New("public key is missing")
@@ -117,10 +119,14 @@ func verifyResponseSignature(response *Response) error {
 		return err
 	}
 
+	digestHeader := response.Headers.Get("Digest")
+	if digestHeader == "" {
+		return ErrResponseDigestMissing
+	}
+
 	shasum := sha256.Sum256(response.Body)
 	digest := "sha-256=" + base64.StdEncoding.EncodeToString(shasum[:])
-
-	if digest != response.Headers.Get("Digest") {
+	if digest != digestHeader {
 		return ErrResponseDigestInvalid
 	}
 
@@ -142,6 +148,10 @@ func verifyResponseSignature(response *Response) error {
 	}
 
 	sigHeader := response.Headers.Get("Keygen-Signature")
+	if sigHeader == "" {
+		return ErrResponseSignatureMissing
+	}
+
 	sigParams := parseSignatureHeader(sigHeader)
 	sig := sigParams["signature"]
 	msg := fmt.Sprintf(

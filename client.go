@@ -130,7 +130,7 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 
 	if PublicKey != "" {
 		if err := verifyResponseSignature(response); err != nil {
-			return nil, err
+			return response, err
 		}
 	}
 
@@ -140,7 +140,7 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 
 	doc, err := jsonapi.Unmarshal(out, model)
 	if err != nil {
-		return nil, err
+		return response, err
 	}
 
 	response.Document = doc

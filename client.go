@@ -47,10 +47,12 @@ type Client struct {
 }
 
 type Response struct {
+	ID       string
 	Method   string
 	URL      string
 	Headers  http.Header
 	Document *jsonapi.Document
+	Size     int
 	Body     []byte
 	Status   int
 }
@@ -98,8 +100,13 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 		}
 	}
 
+	Logger.Infof("Request: method=%s url=%s size=%d", method, url, in.Len())
+	Logger.Debugf("        body=%s", in.Bytes())
+
 	req, err := http.NewRequest(method, url, &in)
 	if err != nil {
+		Logger.Errorf("Error building request: method=%s url=%s err=%v", method, url, err)
+
 		return nil, err
 	}
 
@@ -110,26 +117,38 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 
 	res, err := client.Do(req)
 	if err != nil {
+		Logger.Errorf("Error performing request: method=%s url=%s err=%v", method, url, err)
+
 		return nil, err
 	}
 
+	requestID := res.Header.Get("x-request-id")
 	out, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 
 	if err != nil {
+		Logger.Errorf("Error reading response body: id=%s status=%d err=%v", requestID, res.StatusCode, err)
+
 		return nil, err
 	}
 
 	response := &Response{
+		ID:      requestID,
 		Method:  method,
 		URL:     url,
 		Status:  res.StatusCode,
 		Headers: res.Header,
+		Size:    len(out),
 		Body:    out,
 	}
 
+	Logger.Infof("Response: id=%s status=%d size=%d", response.ID, response.Status, response.Size)
+	Logger.Debugf("         body=%s", response.Body)
+
 	if PublicKey != "" {
 		if err := verifyResponseSignature(response); err != nil {
+			Logger.Errorf("Error verifying response signature: id=%s err=%v", response.ID, err)
+
 			return response, err
 		}
 	}
@@ -140,6 +159,8 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 
 	doc, err := jsonapi.Unmarshal(out, model)
 	if err != nil {
+		Logger.Errorf("Error parsing response JSON: id=%s err=%v", response.ID, err)
+
 		return response, err
 	}
 
@@ -165,7 +186,7 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 		case code == ErrorCodeNotFound:
 			return response, ErrNotFound
 		default:
-			return response, fmt.Errorf("an error occurred: id=%s status=%d response='%s'", res.Header.Get("x-request-id"), res.StatusCode, out)
+			return response, fmt.Errorf("an error occurred: id=%s status=%d response=%s", response.ID, response.Status, response.Body)
 		}
 	}
 

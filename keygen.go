@@ -33,4 +33,8 @@ var (
 	// Platform is the release platform used when checking for upgrades
 	// and when activating machines.
 	Platform = runtime.GOOS + "_" + runtime.GOARCH
+
+	// Logger is a leveled logger implementation used for printing debug,
+	// informational, warning, and error messages.
+	Logger = DefaultLogger
 )

@@ -8,6 +8,7 @@ import (
 )
 
 func TestValidate(t *testing.T) {
+	Logger = &LeveledLogger{Level: LogLevelDebug}
 	PublicKey = os.Getenv("KEYGEN_PUBLIC_KEY")
 	Account = os.Getenv("KEYGEN_ACCOUNT")
 	Product = os.Getenv("KEYGEN_PRODUCT")

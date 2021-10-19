@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"runtime"
+	"strings"
 
 	"github.com/google/go-querystring/query"
 	"github.com/pieoneers/jsonapi-go"
@@ -153,13 +154,24 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 		}
 	}
 
-	if response.Status == http.StatusNoContent || len(out) == 0 {
+	if response.Status == http.StatusNoContent || response.Size == 0 {
 		return response, nil
 	}
 
-	doc, err := jsonapi.Unmarshal(out, model)
+	doc, err := jsonapi.Unmarshal(response.Body, model)
 	if err != nil {
-		Logger.Errorf("Error parsing response JSON: id=%s err=%v", response.ID, err)
+		// Truncate the response if it's too large, just in case this is some sort of
+		// unexpected response format. (Seeing as we should always be responding with
+		// JSON, regardless of any errors that occur.)
+		tldr := string(out)
+		if len(tldr) > 500 {
+			tldr = tldr[0:500] + "..."
+		}
+
+		// Make sure a multi-line response ends up all on one line.
+		tldr = strings.Replace(tldr, "\n", "\\n", -1)
+
+		Logger.Errorf("Error parsing response JSON: id=%s size=%d body=%s err=%v", response.ID, response.Size, tldr, err)
 
 		return response, err
 	}

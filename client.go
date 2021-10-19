@@ -42,11 +42,6 @@ var (
 	ErrNotFound                = errors.New("resource does not exist")
 )
 
-type Client struct {
-	Account string
-	Token   string
-}
-
 type Response struct {
 	ID       string
 	Method   string
@@ -56,6 +51,26 @@ type Response struct {
 	Size     int
 	Body     []byte
 	Status   int
+}
+
+// Truncate the response body if it's too large, just in case this is some sort
+// of unexpected response format. We should always be responding with JSON,
+// regardless of any errors that occur, but this may be from infra.
+func (r *Response) tldr() string {
+	tldr := string(r.Body)
+	if len(tldr) > 500 {
+		tldr = tldr[0:500] + "..."
+	}
+
+	// Make sure a multi-line response ends up all on one line.
+	tldr = strings.Replace(tldr, "\n", "\\n", -1)
+
+	return tldr
+}
+
+type Client struct {
+	Account string
+	Token   string
 }
 
 func (c *Client) Post(path string, params interface{}, model interface{}) (*Response, error) {
@@ -150,9 +165,15 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 		Logger.Debugf("         body=%s", response.Body)
 	}
 
+	if response.Status >= http.StatusInternalServerError {
+		Logger.Errorf("An unexpected API error occurred: id=%s status=%d size=%d body=%s", response.ID, response.Status, response.Size, response.tldr())
+
+		return response, fmt.Errorf("an error occurred: id=%s status=%d size=%d body=%s", response.ID, response.Status, response.Size, response.tldr())
+	}
+
 	if PublicKey != "" {
 		if err := verifyResponseSignature(response); err != nil {
-			Logger.Errorf("Error verifying response signature: id=%s err=%v", response.ID, err)
+			Logger.Errorf("Error verifying response signature: id=%s status=%d size=%d body=%s err=%v", response.ID, response.Status, response.tldr(), err)
 
 			return response, err
 		}
@@ -164,18 +185,7 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 
 	doc, err := jsonapi.Unmarshal(response.Body, model)
 	if err != nil {
-		// Truncate the response if it's too large, just in case this is some sort of
-		// unexpected response format. (Seeing as we should always be responding with
-		// JSON, regardless of any errors that occur.)
-		tldr := string(response.Body)
-		if len(tldr) > 500 {
-			tldr = tldr[0:500] + "..."
-		}
-
-		// Make sure a multi-line response ends up all on one line.
-		tldr = strings.Replace(tldr, "\n", "\\n", -1)
-
-		Logger.Errorf("Error parsing response JSON: id=%s size=%d body=%s err=%v", response.ID, response.Size, tldr, err)
+		Logger.Errorf("Error parsing response JSON: id=%s status=%d size=%d body=%s err=%v", response.ID, response.Status, response.Size, response.tldr(), err)
 
 		return response, err
 	}
@@ -202,7 +212,7 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 		case code == ErrorCodeNotFound:
 			return response, ErrNotFound
 		default:
-			return response, fmt.Errorf("an error occurred: id=%s status=%d response=%s", response.ID, response.Status, response.Body)
+			return response, fmt.Errorf("an error occurred: id=%s status=%d size=%d body=%s", response.ID, response.Status, response.Size, response.Body)
 		}
 	}
 

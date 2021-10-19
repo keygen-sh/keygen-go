@@ -4,7 +4,7 @@ import "runtime"
 
 const (
 	// The current version of the SDK.
-	SDKVersion = "1.7.3"
+	SDKVersion = "1.7.4"
 )
 
 var (
@@ -36,5 +36,5 @@ var (
 
 	// Logger is a leveled logger implementation used for printing debug,
 	// informational, warning, and error messages.
-	Logger = DefaultLogger
+	Logger LoggerInterface = &LeveledLogger{Level: LogLevelError}
 )

@@ -15,8 +15,6 @@ const (
 	LogLevelDebug
 )
 
-var DefaultLogger LoggerInterface = &LeveledLogger{Level: LogLevelError}
-
 type LeveledLogger struct {
 	Level LogLevel
 }

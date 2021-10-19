@@ -3,6 +3,72 @@
 Package [`keygen`](https://pkg.go.dev/github.com/keygen-sh/keygen-go) allows Go programs to
 license and remotely update themselves using the [keygen.sh](https://keygen.sh) service.
 
+## Config
+
+### `keygen.Account`
+
+`Account` is your Keygen account ID used globally in the binding. All requests will be made
+to this account. This should be hard-coded into your app.
+
+```go
+keygen.Product = "1fddcec8-8dd3-4d8d-9b16-215cac0f9b52"
+```
+
+### `keygen.Product`
+
+`Product` is your Keygen product ID used globally in the binding. All license validations and
+upgrade requests will be scoped to this product. This should be hard-coded into your app.
+
+```go
+keygen.Product = "1f086ec9-a943-46ea-9da4-e62c2180c2f4"
+```
+
+### `keygen.Token`
+
+`Token` is an activation token belonging to the licensee. This will be used for license validations,
+activations, deactivations and upgrade requests. You will need to prompt the end-user for this.
+
+```go
+keygen.Token = "activ-d66e044ddd7dcc4169ca9492888435d3v3"
+```
+
+### `keygen.PublicKey`
+
+`PublicKey` is your account's hex-encoded Ed25519 public key, used for verifying signed license keys
+and API response signatures. When set, API reponse signatures will automatically be verified. You may
+leave it blank to skip verifying response signatures. This should be hard-coded into your app.
+
+```go
+keygen.PublicKey = "e8601e48b69383ba520245fd07971e983d06d22c4257cfd82304601479cee788"
+```
+
+### `keygen.Channel`
+
+`Channel` is the release channel used when checking for upgrades. Defaults to `stable`. You may
+provide a different channel, one of: `stable`, `rc`, `beta`, `alpha` or `dev`.
+
+```go
+keygen.Channel = "dev"
+```
+
+### `keygen.Platform`
+
+`Platform` is the release platform used when checking for upgrades and when activating machines.
+Defaults to `runtime.GOOS + "_" + runtime.GOARCH`. You may provide a custom platform.
+
+```go
+keygen.Platform = "win32"
+```
+
+### `keygen.Logger`
+
+`Logger` is a leveled logger implementation used for printing debug, informational, warning, and
+error messages. You may provide your own logger which implements `LoggerInterface`:
+
+```go
+keygen.Logger = &CustomLogger{}
+```
+
 ## Usage
 
 ### `keygen.Validate(fingerprint)`

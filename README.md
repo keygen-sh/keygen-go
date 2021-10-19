@@ -11,7 +11,7 @@ license and remotely update themselves using the [keygen.sh](https://keygen.sh) 
 to this account. This should be hard-coded into your app.
 
 ```go
-keygen.Product = "1fddcec8-8dd3-4d8d-9b16-215cac0f9b52"
+keygen.Account = "1fddcec8-8dd3-4d8d-9b16-215cac0f9b52"
 ```
 
 ### `keygen.Product`

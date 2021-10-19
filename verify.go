@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 )
 
 type SchemeCode string
@@ -24,6 +25,8 @@ var (
 	ErrLicenseNotGenuine         = errors.New("license key is not genuine")
 	ErrResponseSignatureInvalid  = errors.New("response signature was invalid")
 	ErrResponseDigestInvalid     = errors.New("response digest was invalid")
+	ErrResponseDateInvalid       = errors.New("response date is invalid")
+	ErrResponseDateTooOld        = errors.New("response date is too old")
 	ErrPublicKeyMissing          = errors.New("public key is missing")
 	ErrPublicKeyInvalid          = errors.New("public key is invalid")
 )
@@ -122,6 +125,15 @@ func verifyResponseSignature(response *Response) error {
 	}
 
 	date := response.Headers.Get("Date")
+	t, err := time.Parse(time.RFC1123, date)
+	if err != nil {
+		return ErrResponseDateInvalid
+	}
+
+	if time.Since(t) > time.Duration(5)*time.Minute {
+		return ErrResponseDateTooOld
+	}
+
 	method := strings.ToLower(response.Method)
 	host := url.Host
 	path := url.Path
@@ -144,7 +156,7 @@ func verifyResponseSignature(response *Response) error {
 	msgBytes := []byte(msg)
 	sigBytes, err := base64.StdEncoding.DecodeString(sig)
 	if err != nil {
-		return err
+		return ErrResponseSignatureInvalid
 	}
 
 	if ok := ed25519.Verify(pubKey, msgBytes, sigBytes); !ok {

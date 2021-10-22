@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/inconshreveable/go-update"
+	"github.com/keygen-sh/go-update"
 )
 
 var (

@@ -63,10 +63,11 @@ keygen.Platform = "win32"
 ### `keygen.Logger`
 
 `Logger` is a leveled logger implementation used for printing debug, informational, warning, and
-error messages. You may provide your own logger which implements `LoggerInterface`:
+error messages. The default log level is `LogLevelError`. You may provide your own logger which
+implements `LoggerInterface`.
 
 ```go
-keygen.Logger = &CustomLogger{}
+keygen.Logger = &CustomLogger{Level: LogLevelDebug}
 ```
 
 ## Usage

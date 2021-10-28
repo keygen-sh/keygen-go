@@ -3,6 +3,7 @@ package keygen
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -24,6 +25,14 @@ func TestValidate(t *testing.T) {
 	case err == ErrLicenseInvalid:
 		t.Fatalf("Should be a valid license: err=%v", err)
 	case err == ErrLicenseNotActivated:
+		if license.ID == "" {
+			t.Fatalf("Should have a correctly set license ID: license=%v", license)
+		}
+
+		if ts := license.LastValidated; ts == nil || time.Now().Add(time.Duration(-time.Second)).After(*ts) {
+			t.Fatalf("Should have a correct last validated timestamp: ts=%v", ts)
+		}
+
 		machine, err := license.Activate(fingerprint)
 		if err != nil {
 			t.Fatalf("Should not fail activation: err=%v", err)

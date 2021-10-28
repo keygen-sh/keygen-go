@@ -3,7 +3,7 @@ package keygen
 import (
 	"time"
 
-	"github.com/pieoneers/jsonapi-go"
+	"github.com/keygen-sh/jsonapi-go"
 )
 
 // Artifact represents a Keygen artifact object.

@@ -43,6 +43,19 @@ func (v validate) GetMeta() interface{} {
 }
 
 type validation struct {
+	License License `json:"-"`
+	Result  result  `json:"-"`
+}
+
+func (v *validation) SetData(to func(target interface{}) error) error {
+	return to(&v.License)
+}
+
+func (v *validation) SetMeta(to func(target interface{}) error) error {
+	return to(&v.Result)
+}
+
+type result struct {
 	Code  ValidationCode `json:"constant"`
 	Valid bool           `json:"valid"`
 }

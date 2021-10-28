@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/google/go-querystring/query"
-	"github.com/pieoneers/jsonapi-go"
+	"github.com/keygen-sh/jsonapi-go"
 )
 
 var (

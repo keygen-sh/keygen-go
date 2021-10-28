@@ -1,13 +1,12 @@
 package keygen
 
 import (
-	"encoding/json"
 	"errors"
 	"os"
 	"runtime"
 	"time"
 
-	"github.com/pieoneers/jsonapi-go"
+	"github.com/keygen-sh/jsonapi-go"
 )
 
 var (
@@ -70,43 +69,41 @@ type limit struct {
 func (l *License) Validate(fingerprints ...string) error {
 	client := &Client{Account: Account, Token: Token}
 	params := &validate{fingerprints}
-
-	res, err := client.Post("licenses/"+l.ID+"/actions/validate", params, l)
-	switch {
-	case err == ErrNotFound:
-		return ErrLicenseInvalid
-	case err != nil:
-		return err
-	}
-
-	// FIXME(ezekg) The jsonapi lib doesn't know how to unmarshal document meta
 	validation := &validation{}
-	if err := json.Unmarshal(res.Document.Meta, validation); err != nil {
-		return err
+
+	if _, err := client.Post("licenses/"+l.ID+"/actions/validate", params, validation); err != nil {
+		switch {
+		case err == ErrNotFound:
+			return ErrLicenseInvalid
+		default:
+			return err
+		}
 	}
 
-	if validation.Code == ValidationCodeValid {
+	*l = validation.License
+
+	if validation.Result.Code == ValidationCodeValid {
 		return nil
 	}
 
 	switch {
-	case validation.Code == ValidationCodeFingerprintScopeMismatch ||
-		validation.Code == ValidationCodeNoMachines ||
-		validation.Code == ValidationCodeNoMachine:
+	case validation.Result.Code == ValidationCodeFingerprintScopeMismatch ||
+		validation.Result.Code == ValidationCodeNoMachines ||
+		validation.Result.Code == ValidationCodeNoMachine:
 		return ErrLicenseNotActivated
-	case validation.Code == ValidationCodeExpired:
+	case validation.Result.Code == ValidationCodeExpired:
 		return ErrLicenseExpired
-	case validation.Code == ValidationCodeSuspended:
+	case validation.Result.Code == ValidationCodeSuspended:
 		return ErrLicenseSuspended
-	case validation.Code == ValidationCodeTooManyMachines:
+	case validation.Result.Code == ValidationCodeTooManyMachines:
 		return ErrLicenseTooManyMachines
-	case validation.Code == ValidationCodeTooManyCores:
+	case validation.Result.Code == ValidationCodeTooManyCores:
 		return ErrLicenseTooManyCores
-	case validation.Code == ValidationCodeFingerprintScopeRequired ||
-		validation.Code == ValidationCodeFingerprintScopeEmpty:
+	case validation.Result.Code == ValidationCodeFingerprintScopeRequired ||
+		validation.Result.Code == ValidationCodeFingerprintScopeEmpty:
 		return ErrFingerprintMissing
-	case validation.Code == ValidationCodeProductScopeRequired ||
-		validation.Code == ValidationCodeProductScopeEmpty:
+	case validation.Result.Code == ValidationCodeProductScopeRequired ||
+		validation.Result.Code == ValidationCodeProductScopeEmpty:
 		return ErrProductMissing
 	default:
 		return ErrLicenseInvalid

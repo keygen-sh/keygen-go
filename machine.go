@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/pieoneers/jsonapi-go"
+	"github.com/keygen-sh/jsonapi-go"
 )
 
 type HeartbeatStatusCode string

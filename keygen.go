@@ -4,7 +4,7 @@ import "runtime"
 
 const (
 	// The current version of the SDK.
-	SDKVersion = "1.7.9"
+	SDKVersion = "1.7.10"
 )
 
 var (

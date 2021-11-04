@@ -3,6 +3,7 @@ package keygen
 import (
 	"crypto"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"net/http"
 	"time"
@@ -65,14 +66,18 @@ func (r *Release) Install() error {
 	opts := update.Options{}
 
 	if s := r.Signature; s != "" {
-		if UpgradeKey != "" {
+		if k := UpgradeKey; k != "" {
 			opts.Signature, err = base64.RawStdEncoding.DecodeString(s)
 			if err != nil {
 				return err
 			}
 
+			opts.PublicKey, err = hex.DecodeString(k)
+			if err != nil {
+				return err
+			}
+
 			opts.Verifier = ed25519phVerifier{}
-			opts.PublicKey = UpgradeKey
 		}
 	}
 

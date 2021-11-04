@@ -20,7 +20,7 @@ type Release struct {
 	Version  string                 `json:"version"`
 	Filename string                 `json:"filename"`
 	Filetype string                 `json:"filetype"`
-	Filesize string                 `json:"filesize"`
+	Filesize int64                  `json:"filesize"`
 	Platform string                 `json:"platform"`
 	Channel  string                 `json:"channel"`
 	Created  time.Time              `json:"created"`

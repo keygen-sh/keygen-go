@@ -4,7 +4,7 @@ import "runtime"
 
 const (
 	// The current version of the SDK.
-	SDKVersion = "1.8.0"
+	SDKVersion = "1.9.0-alpha.1"
 )
 
 var (
@@ -26,6 +26,11 @@ var (
 	// PublicKey is the Keygen public key used for verifying license keys
 	// and API response signatures.
 	PublicKey string
+
+	// UpgradeKey is a developer's public key used for verifying that an
+	// upgrade was signed by the developer. You can generate an upgrade
+	// key using Keygen's CLI.
+	UpgradeKey string
 
 	// Channel is the release channel used when checking for upgrades.
 	Channel = "stable"

@@ -1,11 +1,14 @@
 package keygen
 
 import (
+	"crypto"
+	"encoding/base64"
 	"errors"
 	"net/http"
 	"time"
 
 	"github.com/keygen-sh/go-update"
+	"github.com/oasisprotocol/curve25519-voi/primitives/ed25519"
 )
 
 var (
@@ -14,19 +17,22 @@ var (
 
 // Release represents a Keygen release object.
 type Release struct {
-	ID       string                 `json:"-"`
-	Type     string                 `json:"-"`
-	Name     string                 `json:"name"`
-	Version  string                 `json:"version"`
-	Filename string                 `json:"filename"`
-	Filetype string                 `json:"filetype"`
-	Filesize int64                  `json:"filesize"`
-	Platform string                 `json:"platform"`
-	Channel  string                 `json:"channel"`
-	Created  time.Time              `json:"created"`
-	Updated  time.Time              `json:"updated"`
-	Metadata map[string]interface{} `json:"metadata"`
-	Location string                 `json:"-"`
+	ID          string                 `json:"-"`
+	Type        string                 `json:"-"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Version     string                 `json:"version"`
+	Filename    string                 `json:"filename"`
+	Filetype    string                 `json:"filetype"`
+	Filesize    int64                  `json:"filesize"`
+	Platform    string                 `json:"platform"`
+	Channel     string                 `json:"channel"`
+	Signature   string                 `json:"signature"`
+	Checksum    string                 `json:"checksum"`
+	Created     time.Time              `json:"created"`
+	Updated     time.Time              `json:"updated"`
+	Metadata    map[string]interface{} `json:"metadata"`
+	Location    string                 `json:"-"`
 }
 
 // Implement jsonapi.UnmarshalData interface
@@ -56,11 +62,45 @@ func (r *Release) Install() error {
 	}
 	defer res.Body.Close()
 
-	// TODO(ezekg) Add Ed25519 signature verification
-	// TODO(ezekg) Add SHA256 checksum verification
-	err = update.Apply(res.Body, update.Options{})
+	opts := update.Options{}
+
+	if s := r.Signature; s != "" {
+		if UpgradeKey != "" {
+			opts.Signature, err = base64.RawStdEncoding.DecodeString(s)
+			if err != nil {
+				return err
+			}
+
+			opts.Verifier = ed25519phVerifier{}
+			opts.PublicKey = UpgradeKey
+		}
+	}
+
+	if c := r.Checksum; c != "" {
+		opts.Checksum, err = base64.RawStdEncoding.DecodeString(c)
+		if err != nil {
+			return err
+		}
+
+		opts.Hash = crypto.SHA512
+	}
+
+	err = update.Apply(res.Body, opts)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+type ed25519phVerifier struct{}
+
+func (v ed25519phVerifier) VerifySignature(checksum []byte, signature []byte, _ crypto.Hash, publicKey crypto.PublicKey) error {
+	opts := &ed25519.Options{Hash: crypto.SHA512}
+	key := publicKey.(ed25519.PublicKey)
+
+	if ok := ed25519.VerifyWithOptions(key, checksum, signature, opts); !ok {
+		return errors.New("failed to verify ed25519ph signature")
 	}
 
 	return nil

@@ -131,7 +131,10 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 		return nil, err
 	}
 
-	req.Header.Add("Authorization", "Bearer "+c.Token)
+	if c.Token != "" {
+		req.Header.Add("Authorization", "Bearer "+c.Token)
+	}
+
 	req.Header.Add("Content-Type", jsonapi.ContentType)
 	req.Header.Add("Accept", jsonapi.ContentType)
 	req.Header.Add("User-Agent", ua)

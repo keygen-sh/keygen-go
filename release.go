@@ -72,12 +72,8 @@ func (r *Release) Install() error {
 				return err
 			}
 
-			opts.PublicKey, err = hex.DecodeString(k)
-			if err != nil {
-				return err
-			}
-
 			opts.Verifier = ed25519phVerifier{}
+			opts.PublicKey = k
 		}
 	}
 
@@ -102,7 +98,14 @@ type ed25519phVerifier struct{}
 
 func (v ed25519phVerifier) VerifySignature(checksum []byte, signature []byte, _ crypto.Hash, publicKey crypto.PublicKey) error {
 	opts := &ed25519.Options{Hash: crypto.SHA512}
-	key := publicKey.(ed25519.PublicKey)
+	key, err := hex.DecodeString(publicKey.(string))
+	if err != nil {
+		return errors.New("failed to decode ed25519ph public key")
+	}
+
+	if l := len(key); l != ed25519.PublicKeySize {
+		return errors.New("invalid ed25519ph public key")
+	}
 
 	if ok := ed25519.VerifyWithOptions(key, checksum, signature, opts); !ok {
 		return errors.New("failed to verify ed25519ph signature")

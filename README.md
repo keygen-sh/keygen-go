@@ -34,7 +34,7 @@ keygen.Token = "activ-d66e044ddd7dcc4169ca9492888435d3v3"
 
 ### `keygen.PublicKey`
 
-`PublicKey` is your account's hex-encoded Ed25519 public key, used for verifying signed license keys
+`PublicKey` is your Keygen account's hex-encoded Ed25519 public key, used for verifying signed license keys
 and API response signatures. When set, API response signatures will automatically be verified. You may
 leave it blank to skip verifying response signatures. This should be hard-coded into your app.
 
@@ -58,6 +58,19 @@ Defaults to `runtime.GOOS + "_" + runtime.GOARCH`. You may provide a custom plat
 
 ```go
 keygen.Platform = "win32"
+```
+
+### `keygen.UpgradeKey`
+
+`UpgradeKey` is your personal hex-encoded Ed25519ph public key, used for verifying that an upgrade was
+signed by yourself or your team using your private publishing key. This should not be equal to
+`keygen.PublicKey` — they are different keys for different purposes. When set, a release's signature
+will be verified before an upgrade is installed. This should be hard-coded into your app.
+
+You can generate a publishing key pair using Keygen's CLI.
+
+```go
+keygen.UpgradeKey = "5ec69b78d4b5d4b624699cef5faf3347dc4b06bb807ed4a2c6740129f1db7159"
 ```
 
 ### `keygen.Logger`

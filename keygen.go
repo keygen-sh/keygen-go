@@ -35,7 +35,7 @@ var (
 	Platform = runtime.GOOS + "_" + runtime.GOARCH
 
 	// UserAgent defines the user-agent string sent to the API backend,
-	// uniquely identifying your integration.
+	// uniquely identifying an integration.
 	UserAgent string
 
 	// Logger is a leveled logger implementation used for printing debug,

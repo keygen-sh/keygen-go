@@ -48,7 +48,7 @@ func Genuine(licenseKey string, signingScheme SchemeCode) ([]byte, error) {
 
 	switch {
 	case signingScheme == SchemeCodeEd25519:
-		dataset, err := verifyEd25519SignedKey(licenseKey)
+		dataset, err := verifyEd25519SignedKey(PublicKey, licenseKey)
 
 		return dataset, err
 	default:
@@ -56,12 +56,12 @@ func Genuine(licenseKey string, signingScheme SchemeCode) ([]byte, error) {
 	}
 }
 
-func verifyEd25519SignedKey(signedKey string) ([]byte, error) {
-	if PublicKey == "" {
+func verifyEd25519SignedKey(publicKey string, signedKey string) ([]byte, error) {
+	if publicKey == "" {
 		return nil, ErrPublicKeyMissing
 	}
 
-	pubKey, err := hex.DecodeString(PublicKey)
+	pubKey, err := hex.DecodeString(publicKey)
 	if err != nil {
 		return nil, ErrPublicKeyInvalid
 	}
@@ -100,12 +100,12 @@ func verifyEd25519SignedKey(signedKey string) ([]byte, error) {
 	return dataset, nil
 }
 
-func verifyResponseSignature(response *Response) error {
-	if PublicKey == "" {
+func verifyResponseSignature(publicKey string, response *Response) error {
+	if publicKey == "" {
 		return ErrPublicKeyMissing
 	}
 
-	pubKey, err := hex.DecodeString(PublicKey)
+	pubKey, err := hex.DecodeString(publicKey)
 	if err != nil {
 		return ErrPublicKeyInvalid
 	}

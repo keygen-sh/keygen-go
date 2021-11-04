@@ -118,7 +118,7 @@ func (m *Machines) SetData(to func(target interface{}) error) error {
 // Deactivate performs a machine deactivation for the current Machine. An error
 // will be returned if the machine deactivation fails.
 func (m *Machine) Deactivate() error {
-	client := &Client{Account: Account, Token: Token}
+	client := &Client{Account: Account, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 
 	if _, err := client.Delete("machines/"+m.ID, nil, nil); err != nil {
 		return err
@@ -166,7 +166,7 @@ func (m *Machine) Monitor() chan error {
 }
 
 func (m *Machine) ping() error {
-	client := &Client{Account: Account, Token: Token}
+	client := &Client{Account: Account, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 
 	if _, err := client.Post("machines/"+m.ID+"/actions/ping-heartbeat", nil, m); err != nil {
 		return err

@@ -18,7 +18,7 @@ type upgrade struct {
 }
 
 func Upgrade(currentVersion string) (*Release, error) {
-	client := &Client{Account: Account, Token: Token}
+	client := &Client{Account: Account, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	params := &upgrade{Product: Product, Version: currentVersion, Platform: Platform, Channel: Channel, Filetype: Filetype}
 	artifact := &Artifact{}
 

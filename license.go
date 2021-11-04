@@ -67,7 +67,7 @@ type limit struct {
 // returns an error if the license is invalid, e.g. ErrLicenseNotActivated,
 // ErrLicenseExpired or ErrLicenseTooManyMachines.
 func (l *License) Validate(fingerprints ...string) error {
-	client := &Client{Account: Account, Token: Token}
+	client := &Client{Account: Account, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	params := &validate{fingerprints}
 	validation := &validation{}
 
@@ -127,7 +127,7 @@ func (l *License) Genuine() ([]byte, error) {
 // error will be returned if the activation fails, e.g. ErrMachineLimitExceeded
 // or ErrMachineAlreadyActivated.
 func (l *License) Activate(fingerprint string) (*Machine, error) {
-	client := &Client{Account: Account, Token: Token}
+	client := &Client{Account: Account, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	hostname, _ := os.Hostname()
 	params := &Machine{
 		Fingerprint: fingerprint,
@@ -149,7 +149,7 @@ func (l *License) Activate(fingerprint string) (*Machine, error) {
 // can be the machine's UUID or the machine's fingerprint. An error will be returned
 // if the machine deactivation fails.
 func (l *License) Deactivate(id string) error {
-	client := &Client{Account: Account, Token: Token}
+	client := &Client{Account: Account, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 
 	_, err := client.Delete("machines/"+id, nil, nil)
 	if err != nil {
@@ -162,7 +162,7 @@ func (l *License) Deactivate(id string) error {
 // Machine retreives a machine, identified by the provided ID. The ID can be the machine's
 // UUID or the machine's fingerprint. An error will be returned if it does not exist.
 func (l *License) Machine(id string) (*Machine, error) {
-	client := &Client{Account: Account, Token: Token}
+	client := &Client{Account: Account, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	machine := &Machine{}
 
 	if _, err := client.Get("machines/"+id, nil, machine); err != nil {
@@ -174,7 +174,7 @@ func (l *License) Machine(id string) (*Machine, error) {
 
 // Machines lists up to 100 machines for the license.
 func (l *License) Machines() (Machines, error) {
-	client := &Client{Account: Account, Token: Token}
+	client := &Client{Account: Account, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	machines := Machines{}
 
 	if _, err := client.Get("licenses/"+l.ID+"/machines", limit{100}, &machines); err != nil {
@@ -186,7 +186,7 @@ func (l *License) Machines() (Machines, error) {
 
 // Machines lists up to 100 entitlements for the license.
 func (l *License) Entitlements() (Entitlements, error) {
-	client := &Client{Account: Account, Token: Token}
+	client := &Client{Account: Account, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	entitlements := Entitlements{}
 
 	if _, err := client.Get("licenses/"+l.ID+"/entitlements", limit{100}, &entitlements); err != nil {

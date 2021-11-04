@@ -4,7 +4,7 @@ import "runtime"
 
 const (
 	// The current version of the SDK.
-	SDKVersion = "1.7.10"
+	SDKVersion = "1.8.0-alpha.1"
 )
 
 var (
@@ -33,6 +33,10 @@ var (
 	// Platform is the release platform used when checking for upgrades
 	// and when activating machines.
 	Platform = runtime.GOOS + "_" + runtime.GOARCH
+
+	// UserAgent defines the user-agent string sent to the API backend,
+	// uniquely identifying your integration.
+	UserAgent string
 
 	// Logger is a leveled logger implementation used for printing debug,
 	// informational, warning, and error messages.

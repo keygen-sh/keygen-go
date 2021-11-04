@@ -69,8 +69,10 @@ func (r *Response) tldr() string {
 }
 
 type Client struct {
-	Account string
-	Token   string
+	Account   string
+	Token     string
+	PublicKey string
+	UserAgent string
 }
 
 func (c *Client) Post(path string, params interface{}, model interface{}) (*Response, error) {
@@ -95,6 +97,7 @@ func (c *Client) Delete(path string, params interface{}, model interface{}) (*Re
 
 func (c *Client) send(method string, path string, params interface{}, model interface{}) (*Response, error) {
 	url := fmt.Sprintf("%s/%s/accounts/%s/%s", APIURL, APIVersion, c.Account, path)
+	ua := strings.Join([]string{userAgent, c.UserAgent}, " ")
 	var in bytes.Buffer
 
 	if params != nil {
@@ -131,7 +134,7 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 	req.Header.Add("Authorization", "Bearer "+c.Token)
 	req.Header.Add("Content-Type", jsonapi.ContentType)
 	req.Header.Add("Accept", jsonapi.ContentType)
-	req.Header.Add("User-Agent", userAgent)
+	req.Header.Add("User-Agent", ua)
 
 	res, err := client.Do(req)
 	if err != nil {
@@ -171,8 +174,8 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 		return response, fmt.Errorf("an error occurred: id=%s status=%d size=%d body=%s", response.ID, response.Status, response.Size, response.tldr())
 	}
 
-	if PublicKey != "" {
-		if err := verifyResponseSignature(response); err != nil {
+	if c.PublicKey != "" {
+		if err := verifyResponseSignature(c.PublicKey, response); err != nil {
 			Logger.Errorf("Error verifying response signature: id=%s status=%d size=%d body=%s err=%v", response.ID, response.Status, response.tldr(), err)
 
 			return response, err

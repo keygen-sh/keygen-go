@@ -97,7 +97,7 @@ func (r *Release) Install() error {
 type ed25519phVerifier struct{}
 
 func (v ed25519phVerifier) VerifySignature(checksum []byte, signature []byte, _ crypto.Hash, publicKey crypto.PublicKey) error {
-	opts := &ed25519.Options{Hash: crypto.SHA512}
+	opts := &ed25519.Options{Hash: crypto.SHA512, Context: Product}
 	key, err := hex.DecodeString(publicKey.(string))
 	if err != nil {
 		return errors.New("failed to decode ed25519ph public key")

@@ -4,7 +4,7 @@ import "runtime"
 
 const (
 	// The current version of the SDK.
-	SDKVersion = "1.10.0"
+	SDKVersion = "1.11.0"
 )
 
 var (
@@ -37,7 +37,7 @@ var (
 
 	// Platform is the release platform used when checking for upgrades
 	// and when activating machines.
-	Platform = runtime.GOOS + "_" + runtime.GOARCH
+	Platform = runtime.GOOS + "/" + runtime.GOARCH
 
 	// UserAgent defines the user-agent string sent to the API backend,
 	// uniquely identifying an integration.

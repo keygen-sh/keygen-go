@@ -54,7 +54,7 @@ keygen.Channel = "dev"
 ### `keygen.Platform`
 
 `Platform` is the release platform used when checking for upgrades and when activating machines.
-Defaults to `runtime.GOOS + "_" + runtime.GOARCH`. You may provide a custom platform.
+Defaults to `runtime.GOOS + "/" + runtime.GOARCH`. You may provide a custom platform.
 
 ```go
 keygen.Platform = "win32"

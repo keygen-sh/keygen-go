@@ -67,7 +67,7 @@ signed by yourself or your team using your private publishing key. This should n
 `keygen.PublicKey` — they are different keys for different purposes. When set, a release's signature
 will be verified before an upgrade is installed. This should be hard-coded into your app.
 
-You can generate a publishing key pair using Keygen's CLI.
+You can generate a publishing key pair [using Keygen's CLI](https://github.com/keygen-sh/keygen-cli).
 
 ```go
 keygen.UpgradeKey = "5ec69b78d4b5d4b624699cef5faf3347dc4b06bb807ed4a2c6740129f1db7159"

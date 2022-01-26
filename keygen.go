@@ -4,7 +4,7 @@ import "runtime"
 
 const (
 	// The current version of the SDK.
-	SDKVersion = "1.11.0"
+	SDKVersion = "1.12.0"
 )
 
 var (
@@ -20,7 +20,10 @@ var (
 	// Product is the Keygen product ID used globally in the binding.
 	Product string
 
-	// Token is the Keygen API token used globally in the binding.
+	// LicenseKey is the end-user's license key used in the binding.
+	LicenseKey string
+
+	// Token is the end-user's API token used in the binding.
 	Token string
 
 	// PublicKey is the Keygen public key used for verifying license keys

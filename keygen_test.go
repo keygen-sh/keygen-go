@@ -15,6 +15,7 @@ func TestValidate(t *testing.T) {
 	PublicKey = os.Getenv("KEYGEN_PUBLIC_KEY")
 	Account = os.Getenv("KEYGEN_ACCOUNT")
 	Product = os.Getenv("KEYGEN_PRODUCT")
+	LicenseKey = os.Getenv("KEYGEN_LICENSE_KEY")
 	Token = os.Getenv("KEYGEN_TOKEN")
 
 	fingerprint := uuid.New().String()

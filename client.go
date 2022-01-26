@@ -69,10 +69,11 @@ func (r *Response) tldr() string {
 }
 
 type Client struct {
-	Account   string
-	Token     string
-	PublicKey string
-	UserAgent string
+	Account    string
+	LicenseKey string
+	Token      string
+	PublicKey  string
+	UserAgent  string
 }
 
 func (c *Client) Post(path string, params interface{}, model interface{}) (*Response, error) {
@@ -131,7 +132,10 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 		return nil, err
 	}
 
-	if c.Token != "" {
+	switch {
+	case c.LicenseKey != "":
+		req.Header.Add("Authorization", "License "+c.LicenseKey)
+	case c.Token != "":
 		req.Header.Add("Authorization", "Bearer "+c.Token)
 	}
 

@@ -23,6 +23,18 @@ upgrade requests will be scoped to this product. This should be hard-coded into 
 keygen.Product = "1f086ec9-a943-46ea-9da4-e62c2180c2f4"
 ```
 
+### `keygen.LicenseKey`
+
+`LicenseKey` a license key belonging to the end-user (licensee). This will be used for license
+validations, activations, deactivations and upgrade requests. You will need to prompt the
+end-user for this value.
+
+Setting `LicenseKey` will take precedence over `Token`.
+
+```go
+keygen.LicenseKey = "C1B6DE-39A6E3-DE1529-8559A0-4AF593-V3"
+```
+
 ### `keygen.Token`
 
 `Token` is an activation token belonging to the licensee. This will be used for license validations,

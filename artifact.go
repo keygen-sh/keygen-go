@@ -40,7 +40,7 @@ func (a *Artifact) SetRelationships(relationships map[string]interface{}) error 
 }
 
 func (a *Artifact) release() (*Release, error) {
-	client := &Client{Account: Account, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
+	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	release := &Release{}
 
 	if _, err := client.Get("releases/"+a.ReleaseId, nil, release); err != nil {

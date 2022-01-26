@@ -23,6 +23,8 @@ func TestValidate(t *testing.T) {
 	switch {
 	case err == ErrLicenseTokenInvalid:
 		t.Fatalf("Should be a valid license token: err=%v", err)
+	case err == ErrLicenseKeyInvalid:
+		t.Fatalf("Should be a valid license key: err=%v", err)
 	case err == ErrLicenseInvalid:
 		t.Fatalf("Should be a valid license: err=%v", err)
 	case err == ErrLicenseNotActivated:
@@ -120,6 +122,7 @@ func TestValidate(t *testing.T) {
 func TestUpgrade(t *testing.T) {
 	Account = os.Getenv("KEYGEN_ACCOUNT")
 	Product = os.Getenv("KEYGEN_PRODUCT")
+	LicenseKey = os.Getenv("KEYGEN_LICENSE_KEY")
 	Token = os.Getenv("KEYGEN_TOKEN")
 
 	upgrade, err := Upgrade("1.0.0")

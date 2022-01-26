@@ -27,6 +27,7 @@ type ErrorCode string
 
 const (
 	ErrorCodeTokenInvalid         ErrorCode = "TOKEN_INVALID"
+	ErrorCodeLicenseInvalid       ErrorCode = "LICENSE_INVALID"
 	ErrorCodeFingerprintTaken     ErrorCode = "FINGERPRINT_TAKEN"
 	ErrorCodeMachineLimitExceeded ErrorCode = "MACHINE_LIMIT_EXCEEDED"
 	ErrorCodeMachineHeartbeatDead ErrorCode = "MACHINE_HEARTBEAT_DEAD"
@@ -34,7 +35,8 @@ const (
 )
 
 var (
-	ErrLicenseTokenInvalid     = errors.New("authentication token is invalid")
+	ErrLicenseTokenInvalid     = errors.New("token authentication is invalid")
+	ErrLicenseKeyInvalid       = errors.New("license key authentication is invalid")
 	ErrMachineAlreadyActivated = errors.New("machine is already activated")
 	ErrMachineLimitExceeded    = errors.New("machine limit has been exceeded")
 	ErrMachineHeartbeatDead    = errors.New("machine heartbeat is dead")
@@ -217,6 +219,8 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 			return response, ErrMachineLimitExceeded
 		case code == ErrorCodeTokenInvalid:
 			return response, ErrLicenseTokenInvalid
+		case code == ErrorCodeLicenseInvalid:
+			return response, ErrLicenseKeyInvalid
 		case code == ErrorCodeMachineHeartbeatDead:
 			return response, ErrMachineHeartbeatDead
 		case code == ErrorCodeNotFound:

@@ -10,9 +10,10 @@ import (
 type HeartbeatStatusCode string
 
 const (
-	HeartbeatStatusCodeNotStarted HeartbeatStatusCode = "NOT_STARTED"
-	HeartbeatStatusCodeAlive      HeartbeatStatusCode = "ALIVE"
-	HeartbeatStatusCodeDead       HeartbeatStatusCode = "DEAD"
+	HeartbeatStatusCodeNotStarted  HeartbeatStatusCode = "NOT_STARTED"
+	HeartbeatStatusCodeAlive       HeartbeatStatusCode = "ALIVE"
+	HeartbeatStatusCodeDead        HeartbeatStatusCode = "DEAD"
+	HeartbeatStatusCodeResurrected HeartbeatStatusCode = "RESURRECTED"
 )
 
 var (

@@ -102,6 +102,10 @@ func (l *License) Validate(fingerprints ...string) error {
 	case validation.Result.Code == ValidationCodeFingerprintScopeRequired ||
 		validation.Result.Code == ValidationCodeFingerprintScopeEmpty:
 		return ErrFingerprintMissing
+	case validation.Result.Code == ValidationCodeHeartbeatNotStarted:
+		return ErrMachineHeartbeatRequired
+	case validation.Result.Code == ValidationCodeHeartbeatDead:
+		return ErrMachineHeartbeatDead
 	case validation.Result.Code == ValidationCodeProductScopeRequired ||
 		validation.Result.Code == ValidationCodeProductScopeEmpty:
 		return ErrProductMissing

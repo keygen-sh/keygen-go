@@ -35,13 +35,14 @@ const (
 )
 
 var (
-	ErrLicenseTokenInvalid     = errors.New("token authentication is invalid")
-	ErrLicenseKeyInvalid       = errors.New("license key authentication is invalid")
-	ErrMachineAlreadyActivated = errors.New("machine is already activated")
-	ErrMachineLimitExceeded    = errors.New("machine limit has been exceeded")
-	ErrMachineHeartbeatDead    = errors.New("machine heartbeat is dead")
-	ErrNotAuthorized           = errors.New("token is not authorized to perform the request")
-	ErrNotFound                = errors.New("resource does not exist")
+	ErrLicenseTokenInvalid      = errors.New("token authentication is invalid")
+	ErrLicenseKeyInvalid        = errors.New("license key authentication is invalid")
+	ErrMachineAlreadyActivated  = errors.New("machine is already activated")
+	ErrMachineLimitExceeded     = errors.New("machine limit has been exceeded")
+	ErrMachineHeartbeatRequired = errors.New("machine heartbeat is required")
+	ErrMachineHeartbeatDead     = errors.New("machine heartbeat is dead")
+	ErrNotAuthorized            = errors.New("token is not authorized to perform the request")
+	ErrNotFound                 = errors.New("resource does not exist")
 )
 
 type Response struct {

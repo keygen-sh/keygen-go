@@ -10,10 +10,17 @@ import (
 type Artifact struct {
 	ID        string    `json:"-"`
 	Type      string    `json:"-"`
-	Key       string    `json:"key"`
+	Filename  string    `json:"filename"`
+	Filetype  string    `json:"filetype"`
+	Filesize  int64     `json:"filesize"`
+	Platform  string    `json:"platform"`
+	Arch      string    `json:"arch"`
+	Signature string    `json:"signature"`
+	Checksum  string    `json:"checksum"`
 	Created   time.Time `json:"created"`
 	Updated   time.Time `json:"updated"`
 	ReleaseId string    `json:"-"`
+	URL       string    `json:"-"`
 }
 
 // Implement jsonapi.UnmarshalData interface
@@ -37,15 +44,4 @@ func (a *Artifact) SetRelationships(relationships map[string]interface{}) error 
 	}
 
 	return nil
-}
-
-func (a *Artifact) release() (*Release, error) {
-	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
-	release := &Release{}
-
-	if _, err := client.Get("releases/"+a.ReleaseId, nil, release); err != nil {
-		return nil, err
-	}
-
-	return release, nil
 }

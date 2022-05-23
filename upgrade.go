@@ -9,35 +9,19 @@ var (
 	ErrUpgradeNotAvailable = errors.New("no upgrades available (already up-to-date)")
 )
 
-type upgrade struct {
-	Product  string `url:"product"`
-	Version  string `url:"version"`
-	Platform string `url:"platform"`
-	Channel  string `url:"channel"`
-	Filetype string `url:"filetype"`
-}
-
-func Upgrade(currentVersion string) (*Release, error) {
+// Upgrade checks if an upgrade is available for the provided version.
+func Upgrade(version string) (*Release, error) {
 	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
-	params := &upgrade{Product: Product, Version: currentVersion, Platform: Platform, Channel: Channel, Filetype: Filetype}
-	artifact := &Artifact{}
+	release := &Release{}
 
-	res, err := client.Get("releases/actions/upgrade", params, artifact)
+	res, err := client.Get("releases/"+version+"/upgrade", nil, release)
 	if err != nil {
 		return nil, err
 	}
 
-	if res.Status == http.StatusNoContent {
+	if res.Status == http.StatusNotFound {
 		return nil, ErrUpgradeNotAvailable
 	}
-
-	release, err := artifact.release()
-	if err != nil {
-		return nil, err
-	}
-
-	// Add download location to upgrade
-	release.Location = res.Headers.Get("Location")
 
 	return release, nil
 }

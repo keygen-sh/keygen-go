@@ -100,7 +100,7 @@ func (c *Client) Delete(path string, params interface{}, model interface{}) (*Re
 }
 
 func (c *Client) send(method string, path string, params interface{}, model interface{}) (*Response, error) {
-	url := fmt.Sprintf("%s/%s/accounts/%s/%s", APIURL, APIVersion, c.Account, path)
+	url := fmt.Sprintf("%s/v1/accounts/%s/%s", APIURL, c.Account, path)
 	ua := strings.Join([]string{userAgent, c.UserAgent}, " ")
 	var in bytes.Buffer
 
@@ -142,6 +142,7 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 		req.Header.Add("Authorization", "Bearer "+c.Token)
 	}
 
+	req.Header.Add("Keygen-Version", APIVersion)
 	req.Header.Add("Content-Type", jsonapi.ContentType)
 	req.Header.Add("Accept", jsonapi.ContentType)
 	req.Header.Add("User-Agent", ua)

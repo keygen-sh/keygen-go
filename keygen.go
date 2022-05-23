@@ -1,10 +1,14 @@
 package keygen
 
-import "runtime"
+import (
+	"os"
+	"path/filepath"
+	"runtime"
+)
 
 const (
 	// The current version of the SDK.
-	SDKVersion = "1.13.0"
+	SDKVersion = "2.0.0-beta.1"
 )
 
 var (
@@ -12,7 +16,7 @@ var (
 	APIURL = "https://api.keygen.sh"
 
 	// APIVersion is the currently supported API version.
-	APIVersion = "v1"
+	APIVersion = "1.1"
 
 	// Account is the Keygen account ID used globally in the binding.
 	Account string
@@ -38,7 +42,11 @@ var (
 	// Channel is the release channel used when checking for upgrades.
 	Channel = "stable"
 
-	// Platform is the release platform used when checking for upgrades
+	// Executable is the name of the current program, used when installing
+	// upgrades.
+	Executable = filepath.Base(os.Args[0])
+
+	// Platform is the release platform used when installing upgrades
 	// and when activating machines.
 	Platform = runtime.GOOS + "/" + runtime.GOARCH
 

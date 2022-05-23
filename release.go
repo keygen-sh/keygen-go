@@ -6,6 +6,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"net/http"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/keygen-sh/go-update"
@@ -23,17 +25,10 @@ type Release struct {
 	Name        string                 `json:"name"`
 	Description string                 `json:"description"`
 	Version     string                 `json:"version"`
-	Filename    string                 `json:"filename"`
-	Filetype    string                 `json:"filetype"`
-	Filesize    int64                  `json:"filesize"`
-	Platform    string                 `json:"platform"`
 	Channel     string                 `json:"channel"`
-	Signature   string                 `json:"signature"`
-	Checksum    string                 `json:"checksum"`
 	Created     time.Time              `json:"created"`
 	Updated     time.Time              `json:"updated"`
 	Metadata    map[string]interface{} `json:"metadata"`
-	Location    string                 `json:"-"`
 }
 
 // Implement jsonapi.UnmarshalData interface
@@ -53,11 +48,12 @@ func (r *Release) SetData(to func(target interface{}) error) error {
 
 // Install performs an update of the current executable to the new Release.
 func (r *Release) Install() error {
-	if r.Location == "" {
-		return ErrReleaseLocationMissing
+	artifact, err := r.artifact()
+	if err != nil {
+		return err
 	}
 
-	res, err := http.Get(r.Location)
+	res, err := http.Get(artifact.URL)
 	if err != nil {
 		return err
 	}
@@ -65,7 +61,7 @@ func (r *Release) Install() error {
 
 	opts := update.Options{}
 
-	if s := r.Signature; s != "" {
+	if s := artifact.Signature; s != "" {
 		if k := UpgradeKey; k != "" {
 			opts.Signature, err = base64.RawStdEncoding.DecodeString(s)
 			if err != nil {
@@ -77,7 +73,7 @@ func (r *Release) Install() error {
 		}
 	}
 
-	if c := r.Checksum; c != "" {
+	if c := artifact.Checksum; c != "" {
 		opts.Checksum, err = base64.RawStdEncoding.DecodeString(c)
 		if err != nil {
 			return err
@@ -94,8 +90,36 @@ func (r *Release) Install() error {
 	return nil
 }
 
+// artifact retrieves the artifact for the current program, on the current platform,
+// according to the release's version.
+func (r *Release) artifact() (*Artifact, error) {
+	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
+	artifact := &Artifact{}
+
+	filename := regexp.MustCompile(`[^a-z0-9_]`).ReplaceAllString(
+		strings.ToLower(Executable+"_"+Platform+"_"+r.Version),
+		"_",
+	)
+
+	if Extension != "" {
+		filename += Extension
+	}
+
+	res, err := client.Get("releases/"+r.ID+"/artifacts/"+filename, nil, artifact)
+	if err != nil {
+		return nil, err
+	}
+
+	// Add download URL to artifact
+	artifact.URL = res.Headers.Get("Location")
+
+	return artifact, nil
+}
+
+// ed25519phVerifier handles verifying the upgrade's signature.
 type ed25519phVerifier struct{}
 
+// VerifySignature verifies the upgrade's signature with Ed25519ph.
 func (v ed25519phVerifier) VerifySignature(checksum []byte, signature []byte, _ crypto.Hash, publicKey crypto.PublicKey) error {
 	opts := &ed25519.Options{Hash: crypto.SHA512, Context: Product}
 	key, err := hex.DecodeString(publicKey.(string))

@@ -132,44 +132,47 @@ func (m *Machine) Deactivate() error {
 // error channel will be returned, where any ping errors will be emitted. Pings are
 // sent according to the machine's required heartbeat window, minus 30 seconds to
 // account for any network lag.
-func (m *Machine) Monitor() chan error {
-	errs := make(chan error)
-	t := (time.Duration(m.HeartbeatDuration) * time.Second) - (30 * time.Second)
-
-	err := m.ping()
-	switch {
-	case err == ErrLicenseTokenInvalid || err == ErrNotAuthorized:
-		// Emit these errors only on first ping, for debugging purposes.
-		errs <- err
-	case err == ErrNotFound:
-		errs <- ErrMachineNotFound
-	case err == ErrMachineHeartbeatDead:
-		errs <- ErrMachineHeartbeatDead
-	case err != nil:
-		errs <- ErrHeartbeatPingFailed
+func (m *Machine) Monitor() error {
+	if err := m.ping(); err != nil {
+		return err
 	}
 
 	go func() {
+		t := (time.Duration(m.HeartbeatDuration) * time.Second) - (30 * time.Second)
+
 		for range time.Tick(t) {
-			err := m.ping()
-			switch {
-			case err == ErrNotFound:
-				errs <- ErrMachineNotFound
-			case err == ErrMachineHeartbeatDead:
-				errs <- ErrMachineHeartbeatDead
-			case err != nil:
-				errs <- ErrHeartbeatPingFailed
+			if err := m.ping(); err != nil {
+				panic(err)
 			}
 		}
 	}()
 
-	return errs
+	return nil
+}
+
+func (m *Machine) Spawn(pid string) (*Process, error) {
+	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
+	params := &Process{
+		Pid:       pid,
+		MachineID: m.ID,
+	}
+
+	process := &Process{}
+	if _, err := client.Post("processes", params, process); err != nil {
+		return nil, err
+	}
+
+	if err := process.monitor(); err != nil {
+		return process, err
+	}
+
+	return process, nil
 }
 
 func (m *Machine) ping() error {
 	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 
-	if _, err := client.Post("machines/"+m.ID+"/actions/ping-heartbeat", nil, m); err != nil {
+	if _, err := client.Post("machines/"+m.ID+"/actions/ping", nil, m); err != nil {
 		return err
 	}
 

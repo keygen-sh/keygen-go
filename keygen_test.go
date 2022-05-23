@@ -1,6 +1,7 @@
 package keygen
 
 import (
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -17,6 +18,9 @@ func TestValidate(t *testing.T) {
 	Product = os.Getenv("KEYGEN_PRODUCT")
 	LicenseKey = os.Getenv("KEYGEN_LICENSE_KEY")
 	Token = os.Getenv("KEYGEN_TOKEN")
+
+	Executable = "sdk"
+	Platform = "test"
 
 	fingerprint := uuid.New().String()
 	license, err := Validate(fingerprint)
@@ -58,13 +62,34 @@ func TestValidate(t *testing.T) {
 			t.Fatalf("Should fail second activation: err=%v", err)
 		}
 
-		errs := machine.Monitor()
-		select {
-		case err := <-errs:
+		err = machine.Monitor()
+		if err != nil {
 			t.Fatalf("Should not fail to send first hearbeat ping: err=%v", err)
-		default:
-			if machine.HeartbeatStatus != HeartbeatStatusCodeAlive {
-				t.Fatalf("Should have a heartbeat that is alive: license=%v machine=%v", license, machine)
+		}
+
+		if machine.HeartbeatStatus != HeartbeatStatusCodeAlive {
+			t.Fatalf("Should have a heartbeat that is alive: license=%v machine=%v", license, machine)
+		}
+
+		processes := []*Process{}
+
+		for i := 0; i < 5; i++ {
+			process, err := machine.Spawn(fmt.Sprintf("proc-%d", i))
+			if err != nil {
+				t.Fatalf("Should not fail spawning process: err=%v", err)
+			}
+
+			if process.Status != ProcessStatusCodeAlive {
+				t.Fatalf("Should have a heartbeat that is alive: license=%v machine=%v process=%v", license, machine, process)
+			}
+
+			processes = append(processes, process)
+		}
+
+		for _, process := range processes {
+			err = process.Kill()
+			if err != nil {
+				t.Fatalf("Should not fail killing process: err=%v", err)
 			}
 		}
 
@@ -133,8 +158,9 @@ func TestUpgrade(t *testing.T) {
 		t.Fatalf("Should not fail upgrade: err=%v", err)
 	}
 
-	if upgrade.Location == "" {
-		t.Fatalf("Should have a download URL: upgrade=%v", upgrade)
+	err = upgrade.Install()
+	if err != nil {
+		t.Fatalf("Should not fail installing upgrade: err=%v", err)
 	}
 
 	t.Logf("upgrade=%v", upgrade)

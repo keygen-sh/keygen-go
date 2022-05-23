@@ -331,14 +331,11 @@ func main() {
     }()
 
     // Start a heartbeat monitor for the current machine
-    errs := machine.Monitor()
+    if err := machine.Monitor(); err != nil {
+      fmt.Println("Machine heartbeat monitor failed to start!")
 
-    go func() {
-      err := <-errs
-
-      // We want to kill the current process if our heartbeat ping fails
       panic(err)
-    }()
+    }
 
     fmt.Println("Machine is activated and monitored!")
   case err != nil:

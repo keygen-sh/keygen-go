@@ -101,7 +101,9 @@ keygen.Logger = &CustomLogger{Level: LogLevelDebug}
 
 ## Usage
 
-### `keygen.Validate(fingerprint)`
+The following top-level functions are available. We recommend starting here.
+
+### `keygen.Validate(fingerprints...)`
 
 To validate a license, configure `keygen.Account` and `keygen.Product` with your Keygen account
 details. Then prompt the user for their license token and set `keygen.Token`.
@@ -115,23 +117,17 @@ such as `license.Activate(fingerprint)`.
 license, err := keygen.Validate(fingerprint)
 switch {
 case err == keygen.ErrLicenseNotActivated:
-  fmt.Println("License is not activated!")
-
-  return
+  panic("License is not activated!")
 case err == keygen.ErrLicenseExpired:
-  fmt.Println("License is expired!")
-
-  return
+  panic("License is expired!")
 case err != nil:
-  fmt.Println("License is invalid!")
-
-  return
+  panic("License is invalid!")
 }
 
 fmt.Println("License is valid!")
 ```
 
-### `keygen.Upgrade(currentVersion)`
+### `keygen.Upgrade(version)`
 
 Check for an upgrade. When an upgrade is available, a `Release` will be returned which will
 allow the update to be installed, replacing the currently running binary. When an upgrade
@@ -146,43 +142,14 @@ case err == keygen.ErrUpgradeNotAvailable:
 
   return
 case err != nil:
-  fmt.Println("Upgrade check failed!")
-
-  return
+  panic("Upgrade check failed!")
 }
 
 if err := release.Install(); err != nil {
-  fmt.Println("Upgrade install failed!")
-
-  return
+  panic("Upgrade install failed!")
 }
 
 fmt.Println("Upgrade complete! Please restart.")
-```
-
-### `keygen.Genuine(licenseKey, schemeCode)`
-
-Cryptographically verify and decode a signed license key. This is useful for checking if a license
-key is genuine in offline or air-gapped environments. Returns the key's decoded dataset and any
-errors that occurred during cryptographic verification, e.g. `ErrLicenseNotGenuine`.
-
-Requires that `keygen.PublicKey` is set.
-
-```go
-dataset, err := keygen.Genuine(licenseKey, keygen.SchemeCodeEd25519)
-switch {
-case err == keygen.ErrLicenseNotGenuine:
-  fmt.Println("License key is not genuine!")
-
-  return
-case err != nil:
-  fmt.Println("Genuine check failed!")
-
-  return
-}
-
-fmt.Println("License is genuine!")
-fmt.Printf("Decoded dataset: %s\n", dataset)
 ```
 
 ---
@@ -212,22 +179,14 @@ func main() {
     machine, err := license.Activate(fingerprint)
     switch {
     case err == keygen.ErrMachineLimitExceeded:
-      fmt.Println("Machine limit has been exceeded!")
-
-      return
+      panic("Machine limit has been exceeded!")
     case err != nil:
-      fmt.Println("Machine activation failed!")
-
-      return
+      panic("Machine activation failed!")
     }
   case err == keygen.ErrLicenseExpired:
-    fmt.Println("License is expired!")
-
-    return
+    panic("License is expired!")
   case err != nil:
-    fmt.Println("License is invalid!")
-
-    return
+    panic("License is invalid!")
   }
 
   fmt.Println("License is activated!")
@@ -260,17 +219,13 @@ func main() {
 
     return
   case err != nil:
-    fmt.Println("Upgrade check failed!")
-
-    return
+    panic("Upgrade check failed!")
   }
 
   // Download the upgrade and install it
   err = release.Install()
   if err != nil {
-    fmt.Println("Upgrade install failed!")
-
-    return
+    panic("Upgrade install failed!")
   }
 
   fmt.Printf("Upgrade complete! Installed version: %s\n", release.Version)
@@ -348,4 +303,53 @@ func main() {
 
   <-done
 }
+```
+
+### Offline license files
+
+Cryptographically verify and decrypt an encrypted license file. This is useful for checking if a license
+key is genuine in offline or air-gapped environments. Returns the license file's dataset and any
+errors that occurred during verification and decryption, e.g. `ErrLicenseFileNotGenuine`.
+
+Requires that `keygen.PublicKey` is set.
+
+```go
+lic := &keygen.LicenseFile{Certificate: "-----BEGIN LICENSE FILE-----\n...", Secret: "key/..."}
+err := lic.Verify()
+switch {
+case err == keygen.ErrLicenseFileNotGenuine:
+  panic("License file is not genuine!")
+case err != nil:
+  panic(err)
+}
+
+dataset, err := lic.Decrypt("...")
+if err != nil {
+  panic(err)
+}
+
+fmt.Println("License file is genuine!")
+fmt.Printf("Decrypted dataset: %s\n", dataset)
+```
+
+### Offline license keys
+
+Cryptographically verify and decode a signed license key. This is useful for checking if a license
+key is genuine in offline or air-gapped environments. Returns the key's decoded dataset and any
+errors that occurred during cryptographic verification, e.g. `ErrLicenseKeyNotGenuine`.
+
+Requires that `keygen.PublicKey` is set.
+
+```go
+license := &keygen.License{Scheme: keygen.SchemeCodeEd25519, Key: "key/..."}
+dataset, err := license.Verify()
+switch {
+case err == keygen.ErrLicenseKeyNotGenuine:
+  panic("License key is not genuine!")
+case err != nil:
+  panic(err)
+}
+
+fmt.Println("License is genuine!")
+fmt.Printf("Decoded dataset: %s\n", dataset)
 ```

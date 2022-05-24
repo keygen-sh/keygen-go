@@ -23,7 +23,7 @@ type LicenseFile struct {
 	Type        string `json:"-"`
 	Certificate string `json:"certificate"`
 	LicenseID   string `json:"-"`
-	secret      string `json:"-"`
+	Secret      string `json:"-"`
 }
 
 // Implement jsonapi.UnmarshalData interface
@@ -52,10 +52,14 @@ func (lic *LicenseFile) SetRelationships(relationships map[string]interface{}) e
 func (lic *LicenseFile) Verify() error {
 	verifier := &verifier{PublicKey: PublicKey}
 
-	return verifier.VerifyLicenseFile(lic)
+	if err := verifier.VerifyLicenseFile(lic); err != nil {
+		return ErrLicenseFileInvalid
+	}
+
+	return nil
 }
 
-func (lic *LicenseFile) Decrypt() (*LicenseFileInfo, error) {
+func (lic *LicenseFile) Decrypt() (*LicenseFileDataset, error) {
 	cert, err := lic.certificate()
 	if err != nil {
 		return nil, err
@@ -69,20 +73,20 @@ func (lic *LicenseFile) Decrypt() (*LicenseFileInfo, error) {
 	}
 
 	// Decrypt
-	decryptor := &decryptor{Secret: lic.secret}
+	decryptor := &decryptor{Secret: lic.Secret}
 	data, err := decryptor.DecryptCertificate(cert)
 	if err != nil {
 		return nil, err
 	}
 
 	// Unmarshal
-	info := &LicenseFileInfo{}
+	dataset := &LicenseFileDataset{}
 
-	if _, err := jsonapi.Unmarshal(data, info); err != nil {
+	if _, err := jsonapi.Unmarshal(data, dataset); err != nil {
 		return nil, err
 	}
 
-	return info, nil
+	return dataset, nil
 }
 
 func (lic *LicenseFile) certificate() (*certificate, error) {
@@ -107,7 +111,7 @@ func (lic *LicenseFile) certificate() (*certificate, error) {
 	return cert, nil
 }
 
-type LicenseFileInfo struct {
+type LicenseFileDataset struct {
 	License      License      `json:"-"`
 	Entitlements Entitlements `json:"-"`
 	Issued       time.Time    `json:"issued"`
@@ -115,15 +119,15 @@ type LicenseFileInfo struct {
 	TTL          int          `json:"ttl"`
 }
 
-func (lic *LicenseFileInfo) SetData(to func(target interface{}) error) error {
+func (lic *LicenseFileDataset) SetData(to func(target interface{}) error) error {
 	return to(&lic.License)
 }
 
-func (lic *LicenseFileInfo) SetMeta(to func(target interface{}) error) error {
+func (lic *LicenseFileDataset) SetMeta(to func(target interface{}) error) error {
 	return to(&lic)
 }
 
-func (lic *LicenseFileInfo) SetIncluded(relationships []*jsonapi.ResourceObject, unmarshal func(included *jsonapi.ResourceObject, target interface{}) error) error {
+func (lic *LicenseFileDataset) SetIncluded(relationships []*jsonapi.ResourceObject, unmarshal func(included *jsonapi.ResourceObject, target interface{}) error) error {
 	for _, relationship := range relationships {
 		switch relationship.Type {
 		case "entitlements":

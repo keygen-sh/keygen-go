@@ -18,17 +18,17 @@ func (d *decryptor) DecryptCertificate(cert *certificate) ([]byte, error) {
 	// Decode parts
 	ciphertext, err := base64.StdEncoding.DecodeString(parts[0])
 	if err != nil {
-		return nil, ErrLicenseFileInvalid
+		return nil, err
 	}
 
 	iv, err := base64.StdEncoding.DecodeString(parts[1])
 	if err != nil {
-		return nil, ErrLicenseFileInvalid
+		return nil, err
 	}
 
 	tag, err := base64.StdEncoding.DecodeString(parts[2])
 	if err != nil {
-		return nil, ErrLicenseFileInvalid
+		return nil, err
 	}
 
 	// Hash secret
@@ -40,12 +40,12 @@ func (d *decryptor) DecryptCertificate(cert *certificate) ([]byte, error) {
 	// Setup AES
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, ErrLicenseFileInvalid
+		return nil, err
 	}
 
 	aes, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, ErrLicenseFileInvalid
+		return nil, err
 	}
 
 	// Append auth tag to ciphertext

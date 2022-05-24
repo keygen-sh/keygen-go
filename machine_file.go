@@ -17,14 +17,14 @@ var (
 	ErrMachineFileInvalid      = errors.New("machine file is not valid")
 )
 
-// LicenseFile represents a Keygen license file.
+// MachineFile represents a Keygen license file.
 type MachineFile struct {
 	ID          string `json:"-"`
 	Type        string `json:"-"`
 	Certificate string `json:"certificate"`
 	MachineID   string `json:"-"`
 	LicenseID   string `json:"-"`
-	secret      string `json:"-"`
+	Secret      string `json:"-"`
 }
 
 // Implement jsonapi.UnmarshalData interface
@@ -57,10 +57,14 @@ func (lic *MachineFile) SetRelationships(relationships map[string]interface{}) e
 func (lic *MachineFile) Verify() error {
 	verifier := &verifier{PublicKey: PublicKey}
 
-	return verifier.VerifyMachineFile(lic)
+	if err := verifier.VerifyMachineFile(lic); err != nil {
+		return ErrMachineFileInvalid
+	}
+
+	return nil
 }
 
-func (lic *MachineFile) Decrypt() (*MachineFileInfo, error) {
+func (lic *MachineFile) Decrypt() (*MachineFileDataset, error) {
 	cert, err := lic.certificate()
 	if err != nil {
 		return nil, err
@@ -74,20 +78,20 @@ func (lic *MachineFile) Decrypt() (*MachineFileInfo, error) {
 	}
 
 	// Decrypt
-	decryptor := &decryptor{Secret: lic.secret}
+	decryptor := &decryptor{Secret: lic.Secret}
 	data, err := decryptor.DecryptCertificate(cert)
 	if err != nil {
 		return nil, err
 	}
 
 	// Unmarshal
-	info := &MachineFileInfo{}
+	dataset := &MachineFileDataset{}
 
-	if _, err := jsonapi.Unmarshal(data, info); err != nil {
+	if _, err := jsonapi.Unmarshal(data, dataset); err != nil {
 		return nil, err
 	}
 
-	return info, nil
+	return dataset, nil
 }
 
 func (lic *MachineFile) certificate() (*certificate, error) {
@@ -112,7 +116,7 @@ func (lic *MachineFile) certificate() (*certificate, error) {
 	return cert, nil
 }
 
-type MachineFileInfo struct {
+type MachineFileDataset struct {
 	Machine      Machine      `json:"-"`
 	License      License      `json:"-"`
 	Entitlements Entitlements `json:"-"`
@@ -121,15 +125,15 @@ type MachineFileInfo struct {
 	TTL          int          `json:"ttl"`
 }
 
-func (lic *MachineFileInfo) SetData(to func(target interface{}) error) error {
+func (lic *MachineFileDataset) SetData(to func(target interface{}) error) error {
 	return to(&lic.Machine)
 }
 
-func (lic *MachineFileInfo) SetMeta(to func(target interface{}) error) error {
+func (lic *MachineFileDataset) SetMeta(to func(target interface{}) error) error {
 	return to(&lic)
 }
 
-func (lic *MachineFileInfo) SetIncluded(relationships []*jsonapi.ResourceObject, unmarshal func(included *jsonapi.ResourceObject, target interface{}) error) error {
+func (lic *MachineFileDataset) SetIncluded(relationships []*jsonapi.ResourceObject, unmarshal func(included *jsonapi.ResourceObject, target interface{}) error) error {
 	for _, relationship := range relationships {
 		switch relationship.Type {
 		case "entitlements":

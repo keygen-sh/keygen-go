@@ -150,6 +150,25 @@ func (m *Machine) Monitor() error {
 	return nil
 }
 
+func (m *Machine) Checkout() (*MachineFile, error) {
+	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
+	license := &License{}
+	lic := &MachineFile{}
+
+	if _, err := client.Get("me", nil, license); err != nil {
+		return nil, err
+	}
+
+	if _, err := client.Post("machines/"+m.ID+"/actions/check-out?encrypt=1&include=license,license.entitlements", nil, lic); err != nil {
+		return nil, err
+	}
+
+	// Pass license key + fingerprint as decryption secret
+	lic.secret = license.Key + m.Fingerprint
+
+	return lic, nil
+}
+
 func (m *Machine) Spawn(pid string) (*Process, error) {
 	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	params := &Process{

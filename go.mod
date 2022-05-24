@@ -6,7 +6,7 @@ require (
 	github.com/google/go-querystring v1.1.0
 	github.com/google/uuid v1.3.0
 	github.com/keygen-sh/go-update v1.0.0
-	github.com/keygen-sh/jsonapi-go v1.1.0
+	github.com/keygen-sh/jsonapi-go v1.2.0
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20211102120939-d5a936accd94
 )
 

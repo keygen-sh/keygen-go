@@ -40,9 +40,81 @@ func TestValidate(t *testing.T) {
 			t.Fatalf("Should have a correct last validated timestamp: ts=%v", ts)
 		}
 
+		key, err := license.Verify()
+		switch {
+		case err == ErrLicenseKeyNotGenuine:
+			t.Fatalf("Should be a genuine license key: err=%v", err)
+		case err != nil:
+			t.Fatalf("Should not fail genuine check: err=%v", err)
+		}
+
+		lic, err := license.Checkout()
+		if err != nil {
+			t.Fatalf("Should not fail checkout: err=%v", err)
+		}
+
+		err = lic.Verify()
+		switch {
+		case err == ErrLicenseFileNotGenuine:
+			t.Fatalf("Should be a genuine license file: err=%v", err)
+		case err != nil:
+			t.Fatalf("Should not fail genuine check: err=%v", err)
+		}
+
+		info, err := lic.Decrypt()
+		if err != nil {
+			t.Fatalf("Should not fail decrypt: err=%v", err)
+		}
+
+		switch {
+		case info.License.ID != license.ID:
+			t.Fatalf("Should have the correct license ID: actual=%s expected=%s", info.License.ID, license.ID)
+		case len(info.Entitlements) == 0:
+			t.Fatalf("Should have at least 1 entitlement: entitlements=%s", info.Entitlements)
+		case info.Issued.IsZero():
+			t.Fatalf("Should have an issued timestamp: ts=%v", info.Issued)
+		case info.Expiry.IsZero():
+			t.Fatalf("Should have an expiry timestamp: ts=%v", info.Expiry)
+		case info.TTL == 0:
+			t.Fatalf("Should have a TTL: ttl=%d", info.TTL)
+		}
+
 		machine, err := license.Activate(fingerprint)
 		if err != nil {
 			t.Fatalf("Should not fail activation: err=%v", err)
+		}
+
+		mic, err := machine.Checkout()
+		if err != nil {
+			t.Fatalf("Should not fail checkout: err=%v", err)
+		}
+
+		err = mic.Verify()
+		switch {
+		case err == ErrLicenseFileNotGenuine:
+			t.Fatalf("Should be a genuine machine file: err=%v", err)
+		case err != nil:
+			t.Fatalf("Should not fail genuine check: err=%v", err)
+		}
+
+		info2, err := mic.Decrypt()
+		if err != nil {
+			t.Fatalf("Should not fail decrypt: err=%v", err)
+		}
+
+		switch {
+		case info2.Machine.ID != machine.ID:
+			t.Fatalf("Should have the correct machine ID: actual=%s expected=%s", info2.Machine.ID, machine.ID)
+		case info2.License.ID != license.ID:
+			t.Fatalf("Should have the correct license ID: actual=%s expected=%s", info2.License.ID, license.ID)
+		case len(info2.Entitlements) == 0:
+			t.Fatalf("Should have at least 1 entitlement: entitlements=%s", info2.Entitlements)
+		case info2.Issued.IsZero():
+			t.Fatalf("Should have an issued timestamp: ts=%v", info2.Issued)
+		case info2.Expiry.IsZero():
+			t.Fatalf("Should have an expiry timestamp: ts=%v", info2.Expiry)
+		case info2.TTL == 0:
+			t.Fatalf("Should have a TTL: ttl=%d", info2.TTL)
 		}
 
 		// _, err = license.Activate(fingerprint)
@@ -128,15 +200,7 @@ func TestValidate(t *testing.T) {
 			t.Fatalf("Should not fail to list entitlements: err=%v", err)
 		}
 
-		dataset, err := license.Genuine()
-		switch {
-		case err == ErrLicenseNotGenuine:
-			t.Fatalf("Should be a genuine license key: err=%v", err)
-		case err != nil:
-			t.Fatalf("Should not fail genuine check: err=%v", err)
-		}
-
-		t.Logf("license=%v machines=%v entitlements=%v dataset=%s", license, machines, entitlements, dataset)
+		t.Logf("license=%v machines=%v entitlements=%v key=%s lic=%v", license, machines, entitlements, key, info)
 	case err != nil:
 		t.Fatalf("Should not fail validation: err=%v", err)
 	case err == nil:

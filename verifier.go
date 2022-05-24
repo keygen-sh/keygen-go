@@ -12,43 +12,113 @@ import (
 	"time"
 )
 
-type SchemeCode string
-
-const (
-	SchemeCodeEd25519 SchemeCode = "ED25519_SIGN"
-)
-
 var (
-	ErrLicenseSchemeNotSupported = errors.New("license scheme is not supported")
-	ErrLicenseSchemeMissing      = errors.New("license scheme is missing")
-	ErrLicenseKeyMissing         = errors.New("license key is missing")
-	ErrLicenseNotGenuine         = errors.New("license key is not genuine")
-	ErrResponseSignatureMissing  = errors.New("response signature is missing")
-	ErrResponseSignatureInvalid  = errors.New("response signature is invalid")
-	ErrResponseDigestMissing     = errors.New("response digest is missing")
-	ErrResponseDigestInvalid     = errors.New("response digest is invalid")
-	ErrResponseDateInvalid       = errors.New("response date is invalid")
-	ErrResponseDateTooOld        = errors.New("response date is too old")
-	ErrPublicKeyMissing          = errors.New("public key is missing")
-	ErrPublicKeyInvalid          = errors.New("public key is invalid")
+	ErrResponseSignatureMissing = errors.New("response signature is missing")
+	ErrResponseSignatureInvalid = errors.New("response signature is invalid")
+	ErrResponseDigestMissing    = errors.New("response digest is missing")
+	ErrResponseDigestInvalid    = errors.New("response digest is invalid")
+	ErrResponseDateInvalid      = errors.New("response date is invalid")
+	ErrResponseDateTooOld       = errors.New("response date is too old")
+	ErrPublicKeyMissing         = errors.New("public key is missing")
+	ErrPublicKeyInvalid         = errors.New("public key is invalid")
 )
 
-// Genuine checks if a license key is genuine by cryptographically verifying the
+type verifier struct {
+	PublicKey string
+}
+
+// VerifyLicenseFile checks if a license file is genuine.
+func (v *verifier) VerifyLicenseFile(lic *LicenseFile) error {
+	cert, err := lic.certificate()
+	if err != nil {
+		return err
+	}
+
+	switch {
+	case cert.Alg == "aes-256-gcm+ed25519" || cert.Alg == "base64+ed25519":
+		if v.PublicKey == "" {
+			return ErrPublicKeyMissing
+		}
+
+		pubKey, err := hex.DecodeString(v.PublicKey)
+		if err != nil {
+			return ErrPublicKeyInvalid
+		}
+
+		if l := len(pubKey); l != ed25519.PublicKeySize {
+			return ErrPublicKeyInvalid
+		}
+
+		msg := []byte("license/" + cert.Enc)
+		sig, err := base64.StdEncoding.DecodeString(cert.Sig)
+		if err != nil {
+			return ErrLicenseFileNotGenuine
+		}
+
+		if ok := ed25519.Verify(pubKey, msg, sig); !ok {
+			return ErrLicenseFileNotGenuine
+		}
+
+		return nil
+	default:
+		return ErrLicenseFileNotSupported
+	}
+}
+
+// VerifyMachineFile checks if a license file is genuine.
+func (v *verifier) VerifyMachineFile(lic *MachineFile) error {
+	cert, err := lic.certificate()
+	if err != nil {
+		return err
+	}
+
+	switch {
+	case cert.Alg == "aes-256-gcm+ed25519" || cert.Alg == "base64+ed25519":
+		if v.PublicKey == "" {
+			return ErrPublicKeyMissing
+		}
+
+		pubKey, err := hex.DecodeString(v.PublicKey)
+		if err != nil {
+			return ErrPublicKeyInvalid
+		}
+
+		if l := len(pubKey); l != ed25519.PublicKeySize {
+			return ErrPublicKeyInvalid
+		}
+
+		msg := []byte("machine/" + cert.Enc)
+		sig, err := base64.StdEncoding.DecodeString(cert.Sig)
+		if err != nil {
+			return ErrLicenseFileNotGenuine
+		}
+
+		if ok := ed25519.Verify(pubKey, msg, sig); !ok {
+			return ErrLicenseFileNotGenuine
+		}
+
+		return nil
+	default:
+		return ErrLicenseFileNotSupported
+	}
+}
+
+// Verify checks if a license key is genuine by cryptographically verifying the
 // key using your PublicKey. If the key is genuine, the decoded dataset from the
 // key will be returned. An error will be returned if the key is not genuine or
 // otherwise invalid, e.g. ErrLicenseNotGenuine.
-func Genuine(licenseKey string, signingScheme SchemeCode) ([]byte, error) {
-	if licenseKey == "" {
+func (v *verifier) VerifyLicense(license *License) ([]byte, error) {
+	if license.Key == "" {
 		return nil, ErrLicenseKeyMissing
 	}
 
-	if signingScheme == "" {
+	if license.Scheme == "" {
 		return nil, ErrLicenseSchemeMissing
 	}
 
 	switch {
-	case signingScheme == SchemeCodeEd25519:
-		dataset, err := verifyEd25519SignedKey(PublicKey, licenseKey)
+	case license.Scheme == SchemeCodeEd25519:
+		dataset, err := v.verifyKey(license.Key)
 
 		return dataset, err
 	default:
@@ -56,12 +126,12 @@ func Genuine(licenseKey string, signingScheme SchemeCode) ([]byte, error) {
 	}
 }
 
-func verifyEd25519SignedKey(publicKey string, signedKey string) ([]byte, error) {
-	if publicKey == "" {
+func (v *verifier) verifyKey(key string) ([]byte, error) {
+	if v.PublicKey == "" {
 		return nil, ErrPublicKeyMissing
 	}
 
-	pubKey, err := hex.DecodeString(publicKey)
+	pubKey, err := hex.DecodeString(v.PublicKey)
 	if err != nil {
 		return nil, ErrPublicKeyInvalid
 	}
@@ -70,7 +140,7 @@ func verifyEd25519SignedKey(publicKey string, signedKey string) ([]byte, error) 
 		return nil, ErrPublicKeyInvalid
 	}
 
-	parts := strings.SplitN(signedKey, ".", 2)
+	parts := strings.SplitN(key, ".", 2)
 	signingData := parts[0]
 	encSig := parts[1]
 
@@ -79,22 +149,22 @@ func verifyEd25519SignedKey(publicKey string, signedKey string) ([]byte, error) 
 	encDataset := parts[1]
 
 	if signingPrefix != "key" {
-		return nil, ErrLicenseNotGenuine
+		return nil, ErrLicenseKeyNotGenuine
 	}
 
 	msg := []byte("key/" + encDataset)
 	sig, err := base64.URLEncoding.DecodeString(encSig)
 	if err != nil {
-		return nil, ErrLicenseNotGenuine
+		return nil, ErrLicenseKeyNotGenuine
 	}
 
 	dataset, err := base64.URLEncoding.DecodeString(encDataset)
 	if err != nil {
-		return nil, ErrLicenseNotGenuine
+		return nil, ErrLicenseKeyNotGenuine
 	}
 
 	if ok := ed25519.Verify(pubKey, msg, sig); !ok {
-		return nil, ErrLicenseNotGenuine
+		return nil, ErrLicenseKeyNotGenuine
 	}
 
 	return dataset, nil

@@ -10,15 +10,25 @@ import (
 )
 
 var (
-	ErrLicenseNotActivated    = errors.New("license is not activated")
-	ErrLicenseExpired         = errors.New("license is expired")
-	ErrLicenseSuspended       = errors.New("license is suspended")
-	ErrLicenseTooManyMachines = errors.New("license has too many machines")
-	ErrLicenseTooManyCores    = errors.New("license has too many cores")
-	ErrLicenseNotSigned       = errors.New("license is not signed")
-	ErrLicenseInvalid         = errors.New("license is invalid")
-	ErrFingerprintMissing     = errors.New("fingerprint scope is missing")
-	ErrProductMissing         = errors.New("product scope is missing")
+	ErrLicenseSchemeNotSupported = errors.New("license scheme is not supported")
+	ErrLicenseSchemeMissing      = errors.New("license scheme is missing")
+	ErrLicenseKeyMissing         = errors.New("license key is missing")
+	ErrLicenseKeyNotGenuine      = errors.New("license key is not genuine")
+	ErrLicenseNotActivated       = errors.New("license is not activated")
+	ErrLicenseExpired            = errors.New("license is expired")
+	ErrLicenseSuspended          = errors.New("license is suspended")
+	ErrLicenseTooManyMachines    = errors.New("license has too many machines")
+	ErrLicenseTooManyCores       = errors.New("license has too many cores")
+	ErrLicenseNotSigned          = errors.New("license is not signed")
+	ErrLicenseInvalid            = errors.New("license is invalid")
+	ErrFingerprintMissing        = errors.New("fingerprint scope is missing")
+	ErrProductMissing            = errors.New("product scope is missing")
+)
+
+type SchemeCode string
+
+const (
+	SchemeCodeEd25519 SchemeCode = "ED25519_SIGN"
 )
 
 // License represents a Keygen license object.
@@ -114,16 +124,18 @@ func (l *License) Validate(fingerprints ...string) error {
 	}
 }
 
-// Genuine checks if the license's key is genuine by cryptographically verifying the
+// Verify checks if the license's key is genuine by cryptographically verifying the
 // key using your PublicKey. If the license is genuine, the decoded dataset from the
 // key will be returned. An error will be returned if the license is not genuine, or
 // if the key is not signed, e.g. ErrLicenseNotGenuine or ErrLicenseNotSigned.
-func (l *License) Genuine() ([]byte, error) {
+func (l *License) Verify() ([]byte, error) {
 	if l.Scheme == "" {
 		return nil, ErrLicenseNotSigned
 	}
 
-	return Genuine(l.Key, l.Scheme)
+	verifier := &verifier{PublicKey: PublicKey}
+
+	return verifier.VerifyLicense(l)
 }
 
 // Activate performs a machine activation for the license, identified by the provided
@@ -198,4 +210,18 @@ func (l *License) Entitlements() (Entitlements, error) {
 	}
 
 	return entitlements, nil
+}
+
+func (l *License) Checkout() (*LicenseFile, error) {
+	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
+	lic := &LicenseFile{}
+
+	if _, err := client.Post("licenses/"+l.ID+"/actions/check-out?encrypt=1&include=entitlements", nil, lic); err != nil {
+		return nil, err
+	}
+
+	// Pass license key as decryption secret
+	lic.secret = l.Key
+
+	return lic, nil
 }

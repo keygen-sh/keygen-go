@@ -61,7 +61,10 @@ func (lic *LicenseFile) Decrypt() (*LicenseFileInfo, error) {
 		return nil, err
 	}
 
-	if cert.Alg != "aes-256-gcm+ed25519" {
+	switch {
+	case cert.Alg == "aes-256-gcm+rsa-pss-sha256" || cert.Alg == "aes-256-gcm+rsa-sha256":
+		return nil, ErrLicenseFileNotSupported
+	case cert.Alg != "aes-256-gcm+ed25519":
 		return nil, ErrLicenseFileNotEncrypted
 	}
 
@@ -134,10 +137,4 @@ func (lic *LicenseFileInfo) SetIncluded(relationships []*jsonapi.ResourceObject,
 	}
 
 	return nil
-}
-
-type certificate struct {
-	Enc string `json:"enc"`
-	Sig string `json:"sig"`
-	Alg string `json:"alg"`
 }

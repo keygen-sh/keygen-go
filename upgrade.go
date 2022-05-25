@@ -31,9 +31,10 @@ func Upgrade(options UpgradeOptions) (*Release, error) {
 	release := &Release{}
 
 	if _, err := client.Get("releases/"+options.CurrentVersion+"/upgrade", params, release); err != nil {
-		if _, ok := err.(*NotFoundError); ok {
+		switch err.(type) {
+		case *NotFoundError:
 			return nil, ErrUpgradeNotAvailable
-		} else {
+		default:
 			return nil, err
 		}
 	}

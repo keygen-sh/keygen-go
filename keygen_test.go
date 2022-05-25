@@ -37,12 +37,11 @@ func TestValidate(t *testing.T) {
 		t.Fatalf("Should not be activated: err=%v", err)
 	}
 
-	if e, ok := err.(*LicenseTokenInvalidError); ok {
-		t.Fatalf("Should be a valid license token: err=%v", e)
-	}
-
-	if e, ok := err.(*LicenseKeyInvalidError); ok {
-		t.Fatalf("Should be a valid license key: err=%v", e)
+	switch err.(type) {
+	case *LicenseTokenInvalidError:
+		t.Fatalf("Should be a valid license token: err=%v", err)
+	case *LicenseKeyInvalidError:
+		t.Fatalf("Should be a valid license key: err=%v", err)
 	}
 
 	switch {
@@ -292,9 +291,8 @@ func TestSignedKey(t *testing.T) {
 }
 
 func TestUpgrade(t *testing.T) {
-	opts := UpgradeOptions{CurrentVersion: "1.0.0", Channel: "stable", PublicKey: os.Getenv("KEYGEN_PERSONAL_PUBLIC_KEY")}
-
-	upgrade, err := Upgrade(opts)
+	outdated := UpgradeOptions{CurrentVersion: "1.0.0", Channel: "stable", PublicKey: os.Getenv("KEYGEN_PERSONAL_PUBLIC_KEY")}
+	upgrade, err := Upgrade(outdated)
 	switch {
 	case err == ErrUpgradeNotAvailable:
 		t.Fatalf("Should have an upgrade available: err=%v", err)
@@ -305,6 +303,18 @@ func TestUpgrade(t *testing.T) {
 	err = upgrade.Install()
 	if err != nil {
 		t.Fatalf("Should not fail installing upgrade: err=%v", err)
+	}
+
+	latest := UpgradeOptions{CurrentVersion: "1.0.1", Channel: "stable", PublicKey: os.Getenv("KEYGEN_PERSONAL_PUBLIC_KEY")}
+	_, err = Upgrade(latest)
+	if err != ErrUpgradeNotAvailable {
+		t.Fatalf("Should not have an upgrade available: err=%v", err)
+	}
+
+	bad := UpgradeOptions{CurrentVersion: "2.0.0", Channel: "stable", PublicKey: os.Getenv("KEYGEN_PERSONAL_PUBLIC_KEY")}
+	_, err = Upgrade(bad)
+	if err != ErrUpgradeNotAvailable {
+		t.Fatalf("Should not have an upgrade available: err=%v", err)
 	}
 
 	t.Logf("upgrade=%v", upgrade)

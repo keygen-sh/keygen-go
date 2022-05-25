@@ -65,6 +65,7 @@ type Machine struct {
 	Hostname          string                 `json:"hostname"`
 	Platform          string                 `json:"platform"`
 	Cores             int                    `json:"cores"`
+	RequireHeartbeat  bool                   `json:"requireHeartbeat"`
 	HeartbeatStatus   HeartbeatStatusCode    `json:"heartbeatStatus"`
 	HeartbeatDuration int                    `json:"heartbeatDuration"`
 	Created           time.Time              `json:"created"`

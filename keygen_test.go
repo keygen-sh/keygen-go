@@ -146,6 +146,10 @@ func TestValidate(t *testing.T) {
 			t.Fatalf("Should have a heartbeat that is alive: license=%v machine=%v", license, machine)
 		}
 
+		if !machine.RequireHeartbeat {
+			t.Fatalf("Should require a heartbeat: license=%v machine=%v", license, machine)
+		}
+
 		processes := []*Process{}
 
 		for i := 0; i < 5; i++ {

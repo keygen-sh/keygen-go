@@ -33,17 +33,18 @@ const (
 
 // License represents a Keygen license object.
 type License struct {
-	ID            string                 `json:"-"`
-	Type          string                 `json:"-"`
-	Name          string                 `json:"name"`
-	Key           string                 `json:"key"`
-	Expiry        *time.Time             `json:"expiry"`
-	Scheme        SchemeCode             `json:"scheme"`
-	LastValidated *time.Time             `json:"lastValidated"`
-	Created       time.Time              `json:"created"`
-	Updated       time.Time              `json:"updated"`
-	Metadata      map[string]interface{} `json:"metadata"`
-	PolicyId      string                 `json:"-"`
+	ID               string                 `json:"-"`
+	Type             string                 `json:"-"`
+	Name             string                 `json:"name"`
+	Key              string                 `json:"key"`
+	Expiry           *time.Time             `json:"expiry"`
+	Scheme           SchemeCode             `json:"scheme"`
+	RequireHeartbeat bool                   `json:"requireHeartbeat"`
+	LastValidated    *time.Time             `json:"lastValidated"`
+	Created          time.Time              `json:"created"`
+	Updated          time.Time              `json:"updated"`
+	Metadata         map[string]interface{} `json:"metadata"`
+	PolicyId         string                 `json:"-"`
 }
 
 // Implement jsonapi.UnmarshalData interface

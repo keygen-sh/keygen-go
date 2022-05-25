@@ -19,11 +19,14 @@ var (
 
 // MachineFile represents a Keygen license file.
 type MachineFile struct {
-	ID          string `json:"-"`
-	Type        string `json:"-"`
-	Certificate string `json:"certificate"`
-	MachineID   string `json:"-"`
-	LicenseID   string `json:"-"`
+	ID          string    `json:"-"`
+	Type        string    `json:"-"`
+	Certificate string    `json:"certificate"`
+	Issued      time.Time `json:"issued"`
+	Expiry      time.Time `json:"expiry"`
+	TTL         int       `json:"ttl"`
+	MachineID   string    `json:"-"`
+	LicenseID   string    `json:"-"`
 }
 
 // Implement jsonapi.UnmarshalData interface

@@ -6,7 +6,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"runtime"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/google/go-querystring/query"
 	"github.com/keygen-sh/jsonapi-go"
@@ -171,6 +173,44 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 		return response, fmt.Errorf("an error occurred: id=%s status=%d size=%d body=%s", response.ID, response.Status, response.Size, response.tldr())
 	}
 
+	switch response.Status {
+	case http.StatusTooManyRequests:
+		err := &Error{response, "", "", "TOO_MANY_REQUESTS"}
+		window := response.Headers.Get("X-RateLimit-Window")
+		var retryAfter, count, limit, remaining int
+		var reset time.Time
+
+		if i, e := strconv.Atoi(response.Headers.Get("Retry-After")); e == nil {
+			retryAfter = i
+		}
+
+		if i, e := strconv.Atoi(response.Headers.Get("X-RateLimit-Count")); e == nil {
+			count = i
+		}
+
+		if i, e := strconv.Atoi(response.Headers.Get("X-RateLimit-Limit")); e == nil {
+			limit = i
+		}
+
+		if i, e := strconv.Atoi(response.Headers.Get("X-RateLimit-Remaining")); e == nil {
+			remaining = i
+		}
+
+		if i, e := strconv.ParseInt(response.Headers.Get("X-RateLimit-Reset"), 10, 64); e == nil {
+			reset = time.Unix(i, 0)
+		}
+
+		return response, &RateLimitError{
+			Window:     window,
+			Count:      count,
+			Limit:      limit,
+			Remaining:  remaining,
+			Reset:      reset,
+			RetryAfter: retryAfter,
+			Err:        err,
+		}
+	}
+
 	if c.PublicKey != "" {
 		if err := verifyResponseSignature(c.PublicKey, response); err != nil {
 			Logger.Errorf("Error verifying response signature: id=%s status=%d size=%d body=%s err=%v", response.ID, response.Status, response.tldr(), err)
@@ -192,7 +232,8 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 
 	response.Document = doc
 
-	if response.Status == http.StatusForbidden {
+	switch response.Status {
+	case http.StatusForbidden:
 		err := &Error{response, doc.Errors[0].Title, doc.Errors[0].Detail, doc.Errors[0].Code}
 		return response, &NotAuthorizedError{err}
 	}

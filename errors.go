@@ -3,6 +3,7 @@ package keygen
 import (
 	"errors"
 	"fmt"
+	"time"
 )
 
 // ErrorCode defines various error codes that are handled explicitly.
@@ -62,6 +63,19 @@ func (e *InvalidLicenseFileError) Error() string { return e.Err.Error() }
 type InvalidMachineFileError struct{ Err error }
 
 func (e *InvalidMachineFileError) Error() string { return e.Err.Error() }
+
+// RateLimitError represents an API rate limiting error.
+type RateLimitError struct {
+	Window     string
+	Count      int
+	Limit      int
+	Remaining  int
+	Reset      time.Time
+	RetryAfter int
+	Err        error
+}
+
+func (e *RateLimitError) Error() string { return e.Err.Error() }
 
 // General errors
 var (

@@ -188,6 +188,17 @@ func (m *Machine) Spawn(pid string) (*Process, error) {
 	return process, nil
 }
 
+func (m *Machine) Processes() (Processes, error) {
+	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
+	processes := Processes{}
+
+	if _, err := client.Get("machines/"+m.ID+"/processes?limit=100", nil, &processes); err != nil {
+		return nil, err
+	}
+
+	return processes, nil
+}
+
 func (m *Machine) ping() error {
 	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 

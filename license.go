@@ -69,10 +69,6 @@ func (l *License) SetRelationships(relationships map[string]interface{}) error {
 	return nil
 }
 
-type limit struct {
-	Limit int `url:"limit"`
-}
-
 // Validate performs a license validation, scoped to any provided fingerprints. It
 // returns an error if the license is invalid, e.g. ErrLicenseNotActivated,
 // ErrLicenseExpired or ErrLicenseTooManyMachines.
@@ -193,7 +189,7 @@ func (l *License) Machines() (Machines, error) {
 	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	machines := Machines{}
 
-	if _, err := client.Get("licenses/"+l.ID+"/machines", limit{100}, &machines); err != nil {
+	if _, err := client.Get("licenses/"+l.ID+"/machines?limit=100", nil, &machines); err != nil {
 		return nil, err
 	}
 
@@ -205,7 +201,7 @@ func (l *License) Entitlements() (Entitlements, error) {
 	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	entitlements := Entitlements{}
 
-	if _, err := client.Get("licenses/"+l.ID+"/entitlements", limit{100}, &entitlements); err != nil {
+	if _, err := client.Get("licenses/"+l.ID+"/entitlements?limit=100", nil, &entitlements); err != nil {
 		return nil, err
 	}
 

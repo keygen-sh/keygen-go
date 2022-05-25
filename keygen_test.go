@@ -158,6 +158,15 @@ func TestValidate(t *testing.T) {
 			processes = append(processes, process)
 		}
 
+		procs, err := machine.Processes()
+		if err != nil {
+			t.Fatalf("Should not fail listing processes: err=%v", err)
+		}
+
+		if len(procs) != len(processes) {
+			t.Fatalf("Should list all processes: actual=%v expected=%v", procs, processes)
+		}
+
 		for _, process := range processes {
 			err = process.Kill()
 			if err != nil {

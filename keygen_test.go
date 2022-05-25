@@ -1,7 +1,6 @@
 package keygen
 
 import (
-	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -143,13 +142,9 @@ func TestValidate(t *testing.T) {
 		// 	t.Fatalf("Should fail duplicate activation: err=%v", err)
 		// }
 
-		another := uuid.New().String()
-		_, err = license.Activate(another)
-		switch {
-		case err == nil:
-			t.Fatalf("Should not allow a second activation: license=%v fingerprint=%s", license, another)
-		case err != ErrMachineLimitExceeded:
-			t.Fatalf("Should fail second activation: err=%v", err)
+		_, err = license.Activate(uuid.New().String())
+		if err != ErrMachineLimitExceeded {
+			t.Fatalf("Should fail over-limit activation: license=%v err=%v", license, err)
 		}
 
 		err = machine.Monitor()
@@ -168,7 +163,7 @@ func TestValidate(t *testing.T) {
 		processes := []*Process{}
 
 		for i := 0; i < 5; i++ {
-			process, err := machine.Spawn(fmt.Sprintf("proc-%d", i))
+			process, err := machine.Spawn(uuid.New().String())
 			if err != nil {
 				t.Fatalf("Should not fail spawning process: err=%v", err)
 			}
@@ -178,6 +173,11 @@ func TestValidate(t *testing.T) {
 			}
 
 			processes = append(processes, process)
+		}
+
+		_, err = machine.Spawn(uuid.New().String())
+		if err != ErrProcessLimitExceeded {
+			t.Fatalf("Should fail over-limit spawn: machine=%v err=%v", machine, err)
 		}
 
 		procs, err := machine.Processes()
@@ -257,8 +257,7 @@ func TestLicenseFile(t *testing.T) {
 		t.Fatalf("License file decryption failed: err=%v", err)
 	}
 
-	fmt.Println("License file is genuine!")
-	fmt.Printf("Decrypted dataset: %v\n", dataset)
+	t.Logf("dataset=%v\n", dataset)
 }
 
 func TestMachineFile(t *testing.T) {
@@ -276,8 +275,7 @@ func TestMachineFile(t *testing.T) {
 		t.Fatalf("Machine file decryption failed: err=%v", err)
 	}
 
-	fmt.Println("Machine file is genuine!")
-	fmt.Printf("Decrypted dataset: %v\n", dataset)
+	t.Logf("dataset=%v\n", dataset)
 }
 
 func TestSignedKey(t *testing.T) {
@@ -290,8 +288,7 @@ func TestSignedKey(t *testing.T) {
 		t.Fatalf("License key verification failed: err=%v", err)
 	}
 
-	fmt.Println("License key is genuine!")
-	fmt.Printf("Decrypted dataset: %s\n", dataset)
+	t.Logf("dataset=%s\n", dataset)
 }
 
 func TestUpgrade(t *testing.T) {

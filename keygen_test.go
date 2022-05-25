@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/denisbrodbeck/machineid"
 	"github.com/google/uuid"
 )
 
@@ -22,7 +23,11 @@ func TestValidate(t *testing.T) {
 	Executable = "sdk"
 	Platform = "test"
 
-	fingerprint := uuid.New().String()
+	fingerprint, err := machineid.ProtectedID(Account)
+	if err != nil {
+		t.Fatalf("Should fingerprint the current machine: err=%v", err)
+	}
+
 	license, err := Validate(fingerprint)
 	switch {
 	case err == ErrLicenseTokenInvalid:

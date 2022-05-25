@@ -158,18 +158,27 @@ fmt.Println("Upgrade complete! Please restart.")
 
 ### License activation example
 
+Validate the license for a particular device fingerprint, and activate when needed. We're
+using `machineid` for fingerprinting, which is cross-platform, using the operating
+system's native GUID.
+
 ```go
 package main
 
-import "github.com/keygen-sh/keygen-go"
+import (
+  "github.com/denisbrodbeck/machineid"
+  "github.com/keygen-sh/keygen-go"
+)
 
 func main() {
   keygen.Account = os.Getenv("KEYGEN_ACCOUNT")
   keygen.Product = os.Getenv("KEYGEN_PRODUCT")
   keygen.Token = os.Getenv("KEYGEN_TOKEN")
 
-  // The current device's fingerprint (could be e.g. MAC, mobo ID, GUID, etc.)
-  fingerprint := uuid.New().String()
+  fingerprint, err := machineid.ProtectedID(keygen.Account)
+	if err != nil {
+		panic(err)
+	}
 
   // Validate the license for the current fingerprint
   license, err := keygen.Validate(fingerprint)
@@ -194,6 +203,8 @@ func main() {
 ```
 
 ### Automatic upgrade example
+
+Check for an upgrade and automatically replace the current binary with the newest version.
 
 ```go
 package main
@@ -234,6 +245,10 @@ func main() {
 ```
 
 ### Machine heartbeats example
+
+Monitor a machine's heartbeat, and automatically deactivate machines in case of a crash
+or an unresponsive node. We recommend using a random UUID fingerprint for activating
+nodes in cloud-based scenarios, since nodes may share underlying hardware.
 
 ```go
 package main

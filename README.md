@@ -133,6 +133,12 @@ if err := release.Install(); err != nil {
 fmt.Println("Upgrade complete! Please restart.")
 ```
 
+To quickly generate a keypair, use [Keygen's CLI](https://github.com/keygen-sh/keygen-cli):
+
+```bash
+keygen genkey
+```
+
 ## Examples
 
 Below are various implementation examples, covering common licensing scenarios and use cases.

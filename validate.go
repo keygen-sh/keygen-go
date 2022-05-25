@@ -40,6 +40,7 @@ type scope struct {
 	Product      string   `json:"product"`
 }
 
+// GetMeta implements jsonapi.MarshalMeta interface.
 func (v validate) GetMeta() interface{} {
 	return meta{Scope: scope{Fingerprints: v.fingerprints, Product: Product}}
 }
@@ -49,10 +50,12 @@ type validation struct {
 	Result  result  `json:"-"`
 }
 
+// SetData implements the jsonapi.UnmarshalData interface.
 func (v *validation) SetData(to func(target interface{}) error) error {
 	return to(&v.License)
 }
 
+// SetMeta implements jsonapi.UnmarshalMeta interface.
 func (v *validation) SetMeta(to func(target interface{}) error) error {
 	return to(&v.Result)
 }

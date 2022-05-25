@@ -1,7 +1,6 @@
 package keygen
 
 import (
-	"errors"
 	"time"
 
 	"github.com/keygen-sh/jsonapi-go"
@@ -16,11 +15,6 @@ const (
 	HeartbeatStatusCodeResurrected HeartbeatStatusCode = "RESURRECTED"
 )
 
-var (
-	ErrHeartbeatPingFailed = errors.New("machine heartbeat ping failed")
-	ErrMachineNotFound     = errors.New("machine no longer exists")
-)
-
 type machine struct {
 	ID          string `json:"-"`
 	Type        string `json:"-"`
@@ -31,20 +25,22 @@ type machine struct {
 	LicenseID   string `json:"-"`
 }
 
-// Implement jsonapi.MarshalData interface
+// GetID implements the jsonapi.MarshalResourceIdentifier interface.
 func (m machine) GetID() string {
 	return m.ID
 }
 
+// GetType implements the jsonapi.MarshalResourceIdentifier interface.
 func (m machine) GetType() string {
 	return "machines"
 }
 
+// GetData implements the jsonapi.MarshalData interface.
 func (m machine) GetData() interface{} {
 	return m
 }
 
-// Implement jsonapi.MarshalRelationships interface
+// GetRelationships implements jsonapi.MarshalRelationships interface.
 func (m machine) GetRelationships() map[string]interface{} {
 	relationships := make(map[string]interface{})
 
@@ -74,15 +70,17 @@ type Machine struct {
 	LicenseID         string                 `json:"-"`
 }
 
-// Implement jsonapi.MarshalData interface
+// GetID implements the jsonapi.MarshalResourceIdentifier interface.
 func (m Machine) GetID() string {
 	return m.ID
 }
 
+// GetType implements the jsonapi.MarshalResourceIdentifier interface.
 func (m Machine) GetType() string {
 	return "machines"
 }
 
+// GetData implements the jsonapi.MarshalData interface.
 func (m Machine) GetData() interface{} {
 	// Transform public machine to private machine to only send a subset of attrs
 	return machine{
@@ -94,17 +92,19 @@ func (m Machine) GetData() interface{} {
 	}
 }
 
-// Implement jsonapi.UnmarshalData interface
+// SetID implements the jsonapi.UnmarshalResourceIdentifier interface.
 func (m *Machine) SetID(id string) error {
 	m.ID = id
 	return nil
 }
 
+// SetType implements the jsonapi.UnmarshalResourceIdentifier interface.
 func (m *Machine) SetType(t string) error {
 	m.Type = t
 	return nil
 }
 
+// SetData implements the jsonapi.UnmarshalData interface.
 func (m *Machine) SetData(to func(target interface{}) error) error {
 	return to(m)
 }
@@ -112,7 +112,7 @@ func (m *Machine) SetData(to func(target interface{}) error) error {
 // Machines represents an array of machine objects.
 type Machines []Machine
 
-// Implement jsonapi.UnmarshalData interface
+// SetData implements the jsonapi.UnmarshalData interface.
 func (m *Machines) SetData(to func(target interface{}) error) error {
 	return to(m)
 }
@@ -151,6 +151,7 @@ func (m *Machine) Monitor() error {
 	return nil
 }
 
+// Checkout generates an encrypted machine file. Returns a MachineFile.
 func (m *Machine) Checkout() (*MachineFile, error) {
 	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	license := &License{}
@@ -167,6 +168,9 @@ func (m *Machine) Checkout() (*MachineFile, error) {
 	return lic, nil
 }
 
+// Spawn creates a new process for a machine, identified by the provided pid. If
+// successful, the new Process will be returned. When unsuccessful, as error
+// will be returned, e.g. ErrProcessLimitExceeded.
 func (m *Machine) Spawn(pid string) (*Process, error) {
 	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	params := &Process{
@@ -186,6 +190,7 @@ func (m *Machine) Spawn(pid string) (*Process, error) {
 	return process, nil
 }
 
+// Processes lists up to 100 processes for the machine.
 func (m *Machine) Processes() (Processes, error) {
 	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	processes := Processes{}

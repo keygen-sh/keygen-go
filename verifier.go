@@ -5,22 +5,9 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
-	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 	"time"
-)
-
-var (
-	ErrResponseSignatureMissing = errors.New("response signature is missing")
-	ErrResponseSignatureInvalid = errors.New("response signature is invalid")
-	ErrResponseDigestMissing    = errors.New("response digest is missing")
-	ErrResponseDigestInvalid    = errors.New("response digest is invalid")
-	ErrResponseDateInvalid      = errors.New("response date is invalid")
-	ErrResponseDateTooOld       = errors.New("response date is too old")
-	ErrPublicKeyMissing         = errors.New("public key is missing")
-	ErrPublicKeyInvalid         = errors.New("public key is invalid")
 )
 
 type verifier struct {
@@ -184,11 +171,6 @@ func verifyResponseSignature(publicKey string, response *Response) error {
 		return ErrPublicKeyInvalid
 	}
 
-	url, err := url.Parse(response.URL)
-	if err != nil {
-		return err
-	}
-
 	digestHeader := response.Headers.Get("Digest")
 	if digestHeader == "" {
 		return ErrResponseDigestMissing
@@ -210,7 +192,8 @@ func verifyResponseSignature(publicKey string, response *Response) error {
 		return ErrResponseDateTooOld
 	}
 
-	method := strings.ToLower(response.Method)
+	method := strings.ToLower(response.Request.Method)
+	url := response.Request.URL
 	host := url.Host
 	path := url.Path
 	if url.RawQuery != "" {

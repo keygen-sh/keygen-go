@@ -15,10 +15,6 @@ import (
 	"github.com/oasisprotocol/curve25519-voi/primitives/ed25519"
 )
 
-var (
-	ErrReleaseLocationMissing = errors.New("release has no download URL")
-)
-
 // Release represents a Keygen release object.
 type Release struct {
 	ID          string                 `json:"-"`
@@ -33,17 +29,19 @@ type Release struct {
 	publicKey   string                 `json:"-"`
 }
 
-// Implement jsonapi.UnmarshalData interface
+// SetID implements the jsonapi.UnmarshalResourceIdentifier interface.
 func (r *Release) SetID(id string) error {
 	r.ID = id
 	return nil
 }
 
+// SetType implements the jsonapi.UnmarshalResourceIdentifier interface.
 func (r *Release) SetType(t string) error {
 	r.Type = t
 	return nil
 }
 
+// SetData implements the jsonapi.UnmarshalData interface.
 func (r *Release) SetData(to func(target interface{}) error) error {
 	return to(r)
 }

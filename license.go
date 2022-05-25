@@ -1,28 +1,11 @@
 package keygen
 
 import (
-	"errors"
 	"os"
 	"runtime"
 	"time"
 
 	"github.com/keygen-sh/jsonapi-go"
-)
-
-var (
-	ErrLicenseSchemeNotSupported = errors.New("license scheme is not supported")
-	ErrLicenseSchemeMissing      = errors.New("license scheme is missing")
-	ErrLicenseKeyMissing         = errors.New("license key is missing")
-	ErrLicenseKeyNotGenuine      = errors.New("license key is not genuine")
-	ErrLicenseNotActivated       = errors.New("license is not activated")
-	ErrLicenseExpired            = errors.New("license is expired")
-	ErrLicenseSuspended          = errors.New("license is suspended")
-	ErrLicenseTooManyMachines    = errors.New("license has too many machines")
-	ErrLicenseTooManyCores       = errors.New("license has too many cores")
-	ErrLicenseNotSigned          = errors.New("license is not signed")
-	ErrLicenseInvalid            = errors.New("license is invalid")
-	ErrFingerprintMissing        = errors.New("fingerprint scope is missing")
-	ErrProductMissing            = errors.New("product scope is missing")
 )
 
 type SchemeCode string
@@ -47,21 +30,24 @@ type License struct {
 	PolicyId         string                 `json:"-"`
 }
 
-// Implement jsonapi.UnmarshalData interface
+// SetID implements the jsonapi.UnmarshalResourceIdentifier interface.
 func (l *License) SetID(id string) error {
 	l.ID = id
 	return nil
 }
 
+// SetType implements the jsonapi.UnmarshalResourceIdentifier interface.
 func (l *License) SetType(t string) error {
 	l.Type = t
 	return nil
 }
 
+// SetData implements the jsonapi.UnmarshalData interface.
 func (l *License) SetData(to func(target interface{}) error) error {
 	return to(l)
 }
 
+// SetRelationships implements the jsonapi.UnmarshalRelationship interface.
 func (l *License) SetRelationships(relationships map[string]interface{}) error {
 	if relationship, ok := relationships["policy"]; ok {
 		l.PolicyId = relationship.(*jsonapi.ResourceObjectIdentifier).ID
@@ -79,10 +65,9 @@ func (l *License) Validate(fingerprints ...string) error {
 	validation := &validation{}
 
 	if _, err := client.Post("licenses/"+l.ID+"/actions/validate", params, validation); err != nil {
-		switch {
-		case err == ErrNotFound:
+		if _, ok := err.(*NotFoundError); ok {
 			return ErrLicenseInvalid
-		default:
+		} else {
 			return err
 		}
 	}
@@ -108,14 +93,14 @@ func (l *License) Validate(fingerprints ...string) error {
 		return ErrLicenseTooManyCores
 	case validation.Result.Code == ValidationCodeFingerprintScopeRequired ||
 		validation.Result.Code == ValidationCodeFingerprintScopeEmpty:
-		return ErrFingerprintMissing
+		return ErrValidationFingerprintMissing
 	case validation.Result.Code == ValidationCodeHeartbeatNotStarted:
-		return ErrMachineHeartbeatRequired
+		return ErrHeartbeatRequired
 	case validation.Result.Code == ValidationCodeHeartbeatDead:
-		return ErrMachineHeartbeatDead
+		return ErrHeartbeatDead
 	case validation.Result.Code == ValidationCodeProductScopeRequired ||
 		validation.Result.Code == ValidationCodeProductScopeEmpty:
-		return ErrProductMissing
+		return ErrValidationProductMissing
 	default:
 		return ErrLicenseInvalid
 	}
@@ -209,6 +194,7 @@ func (l *License) Entitlements() (Entitlements, error) {
 	return entitlements, nil
 }
 
+// Checkout generates an encrypted license file. Returns a LicenseFile.
 func (l *License) Checkout() (*LicenseFile, error) {
 	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	lic := &LicenseFile{}

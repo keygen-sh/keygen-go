@@ -1,14 +1,5 @@
 package keygen
 
-import (
-	"errors"
-	"net/http"
-)
-
-var (
-	ErrUpgradeNotAvailable = errors.New("no upgrades available (already up-to-date)")
-)
-
 type UpgradeOptions struct {
 	// CurrentVersion is the current version of the program. This will be used by
 	// Keygen to determine if an upgrade is available.
@@ -24,7 +15,8 @@ type UpgradeOptions struct {
 	PublicKey string
 }
 
-// Upgrade checks if an upgrade is available for the provided version.
+// Upgrade checks if an upgrade is available for the provided version. Returns a
+// Release and any errors that occurred, e.g. ErrUpgradeNotAvailable.
 func Upgrade(options UpgradeOptions) (*Release, error) {
 	if options.PublicKey == PublicKey {
 		panic("You MUST use a personal public key. This MUST NOT be your Keygen account's public key.")
@@ -38,13 +30,12 @@ func Upgrade(options UpgradeOptions) (*Release, error) {
 	params := &querystring{Constraint: options.Constraint, Channel: options.Channel}
 	release := &Release{}
 
-	res, err := client.Get("releases/"+options.CurrentVersion+"/upgrade", params, release)
-	if err != nil {
-		return nil, err
-	}
-
-	if res.Status == http.StatusNotFound {
-		return nil, ErrUpgradeNotAvailable
+	if _, err := client.Get("releases/"+options.CurrentVersion+"/upgrade", params, release); err != nil {
+		if _, ok := err.(*NotFoundError); ok {
+			return nil, ErrUpgradeNotAvailable
+		} else {
+			return nil, err
+		}
 	}
 
 	release.publicKey = options.PublicKey

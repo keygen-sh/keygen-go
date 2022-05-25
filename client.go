@@ -2,7 +2,6 @@ package keygen
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -23,32 +22,9 @@ var (
 	}
 )
 
-type ErrorCode string
-
-const (
-	ErrorCodeTokenInvalid         ErrorCode = "TOKEN_INVALID"
-	ErrorCodeLicenseInvalid       ErrorCode = "LICENSE_INVALID"
-	ErrorCodeFingerprintTaken     ErrorCode = "FINGERPRINT_TAKEN"
-	ErrorCodeMachineLimitExceeded ErrorCode = "MACHINE_LIMIT_EXCEEDED"
-	ErrorCodeMachineHeartbeatDead ErrorCode = "MACHINE_HEARTBEAT_DEAD"
-	ErrorCodeNotFound             ErrorCode = "NOT_FOUND"
-)
-
-var (
-	ErrLicenseTokenInvalid      = errors.New("token authentication is invalid")
-	ErrLicenseKeyInvalid        = errors.New("license key authentication is invalid")
-	ErrMachineAlreadyActivated  = errors.New("machine is already activated")
-	ErrMachineLimitExceeded     = errors.New("machine limit has been exceeded")
-	ErrMachineHeartbeatRequired = errors.New("machine heartbeat is required")
-	ErrMachineHeartbeatDead     = errors.New("machine heartbeat is dead")
-	ErrNotAuthorized            = errors.New("token is not authorized to perform the request")
-	ErrNotFound                 = errors.New("resource does not exist")
-)
-
 type Response struct {
+	Request  *http.Request
 	ID       string
-	Method   string
-	URL      string
 	Headers  http.Header
 	Document *jsonapi.Document
 	Size     int
@@ -176,9 +152,8 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 	}
 
 	response := &Response{
+		Request: res.Request,
 		ID:      requestID,
-		Method:  method,
-		URL:     url,
 		Status:  res.StatusCode,
 		Headers: res.Header,
 		Size:    len(out),
@@ -218,28 +193,32 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 	response.Document = doc
 
 	if response.Status == http.StatusForbidden {
-		return response, ErrNotAuthorized
+		err := &Error{response, doc.Errors[0].Title, doc.Errors[0].Detail, doc.Errors[0].Code}
+		return response, &NotAuthorizedError{err}
 	}
 
 	if len(doc.Errors) > 0 {
+		err := &Error{response, doc.Errors[0].Title, doc.Errors[0].Detail, doc.Errors[0].Code}
 		code := ErrorCode(doc.Errors[0].Code)
 
 		// TODO(ezekg) Handle additional error codes
 		switch {
+		case code == ErrorCodeMachineHeartbeatDead || code == ErrorCodeProcessHeartbeatDead:
+			return response, ErrHeartbeatDead
 		case code == ErrorCodeFingerprintTaken:
 			return response, ErrMachineAlreadyActivated
 		case code == ErrorCodeMachineLimitExceeded:
 			return response, ErrMachineLimitExceeded
+		case code == ErrorCodeProcessLimitExceeded:
+			return response, ErrProcessLimitExceeded
 		case code == ErrorCodeTokenInvalid:
-			return response, ErrLicenseTokenInvalid
+			return response, &LicenseTokenInvalidError{err}
 		case code == ErrorCodeLicenseInvalid:
-			return response, ErrLicenseKeyInvalid
-		case code == ErrorCodeMachineHeartbeatDead:
-			return response, ErrMachineHeartbeatDead
+			return response, &LicenseKeyInvalidError{err}
 		case code == ErrorCodeNotFound:
-			return response, ErrNotFound
+			return response, &NotFoundError{err}
 		default:
-			return response, fmt.Errorf("an error occurred: id=%s status=%d size=%d body=%s", response.ID, response.Status, response.Size, response.Body)
+			return response, err
 		}
 	}
 

@@ -14,17 +14,19 @@ type Entitlement struct {
 	Metadata map[string]interface{} `json:"metadata"`
 }
 
-// Implement jsonapi.UnmarshalData interface
+// SetID implements the jsonapi.UnmarshalResourceIdentifier interface.
 func (e *Entitlement) SetID(id string) error {
 	e.ID = id
 	return nil
 }
 
+// SetType implements the jsonapi.UnmarshalResourceIdentifier interface.
 func (e *Entitlement) SetType(t string) error {
 	e.Type = t
 	return nil
 }
 
+// SetData implements the jsonapi.UnmarshalData interface.
 func (e *Entitlement) SetData(to func(target interface{}) error) error {
 	return to(e)
 }
@@ -32,7 +34,7 @@ func (e *Entitlement) SetData(to func(target interface{}) error) error {
 // Entitlements represents an array of entitlement objects.
 type Entitlements []Entitlement
 
-// Implement jsonapi.UnmarshalData interface
+// SetData implements the jsonapi.UnmarshalData interface.
 func (e *Entitlements) SetData(to func(target interface{}) error) error {
 	return to(e)
 }

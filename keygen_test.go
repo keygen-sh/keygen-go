@@ -34,11 +34,19 @@ func TestValidate(t *testing.T) {
 	}
 
 	license, err := Validate(fingerprint)
+	if err == nil {
+		t.Fatalf("Should not be activated: err=%v", err)
+	}
+
+	if e, ok := err.(*LicenseTokenInvalidError); ok {
+		t.Fatalf("Should be a valid license token: err=%v", e)
+	}
+
+	if e, ok := err.(*LicenseKeyInvalidError); ok {
+		t.Fatalf("Should be a valid license key: err=%v", e)
+	}
+
 	switch {
-	case err == ErrLicenseTokenInvalid:
-		t.Fatalf("Should be a valid license token: err=%v", err)
-	case err == ErrLicenseKeyInvalid:
-		t.Fatalf("Should be a valid license key: err=%v", err)
 	case err == ErrLicenseInvalid:
 		t.Fatalf("Should be a valid license: err=%v", err)
 	case err == ErrLicenseNotActivated:
@@ -211,11 +219,8 @@ func TestValidate(t *testing.T) {
 		}
 
 		err = license.Deactivate(fingerprint)
-		switch {
-		case err == nil:
-			t.Fatalf("Should not be deactivated again: license=%v fingerprint=%s", license, fingerprint)
-		case err != ErrNotFound:
-			t.Fatalf("Should already be deactivated: err=%v", err)
+		if e, ok := err.(*NotFoundError); !ok {
+			t.Fatalf("Should already be deactivated: err=%v", e)
 		}
 
 		entitlements, err := license.Entitlements()
@@ -234,8 +239,6 @@ func TestValidate(t *testing.T) {
 		)
 	case err != nil:
 		t.Fatalf("Should not fail validation: err=%v", err)
-	case err == nil:
-		t.Fatalf("Should not be activated: err=%v", err)
 	}
 }
 

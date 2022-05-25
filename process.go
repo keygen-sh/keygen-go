@@ -1,7 +1,6 @@
 package keygen
 
 import (
-	"errors"
 	"time"
 
 	"github.com/keygen-sh/jsonapi-go"
@@ -14,10 +13,6 @@ const (
 	ProcessStatusCodeDead  ProcessStatusCode = "DEAD"
 )
 
-var (
-	ErrProcessNotFound = errors.New("process no longer exists")
-)
-
 type process struct {
 	ID        string `json:"-"`
 	Type      string `json:"-"`
@@ -25,20 +20,22 @@ type process struct {
 	MachineID string `json:"-"`
 }
 
-// Implement jsonapi.MarshalData interface
+// GetID implements the jsonapi.MarshalResourceIdentifier interface.
 func (p process) GetID() string {
 	return p.ID
 }
 
+// GetType implements the jsonapi.MarshalResourceIdentifier interface.
 func (p process) GetType() string {
 	return "processes"
 }
 
+// GetData implements the jsonapi.MarshalData interface.
 func (p process) GetData() interface{} {
 	return p
 }
 
-// Implement jsonapi.MarshalRelationships interface
+// GetRelationships implements jsonapi.MarshalRelationships interface.
 func (p process) GetRelationships() map[string]interface{} {
 	relationships := make(map[string]interface{})
 
@@ -63,15 +60,17 @@ type Process struct {
 	MachineID string                 `json:"-"`
 }
 
-// Implement jsonapi.MarshalData interface
+// GetID implements the jsonapi.MarshalResourceIdentifier interface.
 func (p Process) GetID() string {
 	return p.ID
 }
 
+// GetType implements the jsonapi.MarshalResourceIdentifier interface.
 func (p Process) GetType() string {
 	return "processes"
 }
 
+// GetData implements the jsonapi.MarshalData interface.
 func (p Process) GetData() interface{} {
 	// Transform public process to private process to only send a subset of attrs
 	return process{
@@ -80,17 +79,19 @@ func (p Process) GetData() interface{} {
 	}
 }
 
-// Implement jsonapi.UnmarshalData interface
+// SetID implements the jsonapi.UnmarshalResourceIdentifier interface.
 func (p *Process) SetID(id string) error {
 	p.ID = id
 	return nil
 }
 
+// SetType implements the jsonapi.UnmarshalResourceIdentifier interface.
 func (p *Process) SetType(t string) error {
 	p.Type = t
 	return nil
 }
 
+// SetData implements the jsonapi.UnmarshalData interface.
 func (p *Process) SetData(to func(target interface{}) error) error {
 	return to(p)
 }
@@ -98,7 +99,7 @@ func (p *Process) SetData(to func(target interface{}) error) error {
 // Processes represents an array of process objects.
 type Processes []Process
 
-// Implement jsonapi.UnmarshalData interface
+// SetData implements the jsonapi.UnmarshalData interface.
 func (p *Processes) SetData(to func(target interface{}) error) error {
 	return to(p)
 }

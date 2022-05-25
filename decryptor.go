@@ -54,7 +54,7 @@ func (d *decryptor) DecryptCertificate(cert *certificate) ([]byte, error) {
 	// Decrypt
 	plaintext, err := aes.Open(nil, iv, ciphertext, nil)
 	if err != nil {
-		return nil, ErrLicenseFileInvalid
+		return nil, err
 	}
 
 	return plaintext, nil

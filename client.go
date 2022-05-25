@@ -100,7 +100,15 @@ func (c *Client) Delete(path string, params interface{}, model interface{}) (*Re
 }
 
 func (c *Client) send(method string, path string, params interface{}, model interface{}) (*Response, error) {
-	url := fmt.Sprintf("%s/v1/accounts/%s/%s", APIURL, c.Account, path)
+	var url string
+
+	// Support for custom domains
+	if APIURL == "https://api.keygen.sh" {
+		url = fmt.Sprintf("%s/v1/accounts/%s/%s", APIURL, c.Account, path)
+	} else {
+		url = fmt.Sprintf("%s/v1/%s", APIURL, path)
+	}
+
 	ua := strings.Join([]string{userAgent, c.UserAgent}, " ")
 	var in bytes.Buffer
 

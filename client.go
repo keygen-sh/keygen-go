@@ -114,13 +114,15 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 			in = *bytes.NewBuffer(serialized)
 		}
 
-		values, err := query.Values(params)
-		if err != nil {
-			return nil, err
-		}
+		if qs, ok := params.(querystring); ok {
+			values, err := query.Values(qs)
+			if err != nil {
+				return nil, err
+			}
 
-		if enc := values.Encode(); enc != "" {
-			url += "?" + values.Encode()
+			if enc := values.Encode(); enc != "" {
+				url += "?" + values.Encode()
+			}
 		}
 	}
 

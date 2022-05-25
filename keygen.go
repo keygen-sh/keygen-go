@@ -34,7 +34,7 @@ var (
 	PublicKey string
 
 	// Executable is the name of the current program, used when installing
-	// upgrades.
+	// upgrades. Defaults to the current program name.
 	Executable = filepath.Base(os.Args[0])
 
 	// UserAgent defines the user-agent string sent to the API backend,

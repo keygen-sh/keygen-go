@@ -96,11 +96,7 @@ func (r *Release) artifact() (*Artifact, error) {
 	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	artifact := &Artifact{}
 
-	filename := regexp.MustCompile(`[^a-z0-9_]`).ReplaceAllString(
-		strings.ToLower(Executable+"_"+runtime.GOOS+"_"+runtime.GOARCH+"_"+r.Version),
-		"_",
-	)
-
+	filename := parameterize(Executable + " " + runtime.GOOS + " " + runtime.GOARCH + " " + r.Version)
 	if Extension != "" {
 		filename += Extension
 	}
@@ -114,6 +110,16 @@ func (r *Release) artifact() (*Artifact, error) {
 	artifact.URL = res.Headers.Get("Location")
 
 	return artifact, nil
+}
+
+func parameterize(in string) string {
+	reAlphaNum := regexp.MustCompile("[^A-Za-z0-9]+")
+	reTrim := regexp.MustCompile("^-|-$")
+
+	out := reAlphaNum.ReplaceAllString(in, "_")
+	out = reTrim.ReplaceAllString(out, "")
+
+	return strings.ToLower(out)
 }
 
 // ed25519phVerifier handles verifying the upgrade's signature.

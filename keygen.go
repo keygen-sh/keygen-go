@@ -3,7 +3,6 @@ package keygen
 import (
 	"os"
 	"path/filepath"
-	"runtime"
 )
 
 const (
@@ -34,21 +33,9 @@ var (
 	// and API response signatures.
 	PublicKey string
 
-	// UpgradeKey is a developer's public key used for verifying that an
-	// upgrade was signed by the developer. You can generate an upgrade
-	// key using Keygen's CLI.
-	UpgradeKey string
-
-	// Channel is the release channel used when checking for upgrades.
-	Channel = "stable"
-
 	// Executable is the name of the current program, used when installing
 	// upgrades.
 	Executable = filepath.Base(os.Args[0])
-
-	// Platform is the release platform used when installing upgrades
-	// and when activating machines.
-	Platform = runtime.GOOS + "/" + runtime.GOARCH
 
 	// UserAgent defines the user-agent string sent to the API backend,
 	// uniquely identifying an integration.

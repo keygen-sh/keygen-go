@@ -7,6 +7,7 @@ import (
 	"errors"
 	"net/http"
 	"regexp"
+	"runtime"
 	"strings"
 	"time"
 
@@ -29,6 +30,7 @@ type Release struct {
 	Created     time.Time              `json:"created"`
 	Updated     time.Time              `json:"updated"`
 	Metadata    map[string]interface{} `json:"metadata"`
+	publicKey   string                 `json:"-"`
 }
 
 // Implement jsonapi.UnmarshalData interface
@@ -62,7 +64,7 @@ func (r *Release) Install() error {
 	opts := update.Options{}
 
 	if s := artifact.Signature; s != "" {
-		if k := UpgradeKey; k != "" {
+		if k := r.publicKey; k != "" {
 			opts.Signature, err = base64.RawStdEncoding.DecodeString(s)
 			if err != nil {
 				return err
@@ -97,7 +99,7 @@ func (r *Release) artifact() (*Artifact, error) {
 	artifact := &Artifact{}
 
 	filename := regexp.MustCompile(`[^a-z0-9_]`).ReplaceAllString(
-		strings.ToLower(Executable+"_"+Platform+"_"+r.Version),
+		strings.ToLower(Executable+"_"+runtime.GOOS+"_"+runtime.GOARCH+"_"+r.Version),
 		"_",
 	)
 

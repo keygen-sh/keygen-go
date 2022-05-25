@@ -159,7 +159,7 @@ func (m *Machine) Checkout() (*MachineFile, error) {
 		return nil, err
 	}
 
-	if _, err := client.Post("machines/"+m.ID+"/actions/check-out?encrypt=1&include=license,license.entitlements", nil, lic); err != nil {
+	if _, err := client.Post("machines/"+m.ID+"/actions/check-out", querystring{Encrypt: true, Include: "license,license.entitlements"}, lic); err != nil {
 		return nil, err
 	}
 
@@ -192,7 +192,7 @@ func (m *Machine) Processes() (Processes, error) {
 	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	processes := Processes{}
 
-	if _, err := client.Get("machines/"+m.ID+"/processes?limit=100", nil, &processes); err != nil {
+	if _, err := client.Get("machines/"+m.ID+"/processes", querystring{Limit: 100}, &processes); err != nil {
 		return nil, err
 	}
 

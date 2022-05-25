@@ -19,9 +19,7 @@ func TestValidate(t *testing.T) {
 	Product = os.Getenv("KEYGEN_PRODUCT")
 	LicenseKey = os.Getenv("KEYGEN_LICENSE_KEY")
 	Token = os.Getenv("KEYGEN_TOKEN")
-
-	Executable = "sdk"
-	Platform = "test"
+	Executable = "test"
 
 	fingerprint, err := machineid.ProtectedID(Account)
 	if err != nil {
@@ -307,12 +305,15 @@ func TestSignedKey(t *testing.T) {
 }
 
 func TestUpgrade(t *testing.T) {
+	PublicKey = os.Getenv("KEYGEN_PUBLIC_KEY")
 	Account = os.Getenv("KEYGEN_ACCOUNT")
 	Product = os.Getenv("KEYGEN_PRODUCT")
 	LicenseKey = os.Getenv("KEYGEN_LICENSE_KEY")
 	Token = os.Getenv("KEYGEN_TOKEN")
 
-	upgrade, err := Upgrade("1.0.0")
+	opts := UpgradeOptions{CurrentVersion: "1.0.0", Channel: "stable", PublicKey: os.Getenv("KEYGEN_PERSONAL_PUBLIC_KEY")}
+
+	upgrade, err := Upgrade(opts)
 	switch {
 	case err == ErrUpgradeNotAvailable:
 		t.Fatalf("Should have an upgrade available: err=%v", err)

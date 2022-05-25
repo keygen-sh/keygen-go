@@ -105,21 +105,22 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 	var in bytes.Buffer
 
 	if params != nil {
-		switch {
-		case method == http.MethodGet:
-			values, err := query.Values(params)
-			if err != nil {
-				return nil, err
-			}
-
-			url += "?" + values.Encode()
-		default:
+		if method == http.MethodPost || method == http.MethodPatch || method == http.MethodPut {
 			serialized, err := jsonapi.Marshal(params)
 			if err != nil {
 				return nil, err
 			}
 
 			in = *bytes.NewBuffer(serialized)
+		}
+
+		values, err := query.Values(params)
+		if err != nil {
+			return nil, err
+		}
+
+		if enc := values.Encode(); enc != "" {
+			url += "?" + values.Encode()
 		}
 	}
 

@@ -144,7 +144,7 @@ func (l *License) Activate(fingerprint string) (*Machine, error) {
 	params := &Machine{
 		Fingerprint: fingerprint,
 		Hostname:    hostname,
-		Platform:    Platform,
+		Platform:    runtime.GOOS + "/" + runtime.GOARCH,
 		Cores:       runtime.NumCPU(),
 		LicenseID:   l.ID,
 	}
@@ -189,7 +189,7 @@ func (l *License) Machines() (Machines, error) {
 	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	machines := Machines{}
 
-	if _, err := client.Get("licenses/"+l.ID+"/machines?limit=100", nil, &machines); err != nil {
+	if _, err := client.Get("licenses/"+l.ID+"/machines", querystring{Limit: 100}, &machines); err != nil {
 		return nil, err
 	}
 
@@ -201,7 +201,7 @@ func (l *License) Entitlements() (Entitlements, error) {
 	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	entitlements := Entitlements{}
 
-	if _, err := client.Get("licenses/"+l.ID+"/entitlements?limit=100", nil, &entitlements); err != nil {
+	if _, err := client.Get("licenses/"+l.ID+"/entitlements", querystring{Limit: 100}, &entitlements); err != nil {
 		return nil, err
 	}
 
@@ -212,7 +212,7 @@ func (l *License) Checkout() (*LicenseFile, error) {
 	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	lic := &LicenseFile{}
 
-	if _, err := client.Post("licenses/"+l.ID+"/actions/check-out?encrypt=1&include=entitlements", nil, lic); err != nil {
+	if _, err := client.Post("licenses/"+l.ID+"/actions/check-out", querystring{Encrypt: true, Include: "entitlements"}, lic); err != nil {
 		return nil, err
 	}
 

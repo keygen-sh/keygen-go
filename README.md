@@ -58,37 +58,6 @@ leave it blank to skip verifying response signatures. This should be hard-coded 
 keygen.PublicKey = "e8601e48b69383ba520245fd07971e983d06d22c4257cfd82304601479cee788"
 ```
 
-### `keygen.Channel`
-
-`Channel` is the release channel used when checking for upgrades. Defaults to `stable`. You may
-provide a different channel, one of: `stable`, `rc`, `beta`, `alpha` or `dev`.
-
-```go
-keygen.Channel = "dev"
-```
-
-### `keygen.Platform`
-
-`Platform` is the release platform used when checking for upgrades and when activating machines.
-Defaults to `runtime.GOOS + "/" + runtime.GOARCH`. You may provide a custom platform.
-
-```go
-keygen.Platform = "win32"
-```
-
-### `keygen.UpgradeKey`
-
-`UpgradeKey` is your personal hex-encoded Ed25519ph public key, used for verifying that an upgrade was
-signed by yourself or your team using your private publishing key. This should not be equal to
-`keygen.PublicKey` — they are different keys for different purposes. When set, a release's signature
-will be verified before an upgrade is installed. This should be hard-coded into your app.
-
-You can generate a publishing key pair [using Keygen's CLI](https://github.com/keygen-sh/keygen-cli).
-
-```go
-keygen.UpgradeKey = "5ec69b78d4b5d4b624699cef5faf3347dc4b06bb807ed4a2c6740129f1db7159"
-```
-
 ### `keygen.Logger`
 
 `Logger` is a leveled logger implementation used for printing debug, informational, warning, and
@@ -106,7 +75,8 @@ The following top-level functions are available. We recommend starting here.
 ### `keygen.Validate(fingerprints...)`
 
 To validate a license, configure `keygen.Account` and `keygen.Product` with your Keygen account
-details. Then prompt the user for their license token and set `keygen.Token`.
+details. Then prompt the end-user for their license key or token and set `keygen.LicenseKey`
+or `keygen.Token`, respectively.
 
 The `Validate` method accepts zero or more fingerprints, which can be used to scope a license
 validation to a particular fingerprint. It will return a `License` object as well as any
@@ -134,17 +104,28 @@ allow the update to be installed, replacing the currently running binary. When a
 is not available, an `ErrUpgradeNotAvailable` error will be returned indicating the current
 version is up-to-date.
 
+When a `PublicKey` is provided, the release's signature will be verified before installing.
+The public MUST be a personal Ed25519ph public key. It MUST NOT be your Keygen account's
+public key. You can read more about generating a personal keypair and about code signing
+[here](https://keygen.sh/docs/cli/#code-signing).
+
 ```go
-release, err := keygen.Upgrade(currentVersion)
+opts := keygen.UpgradeOptions{CurrentVersion: "1.0.0", Channel: "stable", PublicKey: "5ec69b78d4b5d4b624699cef5faf3347dc4b06bb807ed4a2c6740129f1db7159"}
+
+// Check for an upgrade
+release, err := keygen.Upgrade(opts)
 switch {
 case err == keygen.ErrUpgradeNotAvailable:
   fmt.Println("No upgrade available, already at the latest version!")
 
   return
 case err != nil:
-  panic("Upgrade check failed!")
+  fmt.Println("Upgrade check failed!")
+
+  return
 }
 
+// Install the upgrade
 if err := release.Install(); err != nil {
   panic("Upgrade install failed!")
 }
@@ -152,11 +133,11 @@ if err := release.Install(); err != nil {
 fmt.Println("Upgrade complete! Please restart.")
 ```
 
----
-
 ## Examples
 
-### License activation example
+Below are various implementation examples, covering common licensing scenarios and use cases.
+
+### License Activation
 
 Validate the license for a particular device fingerprint, and activate when needed. We're
 using `machineid` for fingerprinting, which is cross-platform, using the operating
@@ -176,9 +157,9 @@ func main() {
   keygen.Token = os.Getenv("KEYGEN_TOKEN")
 
   fingerprint, err := machineid.ProtectedID(keygen.Account)
-	if err != nil {
-		panic(err)
-	}
+  if err != nil {
+    panic(err)
+  }
 
   // Validate the license for the current fingerprint
   license, err := keygen.Validate(fingerprint)
@@ -202,7 +183,7 @@ func main() {
 }
 ```
 
-### Automatic upgrade example
+### Automatic Upgrades
 
 Check for an upgrade and automatically replace the current binary with the newest version.
 
@@ -212,18 +193,21 @@ package main
 import "github.com/keygen-sh/keygen-go"
 
 // The current version of the program
-const currentVersion = "1.0.0"
+const CurrentVersion = "1.0.0"
 
 func main() {
+  keygen.PublicKey = os.Getenv("KEYGEN_PUBLIC_KEY")
   keygen.Account = os.Getenv("KEYGEN_ACCOUNT")
   keygen.Product = os.Getenv("KEYGEN_PRODUCT")
   keygen.Token = os.Getenv("KEYGEN_TOKEN")
 
-  fmt.Printf("Current version: %s\n", currentVersion)
+  fmt.Printf("Current version: %s\n", CurrentVersion)
   fmt.Println("Checking for upgrades...")
 
+  opts := keygen.UpgradeOptions{CurrentVersion: CurrentVersion, Channel: "stable", PublicKey: os.Getenv("COMPANY_PUBLIC_KEY")}
+
   // Check for upgrade
-  release, err := keygen.Upgrade(currentVersion)
+  release, err := keygen.Upgrade(opts)
   switch {
   case err == keygen.ErrUpgradeNotAvailable:
     fmt.Println("No upgrade available, already at the latest version!")
@@ -244,7 +228,7 @@ func main() {
 }
 ```
 
-### Machine heartbeats example
+### Machine Heartbeats
 
 Monitor a machine's heartbeat, and automatically deactivate machines in case of a crash
 or an unresponsive node. We recommend using a random UUID fingerprint for activating
@@ -320,11 +304,13 @@ func main() {
 }
 ```
 
-### Offline license files
+### Offline License Files
 
 Cryptographically verify and decrypt an encrypted license file. This is useful for checking if a license
-key is genuine in offline or air-gapped environments. Returns the license file's dataset and any
+file is genuine in offline or air-gapped environments. Returns the license file's dataset and any
 errors that occurred during verification and decryption, e.g. `ErrLicenseFileNotGenuine`.
+
+When initializing a `LicenseFile`, `Certificate` and `Secret` are required.
 
 Requires that `keygen.PublicKey` is set.
 
@@ -347,11 +333,13 @@ fmt.Println("License file is genuine!")
 fmt.Printf("Decrypted dataset: %s\n", dataset)
 ```
 
-### Offline license keys
+### Offline License Keys
 
 Cryptographically verify and decode a signed license key. This is useful for checking if a license
 key is genuine in offline or air-gapped environments. Returns the key's decoded dataset and any
 errors that occurred during cryptographic verification, e.g. `ErrLicenseKeyNotGenuine`.
+
+When initializing a `License`, `Scheme` and `Key` are required.
 
 Requires that `keygen.PublicKey` is set.
 

@@ -24,7 +24,6 @@ type MachineFile struct {
 	Certificate string `json:"certificate"`
 	MachineID   string `json:"-"`
 	LicenseID   string `json:"-"`
-	Secret      string `json:"-"`
 }
 
 // Implement jsonapi.UnmarshalData interface
@@ -64,7 +63,7 @@ func (lic *MachineFile) Verify() error {
 	return nil
 }
 
-func (lic *MachineFile) Decrypt() (*MachineFileDataset, error) {
+func (lic *MachineFile) Decrypt(key string) (*MachineFileDataset, error) {
 	cert, err := lic.certificate()
 	if err != nil {
 		return nil, err
@@ -78,7 +77,7 @@ func (lic *MachineFile) Decrypt() (*MachineFileDataset, error) {
 	}
 
 	// Decrypt
-	decryptor := &decryptor{Secret: lic.Secret}
+	decryptor := &decryptor{key}
 	data, err := decryptor.DecryptCertificate(cert)
 	if err != nil {
 		return nil, err

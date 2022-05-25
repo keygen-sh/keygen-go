@@ -11,10 +11,11 @@ import (
 )
 
 var (
-	ErrLicenseFileNotSupported = errors.New("license file is not supported")
-	ErrLicenseFileNotEncrypted = errors.New("license file is not encrypted")
-	ErrLicenseFileNotGenuine   = errors.New("license file is not genuine")
-	ErrLicenseFileInvalid      = errors.New("license file is not valid")
+	ErrLicenseFileNotSupported  = errors.New("license file is not supported")
+	ErrLicenseFileNotEncrypted  = errors.New("license file is not encrypted")
+	ErrLicenseFileNotGenuine    = errors.New("license file is not genuine")
+	ErrLicenseFileInvalid       = errors.New("license file is not valid")
+	ErrLicenseFileSecretMissing = errors.New("license file secret is missing")
 )
 
 // LicenseFile represents a Keygen license file.
@@ -23,7 +24,6 @@ type LicenseFile struct {
 	Type        string `json:"-"`
 	Certificate string `json:"certificate"`
 	LicenseID   string `json:"-"`
-	Secret      string `json:"-"`
 }
 
 // Implement jsonapi.UnmarshalData interface
@@ -59,7 +59,7 @@ func (lic *LicenseFile) Verify() error {
 	return nil
 }
 
-func (lic *LicenseFile) Decrypt() (*LicenseFileDataset, error) {
+func (lic *LicenseFile) Decrypt(key string) (*LicenseFileDataset, error) {
 	cert, err := lic.certificate()
 	if err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ func (lic *LicenseFile) Decrypt() (*LicenseFileDataset, error) {
 	}
 
 	// Decrypt
-	decryptor := &decryptor{Secret: lic.Secret}
+	decryptor := &decryptor{key}
 	data, err := decryptor.DecryptCertificate(cert)
 	if err != nil {
 		return nil, err

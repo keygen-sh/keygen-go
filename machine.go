@@ -163,9 +163,6 @@ func (m *Machine) Checkout() (*MachineFile, error) {
 		return nil, err
 	}
 
-	// Pass license key + fingerprint as decryption secret
-	lic.Secret = license.Key + m.Fingerprint
-
 	return lic, nil
 }
 

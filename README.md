@@ -310,12 +310,14 @@ Cryptographically verify and decrypt an encrypted license file. This is useful f
 file is genuine in offline or air-gapped environments. Returns the license file's dataset and any
 errors that occurred during verification and decryption, e.g. `ErrLicenseFileNotGenuine`.
 
-When initializing a `LicenseFile`, `Certificate` and `Secret` are required.
+When decrypting a license file, you MUST provide the license's key as the decryption key.
+
+When initializing a `LicenseFile`, `Certificate` is required.
 
 Requires that `keygen.PublicKey` is set.
 
 ```go
-lic := &keygen.LicenseFile{Certificate: "-----BEGIN LICENSE FILE-----\n...", Secret: "key/..."}
+lic := &keygen.LicenseFile{Certificate: "-----BEGIN LICENSE FILE-----\n..."}
 err := lic.Verify()
 switch {
 case err == keygen.ErrLicenseFileNotGenuine:
@@ -324,7 +326,7 @@ case err != nil:
   panic(err)
 }
 
-dataset, err := lic.Decrypt("...")
+dataset, err := lic.Decrypt("key/...")
 if err != nil {
   panic(err)
 }

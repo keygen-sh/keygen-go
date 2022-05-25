@@ -216,8 +216,5 @@ func (l *License) Checkout() (*LicenseFile, error) {
 		return nil, err
 	}
 
-	// Pass license key as decryption secret
-	lic.Secret = l.Key
-
 	return lic, nil
 }

@@ -220,7 +220,9 @@ func main() {
 
     return
   case err != nil:
-    panic("Upgrade check failed!")
+    fmt.Println("Upgrade check failed!")
+
+    return
   }
 
   // Download the upgrade and install it
@@ -243,7 +245,10 @@ nodes in cloud-based scenarios, since nodes may share underlying hardware.
 ```go
 package main
 
-import "github.com/keygen-sh/keygen-go"
+import (
+  "github.com/google/uuid"
+  "github.com/keygen-sh/keygen-go"
+)
 
 func main() {
   keygen.Account = os.Getenv("KEYGEN_ACCOUNT")
@@ -323,22 +328,30 @@ When initializing a `LicenseFile`, `Certificate` is required.
 Requires that `keygen.PublicKey` is set.
 
 ```go
-lic := &keygen.LicenseFile{Certificate: "-----BEGIN LICENSE FILE-----\n..."}
-err := lic.Verify()
-switch {
-case err == keygen.ErrLicenseFileNotGenuine:
-  panic("License file is not genuine!")
-case err != nil:
-  panic(err)
-}
+package main
 
-dataset, err := lic.Decrypt("key/...")
-if err != nil {
-  panic(err)
-}
+import "github.com/keygen-sh/keygen-go"
 
-fmt.Println("License file is genuine!")
-fmt.Printf("Decrypted dataset: %s\n", dataset)
+func main() {
+  keygen.PublicKey = os.Getenv("KEYGEN_PUBLIC_KEY")
+
+  lic := &keygen.LicenseFile{Certificate: "-----BEGIN LICENSE FILE-----\n..."}
+  err := lic.Verify()
+  switch {
+  case err == keygen.ErrLicenseFileNotGenuine:
+    panic("License file is not genuine!")
+  case err != nil:
+    panic(err)
+  }
+
+  dataset, err := lic.Decrypt("key/...")
+  if err != nil {
+    panic(err)
+  }
+
+  fmt.Println("License file is genuine!")
+  fmt.Printf("Decrypted dataset: %s\n", dataset)
+}
 ```
 
 ### Offline License Keys
@@ -352,15 +365,23 @@ When initializing a `License`, `Scheme` and `Key` are required.
 Requires that `keygen.PublicKey` is set.
 
 ```go
-license := &keygen.License{Scheme: keygen.SchemeCodeEd25519, Key: "key/..."}
-dataset, err := license.Verify()
-switch {
-case err == keygen.ErrLicenseKeyNotGenuine:
-  panic("License key is not genuine!")
-case err != nil:
-  panic(err)
-}
+package main
 
-fmt.Println("License is genuine!")
-fmt.Printf("Decoded dataset: %s\n", dataset)
+import "github.com/keygen-sh/keygen-go"
+
+func main() {
+  keygen.PublicKey = os.Getenv("KEYGEN_PUBLIC_KEY")
+
+  license := &keygen.License{Scheme: keygen.SchemeCodeEd25519, Key: "key/..."}
+  dataset, err := license.Verify()
+  switch {
+  case err == keygen.ErrLicenseKeyNotGenuine:
+    panic("License key is not genuine!")
+  case err != nil:
+    panic(err)
+  }
+
+  fmt.Println("License is genuine!")
+  fmt.Printf("Decoded dataset: %s\n", dataset)
+}
 ```

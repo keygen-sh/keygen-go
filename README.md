@@ -97,7 +97,7 @@ case err != nil:
 fmt.Println("License is valid!")
 ```
 
-### `keygen.Upgrade(version)`
+### `keygen.Upgrade(opts)`
 
 Check for an upgrade. When an upgrade is available, a `Release` will be returned which will
 allow the update to be installed, replacing the currently running binary. When an upgrade

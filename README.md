@@ -160,7 +160,7 @@ import (
 func main() {
   keygen.Account = os.Getenv("KEYGEN_ACCOUNT")
   keygen.Product = os.Getenv("KEYGEN_PRODUCT")
-  keygen.Token = os.Getenv("KEYGEN_TOKEN")
+  keygen.LicenseKey = "key/..."
 
   fingerprint, err := machineid.ProtectedID(keygen.Product)
   if err != nil {
@@ -205,7 +205,7 @@ func main() {
   keygen.PublicKey = os.Getenv("KEYGEN_PUBLIC_KEY")
   keygen.Account = os.Getenv("KEYGEN_ACCOUNT")
   keygen.Product = os.Getenv("KEYGEN_PRODUCT")
-  keygen.Token = os.Getenv("KEYGEN_TOKEN")
+  keygen.LicenseKey = "key/..."
 
   fmt.Printf("Current version: %s\n", CurrentVersion)
   fmt.Println("Checking for upgrades...")
@@ -253,7 +253,7 @@ import (
 func main() {
   keygen.Account = os.Getenv("KEYGEN_ACCOUNT")
   keygen.Product = os.Getenv("KEYGEN_PRODUCT")
-  keygen.Token = os.Getenv("KEYGEN_TOKEN")
+  keygen.LicenseKey = "key/..."
 
   // The current device's fingerprint (could be e.g. MAC, mobo ID, GUID, etc.)
   fingerprint := uuid.New().String()
@@ -335,6 +335,7 @@ import "github.com/keygen-sh/keygen-go"
 func main() {
   keygen.PublicKey = os.Getenv("KEYGEN_PUBLIC_KEY")
 
+  // Verify the license file's signature
   lic := &keygen.LicenseFile{Certificate: "-----BEGIN LICENSE FILE-----\n..."}
   err := lic.Verify()
   switch {
@@ -344,6 +345,7 @@ func main() {
     panic(err)
   }
 
+  // Use the license key to decrypt the license file
   dataset, err := lic.Decrypt("key/...")
   if err != nil {
     panic(err)
@@ -372,6 +374,7 @@ import "github.com/keygen-sh/keygen-go"
 func main() {
   keygen.PublicKey = os.Getenv("KEYGEN_PUBLIC_KEY")
 
+  // Verify the license key's signature and decode embedded dataset
   license := &keygen.License{Scheme: keygen.SchemeCodeEd25519, Key: "key/..."}
   dataset, err := license.Verify()
   switch {

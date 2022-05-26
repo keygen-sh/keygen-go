@@ -104,10 +104,11 @@ allow the update to be installed, replacing the currently running binary. When a
 is not available, an `ErrUpgradeNotAvailable` error will be returned indicating the current
 version is up-to-date.
 
-When a `PublicKey` is provided, the release's signature will be verified before installing.
-The public MUST be a personal Ed25519ph public key. It MUST NOT be your Keygen account's
-public key. You can read more about generating a personal keypair and about code signing
-[here](https://keygen.sh/docs/cli/#code-signing).
+When a `PublicKey` is provided, and the release has a `Signature`, the signature will be
+cryptographically verified using Ed25519ph before installing. The `PublicKey` MUST be a
+personal Ed25519ph public key. It MUST NOT be your Keygen account's public key.
+
+You can read more about generating a personal keypair and about code signing [here](https://keygen.sh/docs/cli/#code-signing).
 
 ```go
 opts := keygen.UpgradeOptions{CurrentVersion: "1.0.0", Channel: "stable", PublicKey: "5ec69b78d4b5d4b624699cef5faf3347dc4b06bb807ed4a2c6740129f1db7159"}

@@ -325,21 +325,3 @@ func TestUpgrade(t *testing.T) {
 
 	t.Logf("upgrade=%v", upgrade)
 }
-
-func TestParameterize(t *testing.T) {
-	cases := [][]string{
-		{"keygen darwin amd64 1.0.0", "keygen_darwin_amd64_1_0_0"},
-		{"keygen linux arm64 2.0.0-beta.1", "keygen_linux_arm64_2_0_0_beta_1"},
-		{"keygen windows 386 2.0.0+build.1653510415", "keygen_windows_386_2_0_0_build_1653510415"},
-		{"keygen freebsd arm 2.0.0-rc.1+1653510415", "keygen_freebsd_arm_2_0_0_rc_1_1653510415"},
-	}
-
-	for _, c := range cases {
-		in := c[0]
-		expected := c[1]
-
-		if out := parameterize(in); out != expected {
-			t.Fatalf("Should parameterize input: in=%s out=%s expected=%s", in, out, expected)
-		}
-	}
-}

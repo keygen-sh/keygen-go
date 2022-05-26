@@ -158,8 +158,8 @@ import (
 )
 
 func main() {
-  keygen.Account = os.Getenv("KEYGEN_ACCOUNT")
-  keygen.Product = os.Getenv("KEYGEN_PRODUCT")
+  keygen.Account = "YOUR_KEYGEN_ACCOUNT_ID"
+  keygen.Product = "YOUR_KEYGEN_PRODUCT_ID"
   keygen.LicenseKey = "key/..."
 
   fingerprint, err := machineid.ProtectedID(keygen.Product)
@@ -202,15 +202,15 @@ import "github.com/keygen-sh/keygen-go"
 const CurrentVersion = "1.0.0"
 
 func main() {
-  keygen.PublicKey = os.Getenv("KEYGEN_PUBLIC_KEY")
-  keygen.Account = os.Getenv("KEYGEN_ACCOUNT")
-  keygen.Product = os.Getenv("KEYGEN_PRODUCT")
+  keygen.PublicKey = "YOUR_KEYGEN_PUBLIC_KEY"
+  keygen.Account = "YOUR_KEYGEN_ACCOUNT_ID"
+  keygen.Product = "YOUR_KEYGEN_PRODUCT_ID"
   keygen.LicenseKey = "key/..."
 
   fmt.Printf("Current version: %s\n", CurrentVersion)
   fmt.Println("Checking for upgrades...")
 
-  opts := keygen.UpgradeOptions{CurrentVersion: CurrentVersion, Channel: "stable", PublicKey: os.Getenv("COMPANY_PUBLIC_KEY")}
+  opts := keygen.UpgradeOptions{CurrentVersion: CurrentVersion, Channel: "stable", PublicKey: "YOUR_COMPANY_PUBLIC_KEY"}
 
   // Check for upgrade
   release, err := keygen.Upgrade(opts)
@@ -236,7 +236,7 @@ func main() {
 }
 ```
 
-### Machine Heartbeats
+### Monitor Machine Heartbeats
 
 Monitor a machine's heartbeat, and automatically deactivate machines in case of a crash
 or an unresponsive node. We recommend using a random UUID fingerprint for activating
@@ -251,8 +251,8 @@ import (
 )
 
 func main() {
-  keygen.Account = os.Getenv("KEYGEN_ACCOUNT")
-  keygen.Product = os.Getenv("KEYGEN_PRODUCT")
+  keygen.Account = "YOUR_KEYGEN_ACCOUNT_ID"
+  keygen.Product = "YOUR_KEYGEN_PRODUCT_ID"
   keygen.LicenseKey = "key/..."
 
   // The current device's fingerprint (could be e.g. MAC, mobo ID, GUID, etc.)
@@ -333,7 +333,7 @@ package main
 import "github.com/keygen-sh/keygen-go"
 
 func main() {
-  keygen.PublicKey = os.Getenv("KEYGEN_PUBLIC_KEY")
+  keygen.PublicKey = "YOUR_KEYGEN_PUBLIC_KEY"
 
   // Verify the license file's signature
   lic := &keygen.LicenseFile{Certificate: "-----BEGIN LICENSE FILE-----\n..."}
@@ -372,7 +372,7 @@ package main
 import "github.com/keygen-sh/keygen-go"
 
 func main() {
-  keygen.PublicKey = os.Getenv("KEYGEN_PUBLIC_KEY")
+  keygen.PublicKey = "YOUR_KEYGEN_PUBLIC_KEY"
 
   // Verify the license key's signature and decode embedded dataset
   license := &keygen.License{Scheme: keygen.SchemeCodeEd25519, Key: "key/..."}
@@ -388,3 +388,132 @@ func main() {
   fmt.Printf("Decoded dataset: %s\n", dataset)
 }
 ```
+
+## Error Handling
+
+Our SDK tries to return meaningful errors which can be handled in your integration. Below
+are a handful of error recipes that can be used for the more common errors.
+
+### Invalid License Key
+
+When authenticating with a license key, you may receive a `LicenseKeyError` when the license
+key does not exist. You can handle this accordingly.
+
+```go
+package main
+
+import "github.com/keygen-sh/keygen-go"
+
+func getLicense() (*keygen.License, error) {
+  keygen.LicenseKey = promptForLicenseKey()
+
+  license, err := keygen.Validate()
+  if err != nil {
+    if _, ok := err.(*keygen.LicenseKeyError); ok {
+      fmt.Println("License key does not exist!")
+
+      return getLicense()
+    }
+
+    return nil, err
+  }
+
+  return license, nil
+}
+
+func main() {
+  keygen.Account = "..."
+  keygen.Product = "..."
+
+  license, err := getLicense()
+  if err != nil {
+    panic(err)
+  }
+
+  fmt.Printf("License: %v\n", license)
+}
+```
+
+### Invalid License Token
+
+When authenticating with a license token, you may receive a `LicenseTokenError` when the license
+token does not exist or has expired. You can handle this accordingly.
+
+```go
+package main
+
+import "github.com/keygen-sh/keygen-go"
+
+func getLicense() (*keygen.License, error) {
+  keygen.Token = promptForLicenseToken()
+
+  license, err := keygen.Validate()
+  if err != nil {
+    if _, ok := err.(*keygen.LicenseTokenError); ok {
+      fmt.Println("License token does not exist!")
+
+      return getLicense()
+    }
+
+    return nil, err
+  }
+
+  return license, nil
+}
+
+func main() {
+  keygen.Account = "..."
+  keygen.Product = "..."
+
+  license, err := getLicense()
+  if err != nil {
+    panic(err)
+  }
+
+  fmt.Printf("License: %v\n", license)
+}
+```
+
+### Rate Limiting
+
+When your integration makes too many requests too quickly, the IP address may be [rate limited](https://keygen.sh/docs/api/rate-limiting/).
+You can handle this via the `RateLimitError` error. For example, you could use this error to
+determine how long to wait before retrying a request.
+
+```go
+package main
+
+import "github.com/keygen-sh/keygen-go"
+
+func validate() (*keygen.License, error) {
+  license, err := keygen.Validate()
+  if err != nil {
+    if e, ok := err.(*keygen.RateLimitError); ok {
+      // Sleep until our rate limit window is passed
+      time.Sleep(time.Duration(e.RetryAfter) * time.Second)
+
+      // Retry validate
+      return validate()
+    }
+
+    return nil, err
+  }
+
+  return license, nil
+}
+
+func main() {
+  keygen.Account = "YOUR_KEYGEN_ACCOUNT_ID"
+  keygen.Product = "YOUR_KEYGEN_PRODUCT_ID"
+  keygen.LicenseKey = "key/..."
+
+  license, err := validate()
+  if err != nil {
+    panic(err)
+  }
+
+  fmt.Printf("License: %v\n", license)
+}
+```
+
+You may want to add a limit to the number of retry attempts.

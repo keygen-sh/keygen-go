@@ -146,8 +146,8 @@ Below are various implementation examples, covering common licensing scenarios a
 ### License Activation
 
 Validate the license for a particular device fingerprint, and activate when needed. We're
-using `machineid` for fingerprinting, which is cross-platform, using the operating
-system's native GUID.
+using [`machineid`](https://github.com/denisbrodbeck/machineid) for fingerprinting, which
+is cross-platform, using the operating system's native GUID.
 
 ```go
 package main

@@ -233,17 +233,16 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 
 	response.Document = doc
 
-	switch response.Status {
-	case http.StatusForbidden:
-		err := &Error{response, doc.Errors[0].Title, doc.Errors[0].Detail, doc.Errors[0].Code}
-		return response, &NotAuthorizedError{err}
-	}
-
 	if len(doc.Errors) > 0 {
 		err := &Error{response, doc.Errors[0].Title, doc.Errors[0].Detail, doc.Errors[0].Code}
-		code := ErrorCode(doc.Errors[0].Code)
+
+		if response.Status == http.StatusForbidden {
+			return response, &NotAuthorizedError{err}
+		}
 
 		// TODO(ezekg) Handle additional error codes
+		code := ErrorCode(doc.Errors[0].Code)
+
 		switch {
 		case code == ErrorCodeMachineHeartbeatDead || code == ErrorCodeProcessHeartbeatDead:
 			return response, ErrHeartbeatDead

@@ -132,7 +132,7 @@ func (m *Machine) Deactivate() error {
 // Monitor performs, on a loop, a machine hearbeat ping for the current Machine. An
 // error channel will be returned, where any ping errors will be emitted. Pings are
 // sent according to the machine's required heartbeat window, minus 30 seconds to
-// account for any network lag.
+// account for any network lag. Panics if a heartbeat ping fails after first ping.
 func (m *Machine) Monitor() error {
 	if err := m.ping(); err != nil {
 		return err
@@ -170,7 +170,9 @@ func (m *Machine) Checkout() (*MachineFile, error) {
 
 // Spawn creates a new process for a machine, identified by the provided pid. If
 // successful, the new Process will be returned. When unsuccessful, as error
-// will be returned, e.g. ErrProcessLimitExceeded.
+// will be returned, e.g. ErrProcessLimitExceeded. Automatically starts a loop
+// that sends heartbeat pings according to the process's Interval. Panics if a
+// heartbeat ping fails after first ping.
 func (m *Machine) Spawn(pid string) (*Process, error) {
 	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	params := &Process{

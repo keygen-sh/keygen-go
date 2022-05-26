@@ -106,7 +106,8 @@ version is up-to-date.
 
 When a `PublicKey` is provided, and the release has a `Signature`, the signature will be
 cryptographically verified using Ed25519ph before installing. The `PublicKey` MUST be a
-personal Ed25519ph public key. It MUST NOT be your Keygen account's public key.
+personal Ed25519ph public key. It MUST NOT be your Keygen account's public key (method
+will panic if public keys match).
 
 You can read more about generating a personal keypair and about code signing [here](https://keygen.sh/docs/cli/#code-signing).
 

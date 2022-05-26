@@ -162,7 +162,7 @@ func main() {
   keygen.Product = os.Getenv("KEYGEN_PRODUCT")
   keygen.Token = os.Getenv("KEYGEN_TOKEN")
 
-  fingerprint, err := machineid.ProtectedID(keygen.Account)
+  fingerprint, err := machineid.ProtectedID(keygen.Product)
   if err != nil {
     panic(err)
   }

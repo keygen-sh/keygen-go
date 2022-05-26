@@ -38,10 +38,16 @@ func TestValidate(t *testing.T) {
 	}
 
 	switch err.(type) {
-	case *LicenseTokenInvalidError:
+	case *LicenseTokenError:
 		t.Fatalf("Should be a valid license token: err=%v", err)
-	case *LicenseKeyInvalidError:
+	case *LicenseKeyError:
 		t.Fatalf("Should be a valid license key: err=%v", err)
+	case *RateLimitError:
+		t.Fatalf("Should not be rate limited: err=%v", err)
+	case *NotAuthorizedError:
+		t.Fatalf("Should be authorized: err=%v", err)
+	case *NotFoundError:
+		t.Fatalf("Should exist: err=%v", err)
 	}
 
 	switch {

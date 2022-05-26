@@ -23,17 +23,9 @@ func (v *verifier) VerifyLicenseFile(lic *LicenseFile) error {
 
 	switch {
 	case cert.Alg == "aes-256-gcm+ed25519" || cert.Alg == "base64+ed25519":
-		if v.PublicKey == "" {
-			return ErrPublicKeyMissing
-		}
-
-		pubKey, err := hex.DecodeString(v.PublicKey)
+		publicKey, err := v.publicKeyBytes()
 		if err != nil {
-			return ErrPublicKeyInvalid
-		}
-
-		if l := len(pubKey); l != ed25519.PublicKeySize {
-			return ErrPublicKeyInvalid
+			return err
 		}
 
 		msg := []byte("license/" + cert.Enc)
@@ -42,7 +34,7 @@ func (v *verifier) VerifyLicenseFile(lic *LicenseFile) error {
 			return ErrLicenseFileNotGenuine
 		}
 
-		if ok := ed25519.Verify(pubKey, msg, sig); !ok {
+		if ok := ed25519.Verify(publicKey, msg, sig); !ok {
 			return ErrLicenseFileNotGenuine
 		}
 
@@ -61,17 +53,9 @@ func (v *verifier) VerifyMachineFile(lic *MachineFile) error {
 
 	switch {
 	case cert.Alg == "aes-256-gcm+ed25519" || cert.Alg == "base64+ed25519":
-		if v.PublicKey == "" {
-			return ErrPublicKeyMissing
-		}
-
-		pubKey, err := hex.DecodeString(v.PublicKey)
+		publicKey, err := v.publicKeyBytes()
 		if err != nil {
-			return ErrPublicKeyInvalid
-		}
-
-		if l := len(pubKey); l != ed25519.PublicKeySize {
-			return ErrPublicKeyInvalid
+			return err
 		}
 
 		msg := []byte("machine/" + cert.Enc)
@@ -80,7 +64,7 @@ func (v *verifier) VerifyMachineFile(lic *MachineFile) error {
 			return ErrLicenseFileNotGenuine
 		}
 
-		if ok := ed25519.Verify(pubKey, msg, sig); !ok {
+		if ok := ed25519.Verify(publicKey, msg, sig); !ok {
 			return ErrLicenseFileNotGenuine
 		}
 
@@ -113,62 +97,10 @@ func (v *verifier) VerifyLicense(license *License) ([]byte, error) {
 	}
 }
 
-func (v *verifier) verifyKey(key string) ([]byte, error) {
-	if v.PublicKey == "" {
-		return nil, ErrPublicKeyMissing
-	}
-
-	pubKey, err := hex.DecodeString(v.PublicKey)
+func (v *verifier) VerifyResponse(response *Response) error {
+	publicKey, err := v.publicKeyBytes()
 	if err != nil {
-		return nil, ErrPublicKeyInvalid
-	}
-
-	if l := len(pubKey); l != ed25519.PublicKeySize {
-		return nil, ErrPublicKeyInvalid
-	}
-
-	parts := strings.SplitN(key, ".", 2)
-	signingData := parts[0]
-	encSig := parts[1]
-
-	parts = strings.SplitN(signingData, "/", 2)
-	signingPrefix := parts[0]
-	encDataset := parts[1]
-
-	if signingPrefix != "key" {
-		return nil, ErrLicenseKeyNotGenuine
-	}
-
-	msg := []byte("key/" + encDataset)
-	sig, err := base64.URLEncoding.DecodeString(encSig)
-	if err != nil {
-		return nil, ErrLicenseKeyNotGenuine
-	}
-
-	dataset, err := base64.URLEncoding.DecodeString(encDataset)
-	if err != nil {
-		return nil, ErrLicenseKeyNotGenuine
-	}
-
-	if ok := ed25519.Verify(pubKey, msg, sig); !ok {
-		return nil, ErrLicenseKeyNotGenuine
-	}
-
-	return dataset, nil
-}
-
-func verifyResponseSignature(publicKey string, response *Response) error {
-	if publicKey == "" {
-		return ErrPublicKeyMissing
-	}
-
-	pubKey, err := hex.DecodeString(publicKey)
-	if err != nil {
-		return ErrPublicKeyInvalid
-	}
-
-	if l := len(pubKey); l != ed25519.PublicKeySize {
-		return ErrPublicKeyInvalid
+		return err
 	}
 
 	digestHeader := response.Headers.Get("Digest")
@@ -222,11 +154,64 @@ func verifyResponseSignature(publicKey string, response *Response) error {
 		return ErrResponseSignatureInvalid
 	}
 
-	if ok := ed25519.Verify(pubKey, msgBytes, sigBytes); !ok {
+	if ok := ed25519.Verify(publicKey, msgBytes, sigBytes); !ok {
 		return ErrResponseSignatureInvalid
 	}
 
 	return nil
+}
+
+func (v *verifier) verifyKey(key string) ([]byte, error) {
+	publicKey, err := v.publicKeyBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	parts := strings.SplitN(key, ".", 2)
+	signingData := parts[0]
+	encSig := parts[1]
+
+	parts = strings.SplitN(signingData, "/", 2)
+	signingPrefix := parts[0]
+	encDataset := parts[1]
+
+	if signingPrefix != "key" {
+		return nil, ErrLicenseKeyNotGenuine
+	}
+
+	msg := []byte("key/" + encDataset)
+	sig, err := base64.URLEncoding.DecodeString(encSig)
+	if err != nil {
+		return nil, ErrLicenseKeyNotGenuine
+	}
+
+	dataset, err := base64.URLEncoding.DecodeString(encDataset)
+	if err != nil {
+		return nil, ErrLicenseKeyNotGenuine
+	}
+
+	if ok := ed25519.Verify(publicKey, msg, sig); !ok {
+		return nil, ErrLicenseKeyNotGenuine
+	}
+
+	return dataset, nil
+}
+
+func (v *verifier) publicKeyBytes() ([]byte, error) {
+	if v.PublicKey == "" {
+		return nil, ErrPublicKeyMissing
+	}
+
+	key, err := hex.DecodeString(v.PublicKey)
+	if err != nil {
+		return nil, ErrPublicKeyInvalid
+	}
+
+	if l := len(key); l != ed25519.PublicKeySize {
+		return nil, ErrPublicKeyInvalid
+	}
+
+	return key, nil
 }
 
 func parseSignatureHeader(header string) map[string]string {

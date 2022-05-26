@@ -34,8 +34,8 @@ type Response struct {
 	Status   int
 }
 
-// Truncate the response body if it's too large, just in case this is some sort
-// of unexpected response format. We should always be responding with JSON,
+// tldr truncates the response body if it's too large, just in case this is some
+// sort of unexpected response format. We should always be responding with JSON,
 // regardless of any errors that occur, but this may be from infra.
 func (r *Response) tldr() string {
 	tldr := string(r.Body)
@@ -167,14 +167,9 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 		Logger.Debugf("         body=%s", response.Body)
 	}
 
-	if response.Status >= http.StatusInternalServerError {
-		Logger.Errorf("An unexpected API error occurred: id=%s status=%d size=%d body=%s", response.ID, response.Status, response.Size, response.tldr())
-
-		return response, fmt.Errorf("an error occurred: id=%s status=%d size=%d body=%s", response.ID, response.Status, response.Size, response.tldr())
-	}
-
-	switch response.Status {
-	case http.StatusTooManyRequests:
+	// Handle certain error statuses before we check signature
+	switch {
+	case response.Status == http.StatusTooManyRequests:
 		err := &Error{response, "", "", "TOO_MANY_REQUESTS"}
 		window := response.Headers.Get("X-RateLimit-Window")
 		var retryAfter, count, limit, remaining int
@@ -209,10 +204,16 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 			RetryAfter: retryAfter,
 			Err:        err,
 		}
+	case response.Status >= http.StatusInternalServerError:
+		Logger.Errorf("An unexpected API error occurred: id=%s status=%d size=%d body=%s", response.ID, response.Status, response.Size, response.tldr())
+
+		return response, fmt.Errorf("an error occurred: id=%s status=%d size=%d body=%s", response.ID, response.Status, response.Size, response.tldr())
 	}
 
 	if c.PublicKey != "" {
-		if err := verifyResponseSignature(c.PublicKey, response); err != nil {
+		verifier := &verifier{c.PublicKey}
+
+		if err := verifier.VerifyResponse(response); err != nil {
 			Logger.Errorf("Error verifying response signature: id=%s status=%d size=%d body=%s err=%v", response.ID, response.Status, response.tldr(), err)
 
 			return response, err
@@ -253,9 +254,9 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 		case code == ErrorCodeProcessLimitExceeded:
 			return response, ErrProcessLimitExceeded
 		case code == ErrorCodeTokenInvalid:
-			return response, &LicenseTokenInvalidError{err}
+			return response, &LicenseTokenError{err}
 		case code == ErrorCodeLicenseInvalid:
-			return response, &LicenseKeyInvalidError{err}
+			return response, &LicenseKeyError{err}
 		case code == ErrorCodeNotFound:
 			return response, &NotFoundError{err}
 		default:

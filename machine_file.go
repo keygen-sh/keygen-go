@@ -57,7 +57,7 @@ func (lic *MachineFile) Verify() error {
 	verifier := &verifier{PublicKey: PublicKey}
 
 	if err := verifier.VerifyMachineFile(lic); err != nil {
-		return &InvalidMachineFileError{err}
+		return &MachineFileError{err}
 	}
 
 	return nil
@@ -82,14 +82,14 @@ func (lic *MachineFile) Decrypt(key string) (*MachineFileDataset, error) {
 	decryptor := &decryptor{key}
 	data, err := decryptor.DecryptCertificate(cert)
 	if err != nil {
-		return nil, &InvalidMachineFileError{err}
+		return nil, &MachineFileError{err}
 	}
 
 	// Unmarshal
 	dataset := &MachineFileDataset{}
 
 	if _, err := jsonapi.Unmarshal(data, dataset); err != nil {
-		return nil, &InvalidMachineFileError{err}
+		return nil, &MachineFileError{err}
 	}
 
 	return dataset, nil
@@ -105,13 +105,13 @@ func (lic *MachineFile) certificate() (*certificate, error) {
 	// Decode
 	dec, err := base64.StdEncoding.DecodeString(payload)
 	if err != nil {
-		return nil, &InvalidMachineFileError{err}
+		return nil, &MachineFileError{err}
 	}
 
 	// Unmarshal
 	var cert *certificate
 	if err := json.Unmarshal(dec, &cert); err != nil {
-		return nil, &InvalidMachineFileError{err}
+		return nil, &MachineFileError{err}
 	}
 
 	return cert, nil

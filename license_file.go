@@ -52,7 +52,7 @@ func (lic *LicenseFile) Verify() error {
 	verifier := &verifier{PublicKey: PublicKey}
 
 	if err := verifier.VerifyLicenseFile(lic); err != nil {
-		return &InvalidLicenseFileError{err}
+		return &LicenseFileError{err}
 	}
 
 	return nil
@@ -77,7 +77,7 @@ func (lic *LicenseFile) Decrypt(key string) (*LicenseFileDataset, error) {
 	decryptor := &decryptor{key}
 	data, err := decryptor.DecryptCertificate(cert)
 	if err != nil {
-		return nil, &InvalidLicenseFileError{err}
+		return nil, &LicenseFileError{err}
 	}
 
 	// Unmarshal
@@ -100,13 +100,13 @@ func (lic *LicenseFile) certificate() (*certificate, error) {
 	// Decode
 	dec, err := base64.StdEncoding.DecodeString(payload)
 	if err != nil {
-		return nil, &InvalidLicenseFileError{err}
+		return nil, &LicenseFileError{err}
 	}
 
 	// Unmarshal
 	var cert *certificate
 	if err := json.Unmarshal(dec, &cert); err != nil {
-		return nil, &InvalidLicenseFileError{err}
+		return nil, &LicenseFileError{err}
 	}
 
 	return cert, nil

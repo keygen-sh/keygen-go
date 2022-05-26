@@ -1,6 +1,6 @@
-# Keygen Go SDK [![godoc reference](https://godoc.org/github.com/keygen-sh/keygen-go?status.png)](https://godoc.org/github.com/keygen-sh/keygen-go)
+# Keygen Go SDK [![godoc reference](https://godoc.org/github.com/keygen-sh/keygen-go/v2?status.png)](https://godoc.org/github.com/keygen-sh/keygen-go/v2)
 
-Package [`keygen`](https://pkg.go.dev/github.com/keygen-sh/keygen-go) allows Go programs to
+Package [`keygen`](https://pkg.go.dev/github.com/keygen-sh/keygen-go/v2) allows Go programs to
 license and remotely update themselves using the [keygen.sh](https://keygen.sh) service.
 
 ## Config
@@ -154,7 +154,7 @@ package main
 
 import (
   "github.com/denisbrodbeck/machineid"
-  "github.com/keygen-sh/keygen-go"
+  "github.com/keygen-sh/keygen-go/v2"
 )
 
 func main() {
@@ -196,7 +196,7 @@ Check for an upgrade and automatically replace the current binary with the newes
 ```go
 package main
 
-import "github.com/keygen-sh/keygen-go"
+import "github.com/keygen-sh/keygen-go/v2"
 
 // The current version of the program
 const CurrentVersion = "1.0.0"
@@ -247,7 +247,7 @@ package main
 
 import (
   "github.com/google/uuid"
-  "github.com/keygen-sh/keygen-go"
+  "github.com/keygen-sh/keygen-go/v2"
 )
 
 func main() {
@@ -330,7 +330,7 @@ Requires that `keygen.PublicKey` is set.
 ```go
 package main
 
-import "github.com/keygen-sh/keygen-go"
+import "github.com/keygen-sh/keygen-go/v2"
 
 func main() {
   keygen.PublicKey = "YOUR_KEYGEN_PUBLIC_KEY"
@@ -369,7 +369,7 @@ Requires that `keygen.PublicKey` is set.
 ```go
 package main
 
-import "github.com/keygen-sh/keygen-go"
+import "github.com/keygen-sh/keygen-go/v2"
 
 func main() {
   keygen.PublicKey = "YOUR_KEYGEN_PUBLIC_KEY"
@@ -402,7 +402,7 @@ key does not exist. You can handle this accordingly.
 ```go
 package main
 
-import "github.com/keygen-sh/keygen-go"
+import "github.com/keygen-sh/keygen-go/v2"
 
 func getLicense() (*keygen.License, error) {
   keygen.LicenseKey = promptForLicenseKey()
@@ -442,7 +442,7 @@ token does not exist or has expired. You can handle this accordingly.
 ```go
 package main
 
-import "github.com/keygen-sh/keygen-go"
+import "github.com/keygen-sh/keygen-go/v2"
 
 func getLicense() (*keygen.License, error) {
   keygen.Token = promptForLicenseToken()
@@ -483,7 +483,7 @@ determine how long to wait before retrying a request.
 ```go
 package main
 
-import "github.com/keygen-sh/keygen-go"
+import "github.com/keygen-sh/keygen-go/v2"
 
 func validate() (*keygen.License, error) {
   license, err := keygen.Validate()

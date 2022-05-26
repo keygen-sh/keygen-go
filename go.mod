@@ -1,4 +1,4 @@
-module github.com/keygen-sh/keygen-go
+module github.com/keygen-sh/keygen-go/v2
 
 go 1.17
 

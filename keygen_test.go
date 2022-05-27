@@ -206,6 +206,11 @@ func TestValidate(t *testing.T) {
 			t.Fatalf("Should not fail to retrieve the current machine: err=%v", err)
 		}
 
+		_, err = license.Machine("<invalid>")
+		if err == nil {
+			t.Fatalf("Should fail to retrieve invalid machine: err=%v", err)
+		}
+
 		machines, err := license.Machines()
 		if err != nil {
 			t.Fatalf("Should not fail to list machines: err=%v", err)

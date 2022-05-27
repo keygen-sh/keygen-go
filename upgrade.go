@@ -1,7 +1,5 @@
 package keygen
 
-import "net/url"
-
 type UpgradeOptions struct {
 	// CurrentVersion is the current version of the program. This will be used by
 	// Keygen to determine if an upgrade is available.
@@ -31,9 +29,8 @@ func Upgrade(options UpgradeOptions) (*Release, error) {
 	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	params := &querystring{Constraint: options.Constraint, Channel: options.Channel}
 	release := &Release{}
-	version := url.PathEscape(options.CurrentVersion)
 
-	if _, err := client.Get("releases/"+version+"/upgrade", params, release); err != nil {
+	if _, err := client.Get("releases/"+options.CurrentVersion+"/upgrade", params, release); err != nil {
 		switch err.(type) {
 		case *NotFoundError:
 			return nil, ErrUpgradeNotAvailable

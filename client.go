@@ -170,7 +170,7 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 	// Handle certain error statuses before we check signature
 	switch {
 	case response.Status == http.StatusTooManyRequests:
-		err := &Error{response, "", "", "TOO_MANY_REQUESTS"}
+		err := &Error{response, "", "", "TOO_MANY_REQUESTS", ""}
 		window := response.Headers.Get("X-RateLimit-Window")
 		var retryAfter, count, limit, remaining int
 		var reset time.Time
@@ -234,7 +234,7 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 	response.Document = doc
 
 	if len(doc.Errors) > 0 {
-		err := &Error{response, doc.Errors[0].Title, doc.Errors[0].Detail, doc.Errors[0].Code}
+		err := &Error{response, doc.Errors[0].Title, doc.Errors[0].Detail, doc.Errors[0].Code, doc.Errors[0].Source.Pointer}
 
 		if response.Status == http.StatusForbidden {
 			return response, &NotAuthorizedError{err}

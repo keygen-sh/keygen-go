@@ -26,6 +26,7 @@ type Error struct {
 	Title    string
 	Detail   string
 	Code     string
+	Source   string
 }
 
 func (e *Error) Error() string {
@@ -37,32 +38,38 @@ func (e *Error) Error() string {
 // LicenseTokenError represents an API authentication error due to an invalid license token.
 type LicenseTokenError struct{ Err *Error }
 
-func (e *LicenseTokenError) Error() string { return e.Err.Detail }
+func (e *LicenseTokenError) Error() string { return "license token is invalid" }
+func (e *LicenseTokenError) Unwrap() error { return e.Err }
 
 // LicenseKeyError represents an API authentication error due to an invalid license key.
 type LicenseKeyError struct{ Err *Error }
 
-func (e *LicenseKeyError) Error() string { return e.Err.Detail }
+func (e *LicenseKeyError) Error() string { return "license key is invalid" }
+func (e *LicenseKeyError) Unwrap() error { return e.Err }
 
 // NotAuthorizedError represents an API permission error.
 type NotAuthorizedError struct{ Err *Error }
 
-func (e *NotAuthorizedError) Error() string { return e.Err.Detail }
+func (e *NotAuthorizedError) Error() string { return "not authorized to perform the request" }
+func (e *NotAuthorizedError) Unwrap() error { return e.Err }
 
 // NotFoundError represents an API not found error.
 type NotFoundError struct{ Err *Error }
 
-func (e *NotFoundError) Error() string { return e.Err.Detail }
+func (e *NotFoundError) Error() string { return "resource was not found" }
+func (e *NotFoundError) Unwrap() error { return e.Err }
 
 // LicenseFileError represents an invalid license file error.
 type LicenseFileError struct{ Err error }
 
-func (e *LicenseFileError) Error() string { return e.Err.Error() }
+func (e *LicenseFileError) Error() string { return "license file is invalid" }
+func (e *LicenseFileError) Unwrap() error { return e.Err }
 
 // MachineFileError represents an invalid machine file error.
 type MachineFileError struct{ Err error }
 
-func (e *MachineFileError) Error() string { return e.Err.Error() }
+func (e *MachineFileError) Error() string { return "machine file is invalid" }
+func (e *MachineFileError) Unwrap() error { return e.Err }
 
 // RateLimitError represents an API rate limiting error.
 type RateLimitError struct {
@@ -75,7 +82,8 @@ type RateLimitError struct {
 	Err        error
 }
 
-func (e *RateLimitError) Error() string { return e.Err.Error() }
+func (e *RateLimitError) Error() string { return "rate limit has been exceeded" }
+func (e *RateLimitError) Unwrap() error { return e.Err }
 
 // General errors
 var (

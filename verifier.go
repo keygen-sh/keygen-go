@@ -127,7 +127,7 @@ func (v *verifier) VerifyResponse(response *Response) error {
 	method := strings.ToLower(response.Request.Method)
 	url := response.Request.URL
 	host := url.Host
-	path := url.Path
+	path := url.EscapedPath()
 	if url.RawQuery != "" {
 		path += "?" + url.RawQuery
 	}

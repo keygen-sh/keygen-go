@@ -297,8 +297,8 @@ func TestSignedKey(t *testing.T) {
 }
 
 func TestUpgrade(t *testing.T) {
-	outdated := UpgradeOptions{CurrentVersion: "1.0.0", Channel: "stable", PublicKey: os.Getenv("PERSONAL_PUBLIC_KEY")}
-	upgrade, err := Upgrade(outdated)
+	prev := UpgradeOptions{CurrentVersion: "1.0.0", Channel: "stable", PublicKey: os.Getenv("PERSONAL_PUBLIC_KEY")}
+	upgrade, err := Upgrade(prev)
 	switch {
 	case err == ErrUpgradeNotAvailable:
 		t.Fatalf("Should have an upgrade available: err=%v", err)
@@ -317,8 +317,14 @@ func TestUpgrade(t *testing.T) {
 		t.Fatalf("Should not have an upgrade available: err=%v", err)
 	}
 
-	bad := UpgradeOptions{CurrentVersion: "2.0.0", Channel: "stable", PublicKey: os.Getenv("PERSONAL_PUBLIC_KEY")}
-	_, err = Upgrade(bad)
+	next := UpgradeOptions{CurrentVersion: "2.0.0", Channel: "stable", PublicKey: os.Getenv("PERSONAL_PUBLIC_KEY")}
+	_, err = Upgrade(next)
+	if err != ErrUpgradeNotAvailable {
+		t.Fatalf("Should not have an upgrade available: err=%v", err)
+	}
+
+	invalid := UpgradeOptions{CurrentVersion: "<not set>", Channel: "stable", PublicKey: os.Getenv("PERSONAL_PUBLIC_KEY")}
+	_, err = Upgrade(invalid)
 	if err != ErrUpgradeNotAvailable {
 		t.Fatalf("Should not have an upgrade available: err=%v", err)
 	}

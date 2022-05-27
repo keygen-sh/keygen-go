@@ -1,6 +1,7 @@
 package keygen
 
 import (
+	"net/url"
 	"os"
 	"runtime"
 	"time"
@@ -162,6 +163,7 @@ func (l *License) Deactivate(id string) error {
 func (l *License) Machine(id string) (*Machine, error) {
 	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	machine := &Machine{}
+	id = url.PathEscape(id)
 
 	if _, err := client.Get("machines/"+id, nil, machine); err != nil {
 		return nil, err

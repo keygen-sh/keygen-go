@@ -214,7 +214,7 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 		verifier := &verifier{c.PublicKey}
 
 		if err := verifier.VerifyResponse(response); err != nil {
-			Logger.Errorf("Error verifying response signature: id=%s status=%d size=%d body=%s err=%v", response.ID, response.Status, response.tldr(), err)
+			Logger.Errorf("Error verifying response signature: id=%s status=%d size=%d body=%s err=%v", response.ID, response.Status, response.Size, response.tldr(), err)
 
 			return response, err
 		}

@@ -27,7 +27,7 @@ func Upgrade(options UpgradeOptions) (*Release, error) {
 	}
 
 	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
-	params := &querystring{Constraint: options.Constraint, Channel: options.Channel}
+	params := querystring{Constraint: options.Constraint, Channel: options.Channel}
 	release := &Release{}
 
 	if _, err := client.Get("releases/"+options.CurrentVersion+"/upgrade", params, release); err != nil {

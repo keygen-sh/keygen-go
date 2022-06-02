@@ -33,10 +33,6 @@ var (
 	// and API response signatures.
 	PublicKey string
 
-	// Executable is the name of the current program, used when installing
-	// upgrades. Defaults to the current program name.
-	Executable = filepath.Base(os.Args[0])
-
 	// UserAgent defines the user-agent string sent to the API backend,
 	// uniquely identifying an integration.
 	UserAgent string
@@ -44,4 +40,8 @@ var (
 	// Logger is a leveled logger implementation used for printing debug,
 	// informational, warning, and error messages.
 	Logger LoggerInterface = &LeveledLogger{Level: LogLevelError}
+
+	// Program is the name of the current program, used when installing
+	// upgrades. Defaults to the current program name.
+	Program = filepath.Base(os.Args[0])
 )

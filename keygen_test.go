@@ -22,7 +22,6 @@ func init() {
 	Product = os.Getenv("KEYGEN_PRODUCT")
 	LicenseKey = os.Getenv("KEYGEN_LICENSE_KEY")
 	Token = os.Getenv("KEYGEN_TOKEN")
-	Executable = "test"
 	Logger = log
 }
 
@@ -302,8 +301,14 @@ func TestSignedKey(t *testing.T) {
 }
 
 func TestUpgrade(t *testing.T) {
-	prev := UpgradeOptions{CurrentVersion: "1.0.0", Channel: "stable", PublicKey: os.Getenv("PERSONAL_PUBLIC_KEY")}
-	upgrade, err := Upgrade(prev)
+	opts := UpgradeOptions{
+		PublicKey:      os.Getenv("PERSONAL_PUBLIC_KEY"),
+		Filename:       `test_{{.platform}}_{{.arch}}{{if .ext}}.{{.ext}}{{end}}`,
+		CurrentVersion: "1.0.0",
+		Channel:        "stable",
+	}
+
+	upgrade, err := Upgrade(opts)
 	switch {
 	case err == ErrUpgradeNotAvailable:
 		t.Fatalf("Should have an upgrade available: err=%v", err)
@@ -316,20 +321,26 @@ func TestUpgrade(t *testing.T) {
 		t.Fatalf("Should not fail installing upgrade: err=%v", err)
 	}
 
-	latest := UpgradeOptions{CurrentVersion: "1.0.1", Channel: "stable", PublicKey: os.Getenv("PERSONAL_PUBLIC_KEY")}
-	_, err = Upgrade(latest)
+	// Latest version
+	opts.CurrentVersion = "1.0.1"
+
+	_, err = Upgrade(opts)
 	if err != ErrUpgradeNotAvailable {
 		t.Fatalf("Should not have an upgrade available: err=%v", err)
 	}
 
-	next := UpgradeOptions{CurrentVersion: "2.0.0", Channel: "stable", PublicKey: os.Getenv("PERSONAL_PUBLIC_KEY")}
-	_, err = Upgrade(next)
+	// Future version
+	opts.CurrentVersion = "2.0.0"
+
+	_, err = Upgrade(opts)
 	if err != ErrUpgradeNotAvailable {
 		t.Fatalf("Should not have an upgrade available: err=%v", err)
 	}
 
-	invalid := UpgradeOptions{CurrentVersion: "<not set>", Channel: "stable", PublicKey: os.Getenv("PERSONAL_PUBLIC_KEY")}
-	_, err = Upgrade(invalid)
+	// Invalid version
+	opts.CurrentVersion = "<not set>"
+
+	_, err = Upgrade(opts)
 	if err != ErrUpgradeNotAvailable {
 		t.Fatalf("Should not have an upgrade available: err=%v", err)
 	}

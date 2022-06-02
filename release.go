@@ -1,12 +1,14 @@
 package keygen
 
 import (
+	"bytes"
 	"crypto"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"net/http"
 	"runtime"
+	"text/template"
 	"time"
 
 	"github.com/keygen-sh/go-update"
@@ -24,7 +26,8 @@ type Release struct {
 	Created     time.Time              `json:"created"`
 	Updated     time.Time              `json:"updated"`
 	Metadata    map[string]interface{} `json:"metadata"`
-	publicKey   string                 `json:"-"`
+
+	opts UpgradeOptions `json:"-"`
 }
 
 // SetID implements the jsonapi.UnmarshalResourceIdentifier interface.
@@ -60,7 +63,7 @@ func (r *Release) Install() error {
 	opts := update.Options{}
 
 	if s := artifact.Signature; s != "" {
-		if k := r.publicKey; k != "" {
+		if k := r.opts.PublicKey; k != "" {
 			opts.Signature, err = base64.RawStdEncoding.DecodeString(s)
 			if err != nil {
 				return err
@@ -88,15 +91,13 @@ func (r *Release) Install() error {
 	return nil
 }
 
-// artifact retrieves the artifact for the current program, on the current platform,
-// according to the release's version.
 func (r *Release) artifact() (*Artifact, error) {
 	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
 	artifact := &Artifact{}
 
-	filename := Executable + "_" + runtime.GOOS + "_" + runtime.GOARCH
-	if Extension != "" {
-		filename += Extension
+	filename, err := r.filename()
+	if err != nil {
+		return nil, err
 	}
 
 	res, err := client.Get("releases/"+r.ID+"/artifacts/"+filename, nil, artifact)
@@ -108,6 +109,22 @@ func (r *Release) artifact() (*Artifact, error) {
 	artifact.URL = res.Headers.Get("Location")
 
 	return artifact, nil
+}
+
+func (r *Release) filename() (string, error) {
+	tmpl, err := template.New("").Parse(r.opts.Filename)
+	if err != nil {
+		return "", err
+	}
+
+	in := map[string]string{"program": Program, "ext": Ext, "platform": runtime.GOOS, "arch": runtime.GOARCH, "channel": r.Channel, "version": r.Version}
+	var out bytes.Buffer
+
+	if err := tmpl.Execute(&out, in); err != nil {
+		return "", err
+	}
+
+	return out.String(), nil
 }
 
 // ed25519phVerifier handles verifying the upgrade's signature.

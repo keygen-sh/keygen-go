@@ -1,6 +1,6 @@
 package keygen
 
 var (
-	// Extension is .exe for Windows executables.
-	Extension = ".exe"
+	// Ext is .exe for Windows executables.
+	Ext = "exe"
 )

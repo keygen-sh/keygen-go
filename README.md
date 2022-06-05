@@ -87,11 +87,11 @@ such as `license.Activate(fingerprint)`.
 license, err := keygen.Validate(fingerprint)
 switch {
 case err == keygen.ErrLicenseNotActivated:
-  panic("License is not activated!")
+  panic("license is not activated!")
 case err == keygen.ErrLicenseExpired:
-  panic("License is expired!")
+  panic("license is expired!")
 case err != nil:
-  panic("License is invalid!")
+  panic("license is invalid!")
 }
 
 fmt.Println("License is valid!")
@@ -129,7 +129,7 @@ case err != nil:
 
 // Install the upgrade
 if err := release.Install(); err != nil {
-  panic("Upgrade install failed!")
+  panic("upgrade install failed!")
 }
 
 fmt.Println("Upgrade complete! Please restart.")
@@ -177,14 +177,14 @@ func main() {
     machine, err := license.Activate(fingerprint)
     switch {
     case err == keygen.ErrMachineLimitExceeded:
-      panic("Machine limit has been exceeded!")
+      panic("machine limit has been exceeded!")
     case err != nil:
-      panic("Machine activation failed!")
+      panic("machine activation failed!")
     }
   case err == keygen.ErrLicenseExpired:
-    panic("License is expired!")
+    panic("license is expired!")
   case err != nil:
-    panic("License is invalid!")
+    panic("license is invalid!")
   }
 
   fmt.Println("License is activated!")
@@ -230,7 +230,7 @@ func main() {
   // Download the upgrade and install it
   err = release.Install()
   if err != nil {
-    panic("Upgrade install failed!")
+    panic("upgrade install failed!")
   }
 
   fmt.Printf("Upgrade complete! Installed version: %s\n", release.Version)
@@ -270,7 +270,7 @@ func main() {
     // Activate the current fingerprint
     machine, err := license.Activate(fingerprint)
     if err != nil {
-      fmt.Println("Machine activation failed!")
+      fmt.Println("machine activation failed!")
 
       panic(err)
     }
@@ -285,8 +285,6 @@ func main() {
         fmt.Printf("Caught %v, deactivating machine and gracefully exiting...\n", sig)
 
         if err := machine.Deactivate(); err != nil {
-          fmt.Println("Machine deactivation failed!")
-
           panic(err)
         }
 
@@ -342,7 +340,7 @@ func main() {
   err := lic.Verify()
   switch {
   case err == keygen.ErrLicenseFileNotGenuine:
-    panic("License file is not genuine!")
+    panic("license file is not genuine!")
   case err != nil:
     panic(err)
   }
@@ -351,6 +349,14 @@ func main() {
   dataset, err := lic.Decrypt("key/...")
   if err != nil {
     panic(err)
+  }
+
+  if time.Now().Before(dataset.Issued) {
+    panic("system clock tampering detected!")
+  }
+
+  if time.Now().After(dataset.Expiry) {
+    panic("license file is expired!")
   }
 
   fmt.Println("License file is genuine!")
@@ -381,7 +387,7 @@ func main() {
   dataset, err := license.Verify()
   switch {
   case err == keygen.ErrLicenseKeyNotGenuine:
-    panic("License key is not genuine!")
+    panic("license key is not genuine!")
   case err != nil:
     panic(err)
   }

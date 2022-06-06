@@ -403,7 +403,8 @@ func main() {
 ### Verify Webhooks
 
 When listening for webhook events from Keygen, you can verify requests came from
-Keygen's servers by using `keygen.VerifyWebhook`.
+Keygen's servers by using `keygen.VerifyWebhook`. This protects your webhook
+endpoint from event forgery and replay attacks.
 
 Requires that `keygen.PublicKey` is set.
 
@@ -411,26 +412,26 @@ Requires that `keygen.PublicKey` is set.
 package main
 
 import (
-	"log"
-	"net/http"
+  "log"
+  "net/http"
 
-	"github.com/keygen-sh/keygen-go/v2"
+  "github.com/keygen-sh/keygen-go/v2"
 )
 
 func main() {
-	keygen.PublicKey = "YOUR_KEYGEN_PUBLIC_KEY"
+  keygen.PublicKey = "YOUR_KEYGEN_PUBLIC_KEY"
 
-	http.HandleFunc("/webhooks", func(w http.ResponseWriter, r *http.Request) {
-		if err := keygen.VerifyWebhook(r); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+  http.HandleFunc("/webhooks", func(w http.ResponseWriter, r *http.Request) {
+    if err := keygen.VerifyWebhook(r); err != nil {
+      w.WriteHeader(http.StatusBadRequest)
 
-			return
-		}
+      return
+    }
 
-		w.WriteHeader(http.StatusNoContent)
-	})
+    w.WriteHeader(http.StatusNoContent)
+  })
 
-	log.Fatal(http.ListenAndServe(":8081", nil))
+  log.Fatal(http.ListenAndServe(":8081", nil))
 }
 ```
 

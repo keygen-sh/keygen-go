@@ -335,9 +335,15 @@ import "github.com/keygen-sh/keygen-go/v2"
 func main() {
   keygen.PublicKey = "YOUR_KEYGEN_PUBLIC_KEY"
 
+  // Read the license file
+  cert, err := ioutil.ReadFile("/etc/example/license.lic")
+  if err != nil {
+    panic("license file is missing")
+  }
+
   // Verify the license file's signature
-  lic := &keygen.LicenseFile{Certificate: "-----BEGIN LICENSE FILE-----\n..."}
-  err := lic.Verify()
+  lic := &keygen.LicenseFile{Certificate: string(cert)}
+  err = lic.Verify()
   switch {
   case err == keygen.ErrLicenseFileNotGenuine:
     panic("license file is not genuine!")
@@ -360,7 +366,7 @@ func main() {
   }
 
   fmt.Println("License file is genuine!")
-  fmt.Printf("Decrypted dataset: %s\n", dataset)
+  fmt.Printf("Decrypted dataset: %v\n", dataset)
 }
 ```
 

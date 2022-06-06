@@ -353,16 +353,13 @@ func main() {
 
   // Use the license key to decrypt the license file
   dataset, err := lic.Decrypt("key/...")
-  if err != nil {
-    panic(err)
-  }
-
-  if time.Now().Before(dataset.Issued) {
+  switch {
+  case err == ErrSystemClockUnsynced:
     panic("system clock tampering detected!")
-  }
-
-  if time.Now().After(dataset.Expiry) {
+  case err == ErrLicenseFileExpired:
     panic("license file is expired!")
+  case err != nil:
+    panic(err)
   }
 
   fmt.Println("License file is genuine!")

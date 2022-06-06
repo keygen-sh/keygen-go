@@ -92,6 +92,14 @@ func (lic *MachineFile) Decrypt(key string) (*MachineFileDataset, error) {
 		return nil, &MachineFileError{err}
 	}
 
+	if time.Now().Before(dataset.Issued) {
+		return dataset, ErrSystemClockUnsynced
+	}
+
+	if time.Now().After(dataset.Expiry) {
+		return dataset, ErrMachineFileExpired
+	}
+
 	return dataset, nil
 }
 

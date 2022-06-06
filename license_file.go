@@ -87,6 +87,14 @@ func (lic *LicenseFile) Decrypt(key string) (*LicenseFileDataset, error) {
 		return nil, err
 	}
 
+	if time.Now().Before(dataset.Issued) {
+		return dataset, ErrSystemClockUnsynced
+	}
+
+	if time.Now().After(dataset.Expiry) {
+		return dataset, ErrLicenseFileExpired
+	}
+
 	return dataset, nil
 }
 

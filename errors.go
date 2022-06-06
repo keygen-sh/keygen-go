@@ -125,5 +125,7 @@ var (
 	ErrLicenseFileNotSupported      = errors.New("license file is not supported")
 	ErrLicenseFileNotEncrypted      = errors.New("license file is not encrypted")
 	ErrLicenseFileNotGenuine        = errors.New("license file is not genuine")
+	ErrLicenseFileExpired           = errors.New("license file is expired")
 	ErrLicenseFileSecretMissing     = errors.New("license file secret is missing")
+	ErrSystemClockUnsynced          = errors.New("system clock is out of sync")
 )

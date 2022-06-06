@@ -5,7 +5,7 @@ license and remotely update themselves using the [keygen.sh](https://keygen.sh) 
 
 ## Config
 
-### `keygen.Account`
+### keygen.Account
 
 `Account` is your Keygen account ID used globally in the binding. All requests will be made
 to this account. This should be hard-coded into your app.
@@ -14,7 +14,7 @@ to this account. This should be hard-coded into your app.
 keygen.Account = "1fddcec8-8dd3-4d8d-9b16-215cac0f9b52"
 ```
 
-### `keygen.Product`
+### keygen.Product
 
 `Product` is your Keygen product ID used globally in the binding. All license validations and
 upgrade requests will be scoped to this product. This should be hard-coded into your app.
@@ -23,7 +23,7 @@ upgrade requests will be scoped to this product. This should be hard-coded into 
 keygen.Product = "1f086ec9-a943-46ea-9da4-e62c2180c2f4"
 ```
 
-### `keygen.LicenseKey`
+### keygen.LicenseKey
 
 `LicenseKey` a license key belonging to the end-user (licensee). This will be used for license
 validations, activations, deactivations and upgrade requests. You will need to prompt the
@@ -37,7 +37,7 @@ Setting `LicenseKey` will take precedence over `Token`.
 keygen.LicenseKey = "C1B6DE-39A6E3-DE1529-8559A0-4AF593-V3"
 ```
 
-### `keygen.Token`
+### keygen.Token
 
 `Token` is an activation token belonging to the licensee. This will be used for license validations,
 activations, deactivations and upgrade requests. You will need to prompt the end-user for this.
@@ -48,7 +48,7 @@ You will need to set the license policy's authentication strategy to `TOKEN` or 
 keygen.Token = "activ-d66e044ddd7dcc4169ca9492888435d3v3"
 ```
 
-### `keygen.PublicKey`
+### keygen.PublicKey
 
 `PublicKey` is your Keygen account's hex-encoded Ed25519 public key, used for verifying signed license keys
 and API response signatures. When set, API response signatures will automatically be verified. You may
@@ -58,7 +58,7 @@ leave it blank to skip verifying response signatures. This should be hard-coded 
 keygen.PublicKey = "e8601e48b69383ba520245fd07971e983d06d22c4257cfd82304601479cee788"
 ```
 
-### `keygen.Logger`
+### keygen.Logger
 
 `Logger` is a leveled logger implementation used for printing debug, informational, warning, and
 error messages. The default log level is `LogLevelError`. You may provide your own logger which
@@ -72,7 +72,7 @@ keygen.Logger = &CustomLogger{Level: LogLevelDebug}
 
 The following top-level functions are available. We recommend starting here.
 
-### `keygen.Validate(fingerprints...)`
+### keygen.Validate(fingerprints ...string)
 
 To validate a license, configure `keygen.Account` and `keygen.Product` with your Keygen account
 details. Then prompt the end-user for their license key or token and set `keygen.LicenseKey`
@@ -97,7 +97,7 @@ case err != nil:
 fmt.Println("License is valid!")
 ```
 
-### `keygen.Upgrade(opts)`
+### keygen.Upgrade(options keygen.UpgradeOptions)
 
 Check for an upgrade. When an upgrade is available, a `Release` will be returned which will
 allow the update to be installed, replacing the currently running binary. When an upgrade
@@ -397,6 +397,40 @@ func main() {
 
   fmt.Println("License is genuine!")
   fmt.Printf("Decoded dataset: %s\n", dataset)
+}
+```
+
+### Verify Webhooks
+
+When listening for webhook events from Keygen, you can verify requests came from
+Keygen's servers by using `keygen.VerifyWebhook`.
+
+Requires that `keygen.PublicKey` is set.
+
+```go
+package main
+
+import (
+	"log"
+	"net/http"
+
+	"github.com/keygen-sh/keygen-go/v2"
+)
+
+func main() {
+	keygen.PublicKey = "YOUR_KEYGEN_PUBLIC_KEY"
+
+	http.HandleFunc("/webhooks", func(w http.ResponseWriter, r *http.Request) {
+		if err := keygen.VerifyWebhook(r); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	log.Fatal(http.ListenAndServe(":8081", nil))
 }
 ```
 

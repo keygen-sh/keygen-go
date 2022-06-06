@@ -3,6 +3,7 @@ package keygen
 import (
 	"os"
 	"path/filepath"
+	"time"
 )
 
 const (
@@ -44,4 +45,9 @@ var (
 	// Program is the name of the current program, used when installing
 	// upgrades. Defaults to the current program name.
 	Program = filepath.Base(os.Args[0])
+
+	// MaxClockDrift is the maximum allowable difference between the
+	// server time Keygen's API sent a request or response and the
+	// current system time, to prevent replay attacks.
+	MaxClockDrift = time.Duration(5) * time.Minute
 )

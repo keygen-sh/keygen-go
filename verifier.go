@@ -6,6 +6,8 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -97,6 +99,83 @@ func (v *verifier) VerifyLicense(license *License) ([]byte, error) {
 	}
 }
 
+func (v *verifier) VerifyRequest(request *http.Request) error {
+	publicKey, err := v.publicKeyBytes()
+	if err != nil {
+		return err
+	}
+
+	digestHeader := request.Header.Get("Digest")
+	if digestHeader == "" {
+		return ErrRequestDigestMissing
+	}
+
+	body, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		return err
+	}
+
+	shasum := sha256.Sum256(body)
+	digest := "sha-256=" + base64.StdEncoding.EncodeToString(shasum[:])
+	if digest != digestHeader {
+		return ErrRequestDigestInvalid
+	}
+
+	date := request.Header.Get("Date")
+	if date == "" {
+		return ErrRequestDateMissing
+	}
+
+	t, err := time.Parse(time.RFC1123, date)
+	if err != nil {
+		return err
+	}
+
+	if time.Since(t) > MaxClockDrift {
+		return ErrRequestDateTooOld
+	}
+
+	method := strings.ToLower(request.Method)
+	url := request.URL
+	host := url.Host
+	path := url.EscapedPath()
+	if path == "" {
+		path = "/"
+	}
+
+	if url.RawQuery != "" {
+		path += "?" + url.RawQuery
+	}
+
+	sigHeader := request.Header.Get("Keygen-Signature")
+	if sigHeader == "" {
+		return ErrRequestSignatureMissing
+	}
+
+	sigParams := parseSignatureHeader(sigHeader)
+	sig := sigParams["signature"]
+	msg := fmt.Sprintf(
+		"(request-target): %s %s\nhost: %s\ndate: %s\ndigest: %s",
+		method,
+		path,
+		host,
+		date,
+		digest,
+	)
+
+	msgBytes := []byte(msg)
+	sigBytes, err := base64.StdEncoding.DecodeString(sig)
+	if err != nil {
+		return err
+	}
+
+	if ok := ed25519.Verify(publicKey, msgBytes, sigBytes); !ok {
+		return ErrRequestSignatureInvalid
+	}
+
+	return nil
+}
+
 func (v *verifier) VerifyResponse(response *Response) error {
 	publicKey, err := v.publicKeyBytes()
 	if err != nil {
@@ -115,12 +194,16 @@ func (v *verifier) VerifyResponse(response *Response) error {
 	}
 
 	date := response.Headers.Get("Date")
-	t, err := time.Parse(time.RFC1123, date)
-	if err != nil {
-		return ErrResponseDateInvalid
+	if date == "" {
+		return ErrResponseDateMissing
 	}
 
-	if time.Since(t) > time.Duration(5)*time.Minute {
+	t, err := time.Parse(time.RFC1123, date)
+	if err != nil {
+		return err
+	}
+
+	if time.Since(t) > MaxClockDrift {
 		return ErrResponseDateTooOld
 	}
 
@@ -128,6 +211,10 @@ func (v *verifier) VerifyResponse(response *Response) error {
 	url := response.Request.URL
 	host := url.Host
 	path := url.EscapedPath()
+	if path == "" {
+		path = "/"
+	}
+
 	if url.RawQuery != "" {
 		path += "?" + url.RawQuery
 	}

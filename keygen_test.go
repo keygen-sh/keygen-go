@@ -1,6 +1,8 @@
 package keygen
 
 import (
+	"bytes"
+	"net/http"
 	"os"
 	"testing"
 	"time"
@@ -348,4 +350,24 @@ func TestUpgrade(t *testing.T) {
 	}
 
 	t.Logf("upgrade=%v", upgrade)
+}
+
+func TestWebhook(t *testing.T) {
+	MaxClockDrift = time.Duration(525960*100) * time.Minute
+
+	body := `{"data":{"id":"dfd66777-8a60-411c-b61c-ad51c671c0bd","type":"webhook-events","attributes":{"endpoint":"https://5173-2600-1700-3e90-a450-533-a11e-339-f87b.ngrok.io","payload":"{\"data\":{\"id\":\"1598f237-f82f-448a-91f7-18d2c7e6fd41\",\"type\":\"licenses\",\"attributes\":{\"name\":\"Floating Demo License\",\"key\":\"DEMO-DAD877-FCBF82-B83D5A-03E644-V3\",\"expiry\":\"2023-01-01T00:00:00.000Z\",\"status\":\"ACTIVE\",\"uses\":0,\"suspended\":false,\"scheme\":null,\"encrypted\":false,\"strict\":false,\"floating\":true,\"concurrent\":false,\"protected\":true,\"maxMachines\":10,\"maxProcesses\":null,\"maxCores\":null,\"maxUses\":null,\"requireHeartbeat\":false,\"requireCheckIn\":false,\"lastValidated\":\"2022-06-06T16:03:28.185Z\",\"lastCheckIn\":null,\"nextCheckIn\":null,\"metadata\":{\"token\":\"activ-cd4f3a6c17707b94bacab29ab489ddf5v3\"},\"created\":\"2021-04-20T16:14:46.713Z\",\"updated\":\"2022-06-06T16:03:28.190Z\"},\"relationships\":{\"account\":{\"links\":{\"related\":\"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52\"},\"data\":{\"type\":\"accounts\",\"id\":\"1fddcec8-8dd3-4d8d-9b16-215cac0f9b52\"}},\"product\":{\"links\":{\"related\":\"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/1598f237-f82f-448a-91f7-18d2c7e6fd41/product\"},\"data\":{\"type\":\"products\",\"id\":\"42b9731d-21f2-4911-a066-d380a96c3a94\"}},\"policy\":{\"links\":{\"related\":\"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/1598f237-f82f-448a-91f7-18d2c7e6fd41/policy\"},\"data\":{\"type\":\"policies\",\"id\":\"d048c5e6-b813-4e94-a346-d70726397457\"}},\"group\":{\"links\":{\"related\":\"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/1598f237-f82f-448a-91f7-18d2c7e6fd41/group\"},\"data\":null},\"user\":{\"links\":{\"related\":\"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/1598f237-f82f-448a-91f7-18d2c7e6fd41/user\"},\"data\":null},\"machines\":{\"links\":{\"related\":\"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/1598f237-f82f-448a-91f7-18d2c7e6fd41/machines\"},\"meta\":{\"cores\":0,\"count\":1}},\"tokens\":{\"links\":{\"related\":\"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/1598f237-f82f-448a-91f7-18d2c7e6fd41/tokens\"}},\"entitlements\":{\"links\":{\"related\":\"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/1598f237-f82f-448a-91f7-18d2c7e6fd41/entitlements\"}}},\"links\":{\"self\":\"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/1598f237-f82f-448a-91f7-18d2c7e6fd41\"}},\"meta\":{\"ts\":\"2022-06-06T16:03:28.206Z\",\"valid\":true,\"detail\":\"is valid\",\"constant\":\"VALID\",\"scope\":{\"fingerprint\":\"cbce3fc7-0568-476d-a078-069a5d0500a2\",\"entitlements\":[\"DEMO_ENTITLEMENT\"]}}}","event":"license.validation.succeeded","status":"DELIVERING","lastResponseCode":null,"lastResponseBody":null,"created":"2022-06-06T16:03:28.243Z","updated":"2022-06-06T16:03:28.243Z"},"relationships":{"account":{"links":{"related":"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52"},"data":{"type":"accounts","id":"1fddcec8-8dd3-4d8d-9b16-215cac0f9b52"}}},"links":{"self":"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/webhook-events/dfd66777-8a60-411c-b61c-ad51c671c0bd"},"meta":{"idempotencyToken":"99b89d681aecdff9a0435c9f507d00c5345a7c2d6e773f1756e4a9d42e4b14v3"}}}`
+	url := `https://5173-2600-1700-3e90-a450-533-a11e-339-f87b.ngrok.io/webhooks`
+
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader([]byte(body)))
+	if err != nil {
+		t.Fatalf("Should not fail creating a request: err=%v", err)
+	}
+
+	req.Header.Add("Keygen-Signature", `keyid="1fddcec8-8dd3-4d8d-9b16-215cac0f9b52", algorithm="ed25519", signature="oov4eX9ZC30U6l/OOOTH/IQF3NAlALlgBWQdh0LdG6WNtHbR95SoYJf2wOGMUGp2tYzNdSwlzPyepWozkKtXBg==", headers="(request-target) host date digest"`)
+	req.Header.Add("Digest", `sha-256=9QceiZktviddaBO8zKZe18/L2kZSFwpGDcmvFkvIH3k=`)
+	req.Header.Add("Date", `Mon, 06 Jun 2022 16:13:37 GMT`)
+
+	if err := VerifyWebhook(req); err != nil {
+		t.Fatalf("Should verify webhook: err=%v", err)
+	}
 }

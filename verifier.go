@@ -136,8 +136,8 @@ func (v *verifier) VerifyRequest(request *http.Request) error {
 	}
 
 	method := strings.ToLower(request.Method)
+	host := request.Host
 	url := request.URL
-	host := url.Host
 	path := url.EscapedPath()
 	if path == "" {
 		path = "/"

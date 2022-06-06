@@ -61,16 +61,16 @@ func (v *verifier) VerifyMachineFile(lic *MachineFile) error {
 		msg := []byte("machine/" + cert.Enc)
 		sig, err := base64.StdEncoding.DecodeString(cert.Sig)
 		if err != nil {
-			return ErrLicenseFileNotGenuine
+			return ErrMachineFileNotGenuine
 		}
 
 		if ok := ed25519.Verify(publicKey, msg, sig); !ok {
-			return ErrLicenseFileNotGenuine
+			return ErrMachineFileNotGenuine
 		}
 
 		return nil
 	default:
-		return ErrLicenseFileNotSupported
+		return ErrMachineFileNotSupported
 	}
 }
 

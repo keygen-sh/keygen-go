@@ -109,6 +109,7 @@ var (
 	ErrMachineFileNotSupported      = errors.New("machine file is not supported")
 	ErrMachineFileNotEncrypted      = errors.New("machine file is not encrypted")
 	ErrMachineFileNotGenuine        = errors.New("machine file is not genuine")
+	ErrMachineFileExpired           = errors.New("machine file is expired")
 	ErrProcessLimitExceeded         = errors.New("process limit has been exceeded")
 	ErrLicenseSchemeNotSupported    = errors.New("license scheme is not supported")
 	ErrLicenseSchemeMissing         = errors.New("license scheme is missing")

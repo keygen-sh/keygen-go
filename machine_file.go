@@ -64,7 +64,7 @@ func (lic *MachineFile) Verify() error {
 }
 
 // Decrypt decrypts the machine file's encrypted dataset. It returns the decrypted dataset
-// and any errors that occurred during decryption, e.g. ErrLicenseFileNotEncrypted.
+// and any errors that occurred during decryption, e.g. ErrMachineFileNotEncrypted.
 func (lic *MachineFile) Decrypt(key string) (*MachineFileDataset, error) {
 	cert, err := lic.certificate()
 	if err != nil {

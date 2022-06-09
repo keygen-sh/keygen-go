@@ -23,16 +23,16 @@ var (
 	// APIPrefix is the major version prefix included in all API URLs.
 	APIPrefix = "v1"
 
-	// Account is the Keygen account ID used globally in the binding.
+	// Account is the Keygen account ID used globally in the SDK.
 	Account string
 
-	// Product is the Keygen product ID used globally in the binding.
+	// Product is the Keygen product ID used globally in the SDK.
 	Product string
 
-	// LicenseKey is the end-user's license key used in the binding.
+	// LicenseKey is the end-user's license key used in the SDK.
 	LicenseKey string
 
-	// Token is the end-user's API token used in the binding.
+	// Token is the end-user's API token used in the SDK.
 	Token string
 
 	// PublicKey is the Keygen public key used for verifying license keys

@@ -7,7 +7,7 @@ license and remotely update themselves using the [keygen.sh](https://keygen.sh) 
 
 ### keygen.Account
 
-`Account` is your Keygen account ID used globally in the binding. All requests will be made
+`Account` is your Keygen account ID used globally in the SDK. All requests will be made
 to this account. This should be hard-coded into your app.
 
 ```go
@@ -16,7 +16,7 @@ keygen.Account = "1fddcec8-8dd3-4d8d-9b16-215cac0f9b52"
 
 ### keygen.Product
 
-`Product` is your Keygen product ID used globally in the binding. All license validations and
+`Product` is your Keygen product ID used globally in the SDK. All license validations and
 upgrade requests will be scoped to this product. This should be hard-coded into your app.
 
 ```go

@@ -82,9 +82,9 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 
 	// Support for custom domains
 	if APIURL == "https://api.keygen.sh" {
-		url = fmt.Sprintf("%s/v1/accounts/%s/%s", APIURL, c.Account, path)
+		url = fmt.Sprintf("%s/%s/accounts/%s/%s", APIURL, APIPrefix, c.Account, path)
 	} else {
-		url = fmt.Sprintf("%s/v1/%s", APIURL, path)
+		url = fmt.Sprintf("%s/%s/%s", APIURL, APIPrefix, path)
 	}
 
 	ua := strings.Join([]string{userAgent, c.UserAgent}, " ")

@@ -18,6 +18,9 @@ var (
 	// APIVersion is the currently supported API version.
 	APIVersion = "1.1"
 
+	// APIPrefix is the major version prefix included in all API URLs.
+	APIPrefix = "v1"
+
 	// Account is the Keygen account ID used globally in the binding.
 	Account string
 

@@ -53,7 +53,7 @@ func Upgrade(options UpgradeOptions) (*Release, error) {
 		options.Channel = "stable"
 	}
 
-	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
+	client := NewClient()
 	params := querystring{Constraint: options.Constraint, Channel: options.Channel}
 	release := &Release{}
 

@@ -107,7 +107,7 @@ func (p *Processes) SetData(to func(target interface{}) error) error {
 // Kill deletes the current Process. An error will be returned if the process
 // deletion fails.
 func (p *Process) Kill() error {
-	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
+	client := NewClient()
 
 	if _, err := client.Delete("processes/"+p.ID, nil, nil); err != nil {
 		return err
@@ -135,7 +135,7 @@ func (p *Process) monitor() error {
 }
 
 func (p *Process) ping() error {
-	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
+	client := NewClient()
 
 	if _, err := client.Post("processes/"+p.ID+"/actions/ping", nil, p); err != nil {
 		return err

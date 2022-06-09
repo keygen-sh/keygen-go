@@ -16,12 +16,6 @@ import (
 
 var (
 	userAgent = "keygen/" + APIVersion + " sdk/" + SDKVersion + " go/" + runtime.Version() + " " + runtime.GOOS + "/" + runtime.GOARCH
-	client    = &http.Client{
-		// We don't want to automatically follow redirects
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
 )
 
 type Response struct {
@@ -49,7 +43,9 @@ func (r *Response) tldr() string {
 	return tldr
 }
 
+// Client represents the internal HTTP client and config used for API requests.
 type Client struct {
+	HTTPClient *http.Client
 	Account    string
 	LicenseKey string
 	Token      string
@@ -57,27 +53,64 @@ type Client struct {
 	UserAgent  string
 }
 
+// NewClient creates a new Client with default settings.
+func NewClient() *Client {
+	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent, HTTPClient: HTTPClient}
+
+	return client
+}
+
+// Post is a convenience helper for performing POST requests.
 func (c *Client) Post(path string, params interface{}, model interface{}) (*Response, error) {
-	return c.send("POST", path, params, model)
+	req, err := c.new(http.MethodPost, path, params)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.send(req, model)
 }
 
+// Get is a convenience helper for performing GET requests.
 func (c *Client) Get(path string, params interface{}, model interface{}) (*Response, error) {
-	return c.send("GET", path, params, model)
+	req, err := c.new(http.MethodGet, path, params)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.send(req, model)
 }
 
+// Put is a convenience helper for performing PUT requests.
 func (c *Client) Put(path string, params interface{}, model interface{}) (*Response, error) {
-	return c.send("PUT", path, params, model)
+	req, err := c.new(http.MethodPut, path, params)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.send(req, model)
 }
 
+// Patch is a convenience helper for performing PATCH requests.
 func (c *Client) Patch(path string, params interface{}, model interface{}) (*Response, error) {
-	return c.send("PATCH", path, params, model)
+	req, err := c.new(http.MethodPatch, path, params)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.send(req, model)
 }
 
+// Delete is a convenience helper for performing DELETE requests.
 func (c *Client) Delete(path string, params interface{}, model interface{}) (*Response, error) {
-	return c.send("DELETE", path, params, model)
+	req, err := c.new(http.MethodDelete, path, params)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.send(req, model)
 }
 
-func (c *Client) send(method string, path string, params interface{}, model interface{}) (*Response, error) {
+func (c *Client) new(method string, path string, params interface{}) (*http.Request, error) {
 	var url string
 
 	// Support for custom domains
@@ -136,9 +169,15 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 	req.Header.Add("Accept", jsonapi.ContentType)
 	req.Header.Add("User-Agent", ua)
 
-	res, err := client.Do(req)
+	return req, nil
+}
+
+func (c *Client) send(req *http.Request, model interface{}) (*Response, error) {
+	c.HTTPClient.CheckRedirect = c.checkRedirect
+
+	res, err := c.HTTPClient.Do(req)
 	if err != nil {
-		Logger.Errorf("Error performing request: method=%s url=%s err=%v", method, url, err)
+		Logger.Errorf("Error performing request: method=%s url=%s err=%v", req.Method, req.URL, err)
 
 		return nil, err
 	}
@@ -264,4 +303,9 @@ func (c *Client) send(method string, path string, params interface{}, model inte
 	}
 
 	return response, nil
+}
+
+// We don't want to automatically follow redirects
+func (c *Client) checkRedirect(req *http.Request, via []*http.Request) error {
+	return http.ErrUseLastResponse
 }

@@ -120,7 +120,7 @@ func (m *Machines) SetData(to func(target interface{}) error) error {
 // Deactivate performs a machine deactivation for the current Machine. An error
 // will be returned if the machine deactivation fails.
 func (m *Machine) Deactivate() error {
-	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
+	client := NewClient()
 
 	if _, err := client.Delete("machines/"+m.ID, nil, nil); err != nil {
 		return err
@@ -153,7 +153,7 @@ func (m *Machine) Monitor() error {
 
 // Checkout generates an encrypted machine file. Returns a MachineFile.
 func (m *Machine) Checkout() (*MachineFile, error) {
-	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
+	client := NewClient()
 	license := &License{}
 	lic := &MachineFile{}
 
@@ -174,7 +174,7 @@ func (m *Machine) Checkout() (*MachineFile, error) {
 // that sends heartbeat pings according to the process's Interval. Panics if a
 // heartbeat ping fails after first ping.
 func (m *Machine) Spawn(pid string) (*Process, error) {
-	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
+	client := NewClient()
 	params := &Process{
 		Pid:       pid,
 		MachineID: m.ID,
@@ -194,7 +194,7 @@ func (m *Machine) Spawn(pid string) (*Process, error) {
 
 // Processes lists up to 100 processes for the machine.
 func (m *Machine) Processes() (Processes, error) {
-	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
+	client := NewClient()
 	processes := Processes{}
 
 	if _, err := client.Get("machines/"+m.ID+"/processes", querystring{Limit: 100}, &processes); err != nil {
@@ -205,7 +205,7 @@ func (m *Machine) Processes() (Processes, error) {
 }
 
 func (m *Machine) ping() error {
-	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
+	client := NewClient()
 
 	if _, err := client.Post("machines/"+m.ID+"/actions/ping", nil, m); err != nil {
 		return err

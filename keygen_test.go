@@ -9,10 +9,11 @@ import (
 
 	"github.com/denisbrodbeck/machineid"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-retryablehttp"
 )
 
 func init() {
-	log := Logger.(*LeveledLogger)
+	log := Logger.(*logger)
 	log.Level = LogLevelDebug
 
 	if url := os.Getenv("KEYGEN_CUSTOM_DOMAIN"); url != "" {
@@ -370,4 +371,12 @@ func TestWebhook(t *testing.T) {
 	if err := VerifyWebhook(req); err != nil {
 		t.Fatalf("Should verify webhook: err=%v", err)
 	}
+}
+
+func TestHTTPClient(t *testing.T) {
+	re := retryablehttp.NewClient()
+	re.Backoff = retryablehttp.LinearJitterBackoff
+	re.RetryMax = 5
+
+	HTTPClient = re.StandardClient()
 }

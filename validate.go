@@ -69,7 +69,7 @@ type result struct {
 // provided fingerprints. It returns a License, and an error if the license is
 // invalid, e.g. ErrLicenseNotActivated or ErrLicenseExpired.
 func Validate(fingerprints ...string) (*License, error) {
-	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
+	client := NewClient()
 	license := &License{}
 
 	if _, err := client.Get("me", nil, license); err != nil {

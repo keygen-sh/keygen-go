@@ -62,10 +62,10 @@ keygen.PublicKey = "e8601e48b69383ba520245fd07971e983d06d22c4257cfd82304601479ce
 
 `Logger` is a leveled logger implementation used for printing debug, informational, warning, and
 error messages. The default log level is `LogLevelError`. You may provide your own logger which
-implements `LoggerInterface`.
+implements `LeveledLogger`.
 
 ```go
-keygen.Logger = &CustomLogger{Level: LogLevelDebug}
+keygen.Logger = &CustomLogger{Level: keygen.LogLevelDebug}
 ```
 
 ## Usage
@@ -563,3 +563,34 @@ func main() {
 ```
 
 You may want to add a limit to the number of retry attempts.
+
+### Automatic retries
+
+When your integration has less-than-stellar network connectivity, or you simply want to
+ensure that failed requests are retried, you can utilize a package such as [retryablehttp](github.com/hashicorp/go-retryablehttp)
+to implement automatic retries.
+
+```go
+package main
+
+import (
+  "github.com/hashicorp/go-retryablehttp"
+  "github.com/keygen-sh/keygen-go/v2"
+)
+
+func main() {
+  c := retryablehttp.NewClient()
+
+  // Configure with a jitter backoff and max attempts
+	c.Backoff = retryablehttp.LinearJitterBackoff
+	c.RetryMax = 5
+
+	keygen.HTTPClient = c.StandardClient()
+  keygen.Account = "YOUR_KEYGEN_ACCOUNT_ID"
+  keygen.Product = "YOUR_KEYGEN_PRODUCT_ID"
+  keygen.LicenseKey = "key/..."
+
+  // Use SDK as you would normally
+  keygen.Validate()
+}
+```

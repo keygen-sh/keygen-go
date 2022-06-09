@@ -92,7 +92,7 @@ func (r *Release) Install() error {
 }
 
 func (r *Release) artifact() (*Artifact, error) {
-	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent}
+	client := NewClient()
 	artifact := &Artifact{}
 
 	filename, err := r.filename()

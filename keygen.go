@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/hashicorp/go-cleanhttp"
 )
 
 const (
@@ -43,7 +45,7 @@ var (
 
 	// Logger is a leveled logger implementation used for printing debug,
 	// informational, warning, and error messages.
-	Logger LoggerInterface = &LeveledLogger{Level: LogLevelError}
+	Logger LeveledLogger = &logger{Level: LogLevelError}
 
 	// Program is the name of the current program, used when installing
 	// upgrades. Defaults to the current program name.
@@ -53,4 +55,9 @@ var (
 	// server time Keygen's API sent a request or response and the
 	// current system time, to prevent replay attacks.
 	MaxClockDrift = time.Duration(5) * time.Minute
+
+	// HTTPClient is the internal HTTP client used by the SDK for API
+	// requests. Set this to a custom HTTP client, to implement e.g.
+	// automatic retries or rate limiting checks.
+	HTTPClient = cleanhttp.DefaultPooledClient()
 )

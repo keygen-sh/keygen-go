@@ -3,7 +3,7 @@ package keygen
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"runtime"
 	"strconv"
@@ -213,7 +213,7 @@ func (c *Client) send(req *http.Request, model interface{}) (*Response, error) {
 	}
 
 	requestID := res.Header.Get("x-request-id")
-	out, err := ioutil.ReadAll(res.Body)
+	out, err := io.ReadAll(res.Body)
 	res.Body.Close()
 
 	if err != nil {

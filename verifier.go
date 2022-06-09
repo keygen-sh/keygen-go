@@ -1,12 +1,13 @@
 package keygen
 
 import (
+	"bytes"
 	"crypto/ed25519"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -110,10 +111,14 @@ func (v *verifier) VerifyRequest(request *http.Request) error {
 		return ErrRequestDigestMissing
 	}
 
-	body, err := ioutil.ReadAll(request.Body)
+	body, err := io.ReadAll(request.Body)
 	if err != nil {
 		return err
 	}
+
+	// We need to close and replace the body so that others can read
+	request.Body.Close()
+	request.Body = io.NopCloser(bytes.NewBuffer(body))
 
 	shasum := sha256.Sum256(body)
 	digest := "sha-256=" + base64.StdEncoding.EncodeToString(shasum[:])

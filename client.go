@@ -43,9 +43,8 @@ func (r *Response) tldr() string {
 	return tldr
 }
 
-// Client represents the internal HTTP client and config used for API requests.
-type Client struct {
-	HTTPClient *http.Client
+// ClientOptions stores config options used in API requests.
+type ClientOptions struct {
 	Account    string
 	LicenseKey string
 	Token      string
@@ -53,9 +52,40 @@ type Client struct {
 	UserAgent  string
 }
 
+// Client represents the internal HTTP client and config used for API requests.
+type Client struct {
+	HTTPClient *http.Client
+	ClientOptions
+}
+
 // NewClient creates a new Client with default settings.
 func NewClient() *Client {
-	client := &Client{Account: Account, LicenseKey: LicenseKey, Token: Token, PublicKey: PublicKey, UserAgent: UserAgent, HTTPClient: HTTPClient}
+	client := &Client{
+		HTTPClient,
+		ClientOptions{
+			Account:    Account,
+			LicenseKey: LicenseKey,
+			Token:      Token,
+			PublicKey:  PublicKey,
+			UserAgent:  UserAgent,
+		},
+	}
+
+	return client
+}
+
+// NewClientWithOptions creates a new client with custom settings.
+func NewClientWithOptions(options *ClientOptions) *Client {
+	client := &Client{
+		HTTPClient,
+		ClientOptions{
+			Account:    options.Account,
+			LicenseKey: options.LicenseKey,
+			Token:      options.Token,
+			PublicKey:  options.PublicKey,
+			UserAgent:  options.UserAgent,
+		},
+	}
 
 	return client
 }

@@ -58,6 +58,6 @@ var (
 
 	// HTTPClient is the internal HTTP client used by the SDK for API
 	// requests. Set this to a custom HTTP client, to implement e.g.
-	// automatic retries or rate limiting checks.
+	// automatic retries, rate limiting checks, or for tests.
 	HTTPClient = cleanhttp.DefaultPooledClient()
 )

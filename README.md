@@ -595,7 +595,7 @@ func main() {
 }
 ```
 
-### Testing
+## Testing
 
 When implementing a testing strategy for your licensing integration, we recommend that you
 fully mock our APIs. This is especially important for CI/CD environments, to prevent

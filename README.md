@@ -594,3 +594,64 @@ func main() {
   keygen.Validate()
 }
 ```
+
+### Testing
+
+When implementing a testing strategy for your licensing integration, we recommend that you
+fully mock our APIs. This is especially important for CI/CD environments, to prevent
+unneeded load on our servers. Mocking our APIs will also allow you to more easily
+stay within your account's daily request limits.
+
+To do so in Go, you can utilize [`gock`](https://github.com/h2non/gock) or [`httptest`](https://pkg.go.dev/net/http/httptest).
+
+```go
+package main
+
+import (
+  "testing"
+
+  "github.com/keygen-sh/keygen-go/v2"
+  "gopkg.in/h2non/gock.v1"
+)
+
+func init() {
+  keygen.PublicKey = "e8601e48b69383ba520245fd07971e983d06d22c4257cfd82304601479cee788"
+  keygen.Account = "1fddcec8-8dd3-4d8d-9b16-215cac0f9b52"
+  keygen.Product = "1f086ec9-a943-46ea-9da4-e62c2180c2f4"
+  keygen.LicenseKey = "C1B6DE-39A6E3-DE1529-8559A0-4AF593-V3"
+}
+
+func TestExample(t *testing.T) {
+  defer gock.Off()
+
+  // Intercept Keygen's HTTP client
+  gock.InterceptClient(keygen.HTTPClient)
+  defer gock.RestoreClient(keygen.HTTPClient)
+
+  // Mock endpoints
+  gock.New("https://api.keygen.sh").
+    Get(`/v1/accounts/([^\/]+)/me`).
+    Reply(200).
+    SetHeader("Keygen-Signature", `keyid="1fddcec8-8dd3-4d8d-9b16-215cac0f9b52", algorithm="ed25519", signature="IiyYX1ah2HFzbcCx+3sv+KJpOppFdMRuZ7NWlnwZMKAf5khj9c4TO4z6fr62BqNXlyROOTxZinX8UpXHJHVyAw==", headers="(request-target) host date digest"`).
+    SetHeader("Digest", "sha-256=d4uZ26hjiUNqopuSkYcYwg2aBuNtr4D1/9iDhlvf0H8=").
+    SetHeader("Date", "Wed, 15 Jun 2022 18:52:14 GMT").
+    BodyString(`{"data":{"id":"218810ed-2ac8-4c26-a725-a6da67500561","type":"licenses","attributes":{"name":"Demo License","key":"C1B6DE-39A6E3-DE1529-8559A0-4AF593-V3","expiry":null,"status":"ACTIVE","uses":0,"suspended":false,"scheme":null,"encrypted":false,"strict":false,"floating":false,"concurrent":false,"protected":true,"maxMachines":1,"maxProcesses":null,"maxCores":null,"maxUses":null,"requireHeartbeat":false,"requireCheckIn":false,"lastValidated":"2022-06-15T18:52:12.068Z","lastCheckIn":null,"nextCheckIn":null,"metadata":{"email":"user@example.com"},"created":"2020-09-14T21:18:08.990Z","updated":"2022-06-15T18:52:12.073Z"},"relationships":{"account":{"links":{"related":"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52"},"data":{"type":"accounts","id":"1fddcec8-8dd3-4d8d-9b16-215cac0f9b52"}},"product":{"links":{"related":"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/218810ed-2ac8-4c26-a725-a6da67500561/product"},"data":{"type":"products","id":"ef6e0993-70d6-42c4-a0e8-846cb2e3fa54"}},"policy":{"links":{"related":"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/218810ed-2ac8-4c26-a725-a6da67500561/policy"},"data":{"type":"policies","id":"629307fb-331d-430b-978a-44d45d9de133"}},"group":{"links":{"related":"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/218810ed-2ac8-4c26-a725-a6da67500561/group"},"data":null},"user":{"links":{"related":"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/218810ed-2ac8-4c26-a725-a6da67500561/user"},"data":null},"machines":{"links":{"related":"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/218810ed-2ac8-4c26-a725-a6da67500561/machines"},"meta":{"cores":0,"count":1}},"tokens":{"links":{"related":"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/218810ed-2ac8-4c26-a725-a6da67500561/tokens"}},"entitlements":{"links":{"related":"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/218810ed-2ac8-4c26-a725-a6da67500561/entitlements"}}},"links":{"self":"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/218810ed-2ac8-4c26-a725-a6da67500561"}}}`)
+
+  gock.New("https://api.keygen.sh").
+    Post(`/v1/accounts/([^\/]+)/licenses/([^\/]+)/actions/validate`).
+    Reply(200).
+    SetHeader("Keygen-Signature", `keyid="1fddcec8-8dd3-4d8d-9b16-215cac0f9b52", algorithm="ed25519", signature="z5zckjhvw88ZZQG3/TitNyDMjtWQajzwM6WPX4bQZnjvbfAqJthhCP5A6fubuYTJznow5FpsE5+zicJY+e6qCQ==", headers="(request-target) host date digest"`).
+    SetHeader("Digest", "sha-256=Whz4/RQLcj8UMvLMumkbblZm3L8mvYR34kXwq5Cf6YQ=").
+    SetHeader("Date", "Wed, 15 Jun 2022 18:52:16 GMT").
+    BodyString(`{"data":{"id":"218810ed-2ac8-4c26-a725-a6da67500561","type":"licenses","attributes":{"name":"Demo License","key":"C1B6DE-39A6E3-DE1529-8559A0-4AF593-V3","expiry":null,"status":"ACTIVE","uses":0,"suspended":false,"scheme":null,"encrypted":false,"strict":false,"floating":false,"concurrent":false,"protected":true,"maxMachines":1,"maxProcesses":null,"maxCores":null,"maxUses":null,"requireHeartbeat":false,"requireCheckIn":false,"lastValidated":"2022-06-15T18:52:16.115Z","lastCheckIn":null,"nextCheckIn":null,"metadata":{"email":"user@example.com"},"created":"2020-09-14T21:18:08.990Z","updated":"2022-06-15T18:52:16.121Z"},"relationships":{"account":{"links":{"related":"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52"},"data":{"type":"accounts","id":"1fddcec8-8dd3-4d8d-9b16-215cac0f9b52"}},"product":{"links":{"related":"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/218810ed-2ac8-4c26-a725-a6da67500561/product"},"data":{"type":"products","id":"ef6e0993-70d6-42c4-a0e8-846cb2e3fa54"}},"policy":{"links":{"related":"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/218810ed-2ac8-4c26-a725-a6da67500561/policy"},"data":{"type":"policies","id":"629307fb-331d-430b-978a-44d45d9de133"}},"group":{"links":{"related":"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/218810ed-2ac8-4c26-a725-a6da67500561/group"},"data":null},"user":{"links":{"related":"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/218810ed-2ac8-4c26-a725-a6da67500561/user"},"data":null},"machines":{"links":{"related":"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/218810ed-2ac8-4c26-a725-a6da67500561/machines"},"meta":{"cores":0,"count":1}},"tokens":{"links":{"related":"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/218810ed-2ac8-4c26-a725-a6da67500561/tokens"}},"entitlements":{"links":{"related":"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/218810ed-2ac8-4c26-a725-a6da67500561/entitlements"}}},"links":{"self":"/v1/accounts/1fddcec8-8dd3-4d8d-9b16-215cac0f9b52/licenses/218810ed-2ac8-4c26-a725-a6da67500561"}},"meta":{"ts":"2022-06-15T18:52:16.126Z","valid":true,"detail":"is valid","constant":"VALID"}}`)
+
+  // Allow old response signatures
+  keygen.MaxClockDrift = -1
+
+  // Use SDK as you would normally
+  _, err := keygen.Validate()
+  if err != nil {
+    t.Fatalf("Should not fail mock validation: err=%v", err)
+  }
+}
+```

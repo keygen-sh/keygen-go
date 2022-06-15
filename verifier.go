@@ -136,7 +136,7 @@ func (v *verifier) VerifyRequest(request *http.Request) error {
 		return err
 	}
 
-	if time.Since(t) > MaxClockDrift {
+	if MaxClockDrift >= 0 && time.Since(t) > MaxClockDrift {
 		return ErrRequestDateTooOld
 	}
 
@@ -208,7 +208,7 @@ func (v *verifier) VerifyResponse(response *Response) error {
 		return err
 	}
 
-	if time.Since(t) > MaxClockDrift {
+	if MaxClockDrift >= 0 && time.Since(t) > MaxClockDrift {
 		return ErrResponseDateTooOld
 	}
 

@@ -53,7 +53,8 @@ var (
 
 	// MaxClockDrift is the maximum allowable difference between the
 	// server time Keygen's API sent a request or response and the
-	// current system time, to prevent replay attacks.
+	// current system time, to prevent clock-tampering and replay
+	// attacks. Set to -1 to disable.
 	MaxClockDrift = time.Duration(5) * time.Minute
 
 	// HTTPClient is the internal HTTP client used by the SDK for API

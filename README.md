@@ -25,7 +25,7 @@ keygen.Product = "1f086ec9-a943-46ea-9da4-e62c2180c2f4"
 
 ### keygen.LicenseKey
 
-`LicenseKey` a license key belonging to the end-user (licensee). This will be used for license
+`LicenseKey` is a license key belonging to the end-user (licensee). This will be used for license
 validations, activations, deactivations and upgrade requests. You will need to prompt the
 end-user for this value.
 

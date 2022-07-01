@@ -267,7 +267,10 @@ func TestLicenseFile(t *testing.T) {
 	}
 
 	dataset, err := lic.Decrypt(LicenseKey)
-	if err != nil {
+	switch {
+	case err == ErrLicenseFileExpired:
+		// noop
+	case err != nil:
 		t.Fatalf("License file decryption failed: err=%v", err)
 	}
 
@@ -286,7 +289,10 @@ func TestMachineFile(t *testing.T) {
 	}
 
 	dataset, err := lic.Decrypt(LicenseKey + "39bb2cae-af5a-40c2-80f7-9e2ea0f90d17")
-	if err != nil {
+	switch {
+	case err == ErrMachineFileExpired:
+		// noop
+	case err != nil:
 		t.Fatalf("Machine file decryption failed: err=%v", err)
 	}
 

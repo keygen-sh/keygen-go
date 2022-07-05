@@ -61,7 +61,7 @@ func (v *validation) SetMeta(to func(target interface{}) error) error {
 }
 
 type result struct {
-	Code  ValidationCode `json:"constant"`
+	Code  ValidationCode `json:"code"`
 	Valid bool           `json:"valid"`
 }
 

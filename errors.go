@@ -128,6 +128,7 @@ var (
 	ErrLicenseSuspended             = errors.New("license is suspended")
 	ErrLicenseTooManyMachines       = errors.New("license has too many machines")
 	ErrLicenseTooManyCores          = errors.New("license has too many cores")
+	ErrLicenseTooManyProcesses      = errors.New("license has too many processes")
 	ErrLicenseNotSigned             = errors.New("license is not signed")
 	ErrLicenseInvalid               = errors.New("license is invalid")
 	ErrLicenseFileNotSupported      = errors.New("license file is not supported")

@@ -91,6 +91,8 @@ func (l *License) Validate(fingerprints ...string) error {
 		return ErrLicenseTooManyMachines
 	case validation.Result.Code == ValidationCodeTooManyCores:
 		return ErrLicenseTooManyCores
+	case validation.Result.Code == ValidationCodeTooManyProcesses:
+		return ErrLicenseTooManyProcesses
 	case validation.Result.Code == ValidationCodeFingerprintScopeRequired ||
 		validation.Result.Code == ValidationCodeFingerprintScopeEmpty:
 		return ErrValidationFingerprintMissing

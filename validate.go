@@ -12,6 +12,7 @@ const (
 	ValidationCodeNoMachines               ValidationCode = "NO_MACHINES"
 	ValidationCodeTooManyMachines          ValidationCode = "TOO_MANY_MACHINES"
 	ValidationCodeTooManyCores             ValidationCode = "TOO_MANY_CORES"
+	ValidationCodeTooManyProcesses         ValidationCode = "TOO_MANY_PROCESSES"
 	ValidationCodeFingerprintScopeRequired ValidationCode = "FINGERPRINT_SCOPE_REQUIRED"
 	ValidationCodeFingerprintScopeMismatch ValidationCode = "FINGERPRINT_SCOPE_MISMATCH"
 	ValidationCodeFingerprintScopeEmpty    ValidationCode = "FINGERPRINT_SCOPE_EMPTY"

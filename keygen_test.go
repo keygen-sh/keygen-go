@@ -61,7 +61,7 @@ func TestValidate(t *testing.T) {
 		case license.LastValidation.Code != ValidationCodeNoMachine:
 			t.Fatalf("Should store last validation code: code=%s", license.LastValidation.Code)
 		case license.LastValidation.Valid:
-			t.Fatalf("Should store last validation validity: valid=%t", license.LastValidation.Valid)
+			t.Fatalf("Should store last validation: valid=%t", license.LastValidation.Valid)
 		case license.ID == "":
 			t.Fatalf("Should have a correctly set license ID: license=%v", license)
 		}
@@ -224,9 +224,16 @@ func TestValidate(t *testing.T) {
 			t.Fatalf("Should not fail to list machines: err=%v", err)
 		}
 
-		_, err = Validate(fingerprint)
+		l, err := Validate(fingerprint)
 		if err != nil {
 			t.Fatalf("Should not fail revalidation: err=%v", err)
+		}
+
+		switch {
+		case l.LastValidation.Code != ValidationCodeValid:
+			t.Fatalf("Should store last revalidation code: code=%s", l.LastValidation.Code)
+		case !l.LastValidation.Valid:
+			t.Fatalf("Should store last revalidation: valid=%t", l.LastValidation.Valid)
 		}
 
 		for _, machine := range machines {

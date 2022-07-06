@@ -28,6 +28,7 @@ type License struct {
 	Updated          time.Time              `json:"updated"`
 	Metadata         map[string]interface{} `json:"metadata"`
 	PolicyId         string                 `json:"-"`
+	LastValidation   *ValidationResult      `json:"-"`
 }
 
 // SetID implements the jsonapi.UnmarshalResourceIdentifier interface.
@@ -73,6 +74,9 @@ func (l *License) Validate(fingerprints ...string) error {
 	}
 
 	*l = validation.License
+
+	// Store last validation result
+	l.LastValidation = &validation.Result
 
 	if validation.Result.Code == ValidationCodeValid {
 		return nil

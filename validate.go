@@ -47,8 +47,8 @@ func (v validate) GetMeta() interface{} {
 }
 
 type validation struct {
-	License License `json:"-"`
-	Result  result  `json:"-"`
+	License License          `json:"-"`
+	Result  ValidationResult `json:"-"`
 }
 
 // SetData implements the jsonapi.UnmarshalData interface.
@@ -61,7 +61,7 @@ func (v *validation) SetMeta(to func(target interface{}) error) error {
 	return to(&v.Result)
 }
 
-type result struct {
+type ValidationResult struct {
 	Code  ValidationCode `json:"code"`
 	Valid bool           `json:"valid"`
 }

@@ -57,7 +57,12 @@ func TestValidate(t *testing.T) {
 	case err == ErrLicenseInvalid:
 		t.Fatalf("Should be a valid license: err=%v", err)
 	case err == ErrLicenseNotActivated:
-		if license.ID == "" {
+		switch {
+		case license.LastValidation.Code != ValidationCodeNoMachine:
+			t.Fatalf("Should store last validation code: code=%s", license.LastValidation.Code)
+		case license.LastValidation.Valid:
+			t.Fatalf("Should store last validation validity: valid=%t", license.LastValidation.Valid)
+		case license.ID == "":
 			t.Fatalf("Should have a correctly set license ID: license=%v", license)
 		}
 

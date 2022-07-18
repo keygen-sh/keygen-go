@@ -96,7 +96,7 @@ func (lic *MachineFile) Decrypt(key string) (*MachineFileDataset, error) {
 		return dataset, ErrSystemClockUnsynced
 	}
 
-	if time.Now().After(dataset.Expiry) {
+	if dataset.TTL != 0 && time.Now().After(dataset.Expiry) {
 		return dataset, ErrMachineFileExpired
 	}
 

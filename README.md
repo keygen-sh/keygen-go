@@ -226,6 +226,9 @@ func main() {
 
     return
   }
+  
+  fmt.Printf("Upgrade available! Newest version: %s\n", release.Version)
+	fmt.Println("Installing upgrade...")
 
   // Download the upgrade and install it
   err = release.Install()

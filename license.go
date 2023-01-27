@@ -68,9 +68,9 @@ func (l *License) Validate(fingerprints ...string) error {
 	if _, err := client.Post("licenses/"+l.ID+"/actions/validate", params, validation); err != nil {
 		if _, ok := err.(*NotFoundError); ok {
 			return ErrLicenseInvalid
-		} else {
-			return err
 		}
+
+		return err
 	}
 
 	*l = validation.License

@@ -12,6 +12,8 @@ type ErrorCode string
 const (
 	ErrorCodeTokenInvalid         ErrorCode = "TOKEN_INVALID"
 	ErrorCodeLicenseInvalid       ErrorCode = "LICENSE_INVALID"
+	ErrorCodeLicenseExpired       ErrorCode = "LICENSE_EXPIRED"
+	ErrorCodeLicenseSuspended     ErrorCode = "LICENSE_SUSPENDED"
 	ErrorCodeFingerprintTaken     ErrorCode = "FINGERPRINT_TAKEN"
 	ErrorCodeMachineLimitExceeded ErrorCode = "MACHINE_LIMIT_EXCEEDED"
 	ErrorCodeProcessLimitExceeded ErrorCode = "MACHINE_PROCESS_LIMIT_EXCEEDED"

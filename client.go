@@ -306,7 +306,17 @@ func (c *Client) send(req *http.Request, model interface{}) (*Response, error) {
 		err := &Error{response, doc.Errors[0].Title, doc.Errors[0].Detail, doc.Errors[0].Code, doc.Errors[0].Source.Pointer}
 
 		if response.Status == http.StatusForbidden {
-			return response, &NotAuthorizedError{err}
+			code := ErrorCode(err.Code)
+
+			// Handle certain license auth error codes so that we emit helpful errors
+			switch {
+			case code == ErrorCodeLicenseSuspended:
+				return nil, ErrLicenseSuspended
+			case code == ErrorCodeLicenseExpired:
+				return nil, ErrLicenseExpired
+			default:
+				return response, &NotAuthorizedError{err}
+			}
 		}
 
 		// TODO(ezekg) Handle additional error codes

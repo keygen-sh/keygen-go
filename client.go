@@ -311,9 +311,9 @@ func (c *Client) send(req *http.Request, model interface{}) (*Response, error) {
 			// Handle certain license auth error codes so that we emit helpful errors
 			switch {
 			case code == ErrorCodeLicenseSuspended:
-				return nil, ErrLicenseSuspended
+				return response, ErrLicenseSuspended
 			case code == ErrorCodeLicenseExpired:
-				return nil, ErrLicenseExpired
+				return response, ErrLicenseExpired
 			default:
 				return response, &NotAuthorizedError{err}
 			}

@@ -570,7 +570,7 @@ You may want to add a limit to the number of retry attempts.
 ### Automatic retries
 
 When your integration has less-than-stellar network connectivity, or you simply want to
-ensure that failed requests are retried, you can utilize a package such as [`retryablehttp`](github.com/hashicorp/go-retryablehttp)
+ensure that failed requests are retried, you can utilize a package such as [`retryablehttp`](https://github.com/hashicorp/go-retryablehttp)
 to implement automatic retries.
 
 ```go

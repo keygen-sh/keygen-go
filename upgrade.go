@@ -5,6 +5,11 @@ type UpgradeOptions struct {
 	// Keygen to determine if an upgrade is available.
 	CurrentVersion string
 
+	// Product is the product ID to scope the upgrade to. This defaults to keygen.Product,
+	// but overriding it may be useful if you're requesting an upgrade for another
+	// accessible product, e.g. a product with an OPEN distribution strategy.
+	Product string
+
 	// Constraint is a version constraint to use when checking for upgrades. For
 	// example, to pin upgrades to v1, you would pass a "1.0" constraint.
 	Constraint string
@@ -49,12 +54,16 @@ func Upgrade(options UpgradeOptions) (*Release, error) {
 		options.Filename = `{{.program}}_{{.platform}}_{{.arch}}{{if .ext}}.{{.ext}}{{end}}`
 	}
 
+	if options.Product == "" {
+		options.Product = Product
+	}
+
 	if options.Channel == "" {
 		options.Channel = "stable"
 	}
 
 	client := NewClient()
-	params := querystring{Constraint: options.Constraint, Channel: options.Channel}
+	params := querystring{Product: options.Product, Constraint: options.Constraint, Channel: options.Channel}
 	release := &Release{}
 
 	if _, err := client.Get("releases/"+options.CurrentVersion+"/upgrade", params, release); err != nil {

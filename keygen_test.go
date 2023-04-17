@@ -391,6 +391,15 @@ func TestUpgrade(t *testing.T) {
 		t.Fatalf("Should not have an upgrade available: err=%v", err)
 	}
 
+	// Invalid product
+	opts.CurrentVersion = "1.0.0"
+	opts.Product = uuid.NewString()
+
+	_, err = Upgrade(opts)
+	if err != ErrUpgradeNotAvailable {
+		t.Fatalf("Should not have an upgrade available: err=%v", err)
+	}
+
 	t.Logf("upgrade=%v", upgrade)
 }
 

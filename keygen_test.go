@@ -160,6 +160,11 @@ func TestValidate(t *testing.T) {
 			t.Fatalf("Should fail over-limit activation: license=%v err=%v", license, err)
 		}
 
+		// Check if there are any race conditions
+		for i := 0; i <= 5; i++ {
+			go license.Machine(machine.Fingerprint)
+		}
+
 		err = machine.Monitor()
 		if err != nil {
 			t.Fatalf("Should not fail to send first hearbeat ping: err=%v", err)

@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/go-querystring/query"
@@ -16,6 +17,9 @@ import (
 
 var (
 	userAgent = "keygen/" + APIVersion + " sdk/" + SDKVersion + " go/" + runtime.Version() + " " + runtime.GOOS + "/" + runtime.GOARCH
+
+	// mutex is used to sychronize access to the HTTP client.
+	mutex = &sync.Mutex{}
 )
 
 type Response struct {
@@ -56,6 +60,8 @@ type ClientOptions struct {
 type Client struct {
 	HTTPClient *http.Client
 	ClientOptions
+
+	mutex *sync.Mutex
 }
 
 // NewClient creates a new Client with default settings.
@@ -69,6 +75,7 @@ func NewClient() *Client {
 			PublicKey:  PublicKey,
 			UserAgent:  UserAgent,
 		},
+		mutex,
 	}
 
 	return client
@@ -85,6 +92,7 @@ func NewClientWithOptions(options *ClientOptions) *Client {
 			PublicKey:  options.PublicKey,
 			UserAgent:  options.UserAgent,
 		},
+		mutex,
 	}
 
 	return client
@@ -203,6 +211,9 @@ func (c *Client) new(method string, path string, params interface{}) (*http.Requ
 }
 
 func (c *Client) send(req *http.Request, model interface{}) (*Response, error) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
 	c.HTTPClient.CheckRedirect = c.checkRedirect
 
 	res, err := c.HTTPClient.Do(req)

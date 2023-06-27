@@ -18,7 +18,7 @@ var (
 	APIURL = "https://api.keygen.sh"
 
 	// APIVersion is the currently supported API version.
-	APIVersion = "1.2"
+	APIVersion = "1.3"
 
 	// APIPrefix is the major version prefix included in all API URLs.
 	APIPrefix = "v1"
@@ -28,6 +28,9 @@ var (
 
 	// Product is the Keygen product ID used globally in the SDK.
 	Product string
+
+	// Environment is the Keygen environment identifier used globally in the SDK.
+	Environment string
 
 	// LicenseKey is the end-user's license key used in the SDK.
 	LicenseKey string

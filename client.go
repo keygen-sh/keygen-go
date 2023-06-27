@@ -49,11 +49,12 @@ func (r *Response) tldr() string {
 
 // ClientOptions stores config options used in API requests.
 type ClientOptions struct {
-	Account    string
-	LicenseKey string
-	Token      string
-	PublicKey  string
-	UserAgent  string
+	Account     string
+	Environment string
+	LicenseKey  string
+	Token       string
+	PublicKey   string
+	UserAgent   string
 }
 
 // Client represents the internal HTTP client and config used for API requests.
@@ -69,11 +70,12 @@ func NewClient() *Client {
 	client := &Client{
 		HTTPClient,
 		ClientOptions{
-			Account:    Account,
-			LicenseKey: LicenseKey,
-			Token:      Token,
-			PublicKey:  PublicKey,
-			UserAgent:  UserAgent,
+			Account:     Account,
+			Environment: Environment,
+			LicenseKey:  LicenseKey,
+			Token:       Token,
+			PublicKey:   PublicKey,
+			UserAgent:   UserAgent,
 		},
 		mutex,
 	}
@@ -86,11 +88,12 @@ func NewClientWithOptions(options *ClientOptions) *Client {
 	client := &Client{
 		HTTPClient,
 		ClientOptions{
-			Account:    options.Account,
-			LicenseKey: options.LicenseKey,
-			Token:      options.Token,
-			PublicKey:  options.PublicKey,
-			UserAgent:  options.UserAgent,
+			Account:     options.Account,
+			Environment: options.Environment,
+			LicenseKey:  options.LicenseKey,
+			Token:       options.Token,
+			PublicKey:   options.PublicKey,
+			UserAgent:   options.UserAgent,
 		},
 		mutex,
 	}
@@ -202,8 +205,16 @@ func (c *Client) new(method string, path string, params interface{}) (*http.Requ
 		req.Header.Add("Authorization", "Bearer "+c.Token)
 	}
 
+	if c.Environment != "" {
+		req.Header.Add("Keygen-Environment", c.Environment)
+	}
+
 	req.Header.Add("Keygen-Version", APIVersion)
-	req.Header.Add("Content-Type", jsonapi.ContentType)
+
+	if in.Len() > 0 {
+		req.Header.Add("Content-Type", jsonapi.ContentType)
+	}
+
 	req.Header.Add("Accept", jsonapi.ContentType)
 	req.Header.Add("User-Agent", ua)
 

@@ -1,4 +1,7 @@
-# Keygen Go SDK [![godoc reference](https://godoc.org/github.com/keygen-sh/keygen-go/v2?status.png)](https://godoc.org/github.com/keygen-sh/keygen-go/v2)
+# Keygen Go SDK
+
+[![godoc reference](https://godoc.org/github.com/keygen-sh/keygen-go/v2?status.png)](https://godoc.org/github.com/keygen-sh/keygen-go/v2)
+[![CI](https://github.com/keygen-sh/keygen-go/actions/workflows/test.yml/badge.svg)](https://github.com/keygen-sh/keygen-go/actions)
 
 Package [`keygen`](https://pkg.go.dev/github.com/keygen-sh/keygen-go/v2) allows Go programs to
 license and remotely update themselves using the [keygen.sh](https://keygen.sh) service.
@@ -226,7 +229,7 @@ func main() {
 
     return
   }
-  
+
   fmt.Printf("Upgrade available! Newest version: %s\n", release.Version)
   fmt.Println("Installing upgrade...")
 

@@ -87,7 +87,7 @@ func (lic *LicenseFile) Decrypt(key string) (*LicenseFileDataset, error) {
 		return nil, err
 	}
 
-	if time.Now().Before(dataset.Issued) {
+	if MaxClockDrift >= 0 && time.Until(dataset.Issued) > MaxClockDrift {
 		return dataset, ErrSystemClockUnsynced
 	}
 

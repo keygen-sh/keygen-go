@@ -92,7 +92,7 @@ func (lic *MachineFile) Decrypt(key string) (*MachineFileDataset, error) {
 		return nil, &MachineFileError{err}
 	}
 
-	if time.Now().Before(dataset.Issued) {
+	if MaxClockDrift >= 0 && time.Until(dataset.Issued) > MaxClockDrift {
 		return dataset, ErrSystemClockUnsynced
 	}
 

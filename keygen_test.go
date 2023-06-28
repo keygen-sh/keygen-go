@@ -22,10 +22,11 @@ func init() {
 	}
 
 	PublicKey = os.Getenv("KEYGEN_PUBLIC_KEY")
-	Account = os.Getenv("KEYGEN_ACCOUNT")
-	Product = os.Getenv("KEYGEN_PRODUCT")
+	Environment = os.Getenv("KEYGEN_ENVIRONMENT_ID")
+	Account = os.Getenv("KEYGEN_ACCOUNT_ID")
+	Product = os.Getenv("KEYGEN_PRODUCT_ID")
 	LicenseKey = os.Getenv("KEYGEN_LICENSE_KEY")
-	Token = os.Getenv("KEYGEN_TOKEN")
+	Token = os.Getenv("KEYGEN_LICENSE_TOKEN")
 	Logger = log
 }
 

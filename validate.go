@@ -39,11 +39,16 @@ type meta struct {
 type scope struct {
 	Fingerprints []string `json:"fingerprints"`
 	Product      string   `json:"product"`
+	Environment  *string  `json:"environment"`
 }
 
 // GetMeta implements jsonapi.MarshalMeta interface.
 func (v validate) GetMeta() interface{} {
-	return meta{Scope: scope{Fingerprints: v.fingerprints, Product: Product}}
+	if Environment != "" {
+		return meta{Scope: scope{Fingerprints: v.fingerprints, Product: Product, Environment: &Environment}}
+	}
+
+	return meta{Scope: scope{Fingerprints: v.fingerprints, Environment: nil, Product: Product}}
 }
 
 type validation struct {

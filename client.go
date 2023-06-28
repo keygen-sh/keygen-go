@@ -345,6 +345,8 @@ func (c *Client) send(req *http.Request, model interface{}) (*Response, error) {
 		code := ErrorCode(doc.Errors[0].Code)
 
 		switch {
+		case code == ErrorCodeEnvironmentNotSupported || code == ErrorCodeEnvironmentInvalid:
+			return response, &EnvironmentError{err}
 		case code == ErrorCodeMachineHeartbeatDead || code == ErrorCodeProcessHeartbeatDead:
 			return response, ErrHeartbeatDead
 		case code == ErrorCodeFingerprintTaken:

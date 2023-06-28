@@ -10,16 +10,18 @@ import (
 type ErrorCode string
 
 const (
-	ErrorCodeTokenInvalid         ErrorCode = "TOKEN_INVALID"
-	ErrorCodeLicenseInvalid       ErrorCode = "LICENSE_INVALID"
-	ErrorCodeLicenseExpired       ErrorCode = "LICENSE_EXPIRED"
-	ErrorCodeLicenseSuspended     ErrorCode = "LICENSE_SUSPENDED"
-	ErrorCodeFingerprintTaken     ErrorCode = "FINGERPRINT_TAKEN"
-	ErrorCodeMachineLimitExceeded ErrorCode = "MACHINE_LIMIT_EXCEEDED"
-	ErrorCodeProcessLimitExceeded ErrorCode = "MACHINE_PROCESS_LIMIT_EXCEEDED"
-	ErrorCodeMachineHeartbeatDead ErrorCode = "MACHINE_HEARTBEAT_DEAD"
-	ErrorCodeProcessHeartbeatDead ErrorCode = "PROCESS_HEARTBEAT_DEAD"
-	ErrorCodeNotFound             ErrorCode = "NOT_FOUND"
+	ErrorCodeEnvironmentInvalid      ErrorCode = "ENVIRONMENT_INVALID"
+	ErrorCodeEnvironmentNotSupported ErrorCode = "ENVIRONMENT_NOT_SUPPORTED"
+	ErrorCodeTokenInvalid            ErrorCode = "TOKEN_INVALID"
+	ErrorCodeLicenseInvalid          ErrorCode = "LICENSE_INVALID"
+	ErrorCodeLicenseExpired          ErrorCode = "LICENSE_EXPIRED"
+	ErrorCodeLicenseSuspended        ErrorCode = "LICENSE_SUSPENDED"
+	ErrorCodeFingerprintTaken        ErrorCode = "FINGERPRINT_TAKEN"
+	ErrorCodeMachineLimitExceeded    ErrorCode = "MACHINE_LIMIT_EXCEEDED"
+	ErrorCodeProcessLimitExceeded    ErrorCode = "MACHINE_PROCESS_LIMIT_EXCEEDED"
+	ErrorCodeMachineHeartbeatDead    ErrorCode = "MACHINE_HEARTBEAT_DEAD"
+	ErrorCodeProcessHeartbeatDead    ErrorCode = "PROCESS_HEARTBEAT_DEAD"
+	ErrorCodeNotFound                ErrorCode = "NOT_FOUND"
 )
 
 // Error represents an API error response.
@@ -36,6 +38,12 @@ func (e *Error) Error() string {
 
 	return fmt.Sprintf("an error occurred: id=%s status=%d size=%d body=%s", res.ID, res.Status, res.Size, res.tldr())
 }
+
+// EnvironmentError represents an API environment error due to an invalid environment.
+type EnvironmentError struct{ Err *Error }
+
+func (e *EnvironmentError) Error() string { return "environment is invalid" }
+func (e *EnvironmentError) Unwrap() error { return e.Err }
 
 // LicenseTokenError represents an API authentication error due to an invalid license token.
 type LicenseTokenError struct{ Err *Error }

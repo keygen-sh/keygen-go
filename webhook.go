@@ -10,19 +10,19 @@ import (
 //
 // Example:
 //
-//   func main() {
-//       http.HandleFunc("/webhooks", func(w http.ResponseWriter, r *http.Request) {
-//           if err := keygen.VerifyWebhook(r); err != nil {
-//               w.WriteHeader(http.StatusBadRequest)
+//	func main() {
+//		http.HandleFunc("/webhooks", func(w http.ResponseWriter, r *http.Request) {
+//			if err := keygen.VerifyWebhook(r); err != nil {
+//				w.WriteHeader(http.StatusBadRequest)
 //
-//               return
-//           }
+//				return
+//			}
 //
-//           w.WriteHeader(http.StatusNoContent)
-//       })
+//			w.WriteHeader(http.StatusNoContent)
+//		})
 //
-//       http.ListenAndServe(":8081", nil)
-//   }
+//		http.ListenAndServe(":8081", nil)
+//	}
 func VerifyWebhook(request *http.Request) error {
 	verifier := &verifier{PublicKey: PublicKey}
 

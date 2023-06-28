@@ -55,6 +55,9 @@ type ClientOptions struct {
 	Token       string
 	PublicKey   string
 	UserAgent   string
+	APIVersion  string
+	APIPrefix   string
+	APIURL      string
 }
 
 // Client represents the internal HTTP client and config used for API requests.
@@ -76,6 +79,9 @@ func NewClient() *Client {
 			Token:       Token,
 			PublicKey:   PublicKey,
 			UserAgent:   UserAgent,
+			APIPrefix:   APIPrefix,
+			APIVersion:  APIVersion,
+			APIURL:      APIURL,
 		},
 		mutex,
 	}
@@ -94,6 +100,9 @@ func NewClientWithOptions(options *ClientOptions) *Client {
 			Token:       options.Token,
 			PublicKey:   options.PublicKey,
 			UserAgent:   options.UserAgent,
+			APIPrefix:   options.APIPrefix,
+			APIVersion:  options.APIVersion,
+			APIURL:      options.APIURL,
 		},
 		mutex,
 	}
@@ -154,11 +163,23 @@ func (c *Client) Delete(path string, params interface{}, model interface{}) (*Re
 func (c *Client) new(method string, path string, params interface{}) (*http.Request, error) {
 	var url string
 
+	if c.APIVersion == "" {
+		c.APIVersion = APIVersion
+	}
+
+	if c.APIPrefix == "" {
+		c.APIPrefix = APIPrefix
+	}
+
+	if c.APIURL == "" {
+		c.APIURL = APIURL
+	}
+
 	// Support for custom domains
-	if APIURL == "https://api.keygen.sh" {
-		url = fmt.Sprintf("%s/%s/accounts/%s/%s", APIURL, APIPrefix, c.Account, path)
+	if c.APIURL == "https://api.keygen.sh" {
+		url = fmt.Sprintf("%s/%s/accounts/%s/%s", c.APIURL, c.APIPrefix, c.Account, path)
 	} else {
-		url = fmt.Sprintf("%s/%s/%s", APIURL, APIPrefix, path)
+		url = fmt.Sprintf("%s/%s/%s", c.APIURL, c.APIPrefix, path)
 	}
 
 	ua := strings.Join([]string{userAgent, c.UserAgent}, " ")
@@ -209,7 +230,7 @@ func (c *Client) new(method string, path string, params interface{}) (*http.Requ
 		req.Header.Add("Keygen-Environment", c.Environment)
 	}
 
-	req.Header.Add("Keygen-Version", APIVersion)
+	req.Header.Add("Keygen-Version", c.APIVersion)
 
 	if in.Len() > 0 {
 		req.Header.Add("Content-Type", jsonapi.ContentType)

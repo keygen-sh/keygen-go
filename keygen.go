@@ -10,7 +10,7 @@ import (
 
 const (
 	// The current version of the SDK.
-	SDKVersion = "2.5.0"
+	SDKVersion = "2.6.0"
 )
 
 var (
@@ -23,11 +23,14 @@ var (
 	// APIPrefix is the major version prefix included in all API URLs.
 	APIPrefix = "v1"
 
-	// Account is the Keygen account ID used globally in the SDK.
+	// Account is the Keygen account identifier used globally in the SDK.
 	Account string
 
-	// Product is the Keygen product ID used globally in the SDK.
+	// Product is the Keygen product identifier used globally in the SDK.
 	Product string
+
+	// Package is the Keygen package identifier used globally in the SDK.
+	Package string
 
 	// Environment is the Keygen environment identifier used globally in the SDK.
 	Environment string

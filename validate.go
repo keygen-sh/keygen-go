@@ -39,7 +39,7 @@ type meta struct {
 type scope struct {
 	Fingerprints []string `json:"fingerprints"`
 	Product      string   `json:"product"`
-	Environment  *string  `json:"environment"`
+	Environment  *string  `json:"environment,omitempty"`
 }
 
 // GetMeta implements jsonapi.MarshalMeta interface.

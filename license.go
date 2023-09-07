@@ -201,11 +201,19 @@ func (l *License) Entitlements() (Entitlements, error) {
 }
 
 // Checkout generates an encrypted license file. Returns a LicenseFile.
-func (l *License) Checkout() (*LicenseFile, error) {
+func (l *License) Checkout(options ...CheckoutOption) (*LicenseFile, error) {
 	client := NewClient()
 	lic := &LicenseFile{}
 
-	if _, err := client.Post("licenses/"+l.ID+"/actions/check-out", querystring{Encrypt: true, Include: "entitlements"}, lic); err != nil {
+	opts := CheckoutOptions{Encrypt: true, Include: "entitlements"}
+	for _, opt := range options {
+		err := opt(&opts)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if _, err := client.Post("licenses/"+l.ID+"/actions/check-out", opts, lic); err != nil {
 		return nil, err
 	}
 

@@ -152,16 +152,24 @@ func (m *Machine) Monitor() error {
 }
 
 // Checkout generates an encrypted machine file. Returns a MachineFile.
-func (m *Machine) Checkout() (*MachineFile, error) {
+func (m *Machine) Checkout(options ...CheckoutOption) (*MachineFile, error) {
 	client := NewClient()
 	license := &License{}
 	lic := &MachineFile{}
+
+	opts := CheckoutOptions{Encrypt: true, Include: "license,license.entitlements"}
+	for _, opt := range options {
+		err := opt(&opts)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if _, err := client.Get("me", nil, license); err != nil {
 		return nil, err
 	}
 
-	if _, err := client.Post("machines/"+m.ID+"/actions/check-out", querystring{Encrypt: true, Include: "license,license.entitlements"}, lic); err != nil {
+	if _, err := client.Post("machines/"+m.ID+"/actions/check-out", opts, lic); err != nil {
 		return nil, err
 	}
 

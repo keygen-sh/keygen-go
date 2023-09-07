@@ -71,43 +71,91 @@ func TestValidate(t *testing.T) {
 			t.Fatalf("Should have a correct last validated timestamp: ts=%v", ts)
 		}
 
-		keyDataset, err := license.Verify()
-		switch {
-		case err == ErrLicenseKeyNotGenuine:
-			t.Fatalf("Should be a genuine license key: err=%v", err)
-		case err != nil:
-			t.Fatalf("Should not fail genuine check: err=%v", err)
+		{
+			dataset, err := license.Verify()
+			switch {
+			case err == ErrLicenseKeyNotGenuine:
+				t.Fatalf("Should be a genuine license key: err=%v", err)
+			case err != nil:
+				t.Fatalf("Should not fail genuine check: err=%v", err)
+			}
+
+			t.Logf("dataset=%v", dataset)
 		}
 
-		lic, err := license.Checkout()
-		if err != nil {
-			t.Fatalf("Should not fail checkout: err=%v", err)
+		// defaults
+		{
+			lic, err := license.Checkout()
+			if err != nil {
+				t.Fatalf("Should not fail checkout: err=%v", err)
+			}
+
+			err = lic.Verify()
+			switch {
+			case err == ErrLicenseFileNotGenuine:
+				t.Fatalf("Should be a genuine license file: err=%v", err)
+			case err != nil:
+				t.Fatalf("Should not fail genuine check: err=%v", err)
+			}
+
+			dataset, err := lic.Decrypt(license.Key)
+			if err != nil {
+				t.Fatalf("Should not fail decrypt: err=%v", err)
+			}
+
+			switch {
+			case dataset.License.ID != license.ID:
+				t.Fatalf("Should have the correct license ID: actual=%s expected=%s", dataset.License.ID, license.ID)
+			case len(dataset.Entitlements) == 0:
+				t.Fatalf("Should have at least 1 entitlement: entitlements=%s", dataset.Entitlements)
+			case dataset.Issued.IsZero():
+				t.Fatalf("Should have an issued timestamp: ts=%v", dataset.Issued)
+			case dataset.Expiry.IsZero():
+				t.Fatalf("Should have an expiry timestamp: ts=%v", dataset.Expiry)
+			case dataset.TTL == 0:
+				t.Fatalf("Should have a TTL: ttl=%d", dataset.TTL)
+			}
+
+			t.Logf("dataset=%+v", dataset)
 		}
 
-		err = lic.Verify()
-		switch {
-		case err == ErrLicenseFileNotGenuine:
-			t.Fatalf("Should be a genuine license file: err=%v", err)
-		case err != nil:
-			t.Fatalf("Should not fail genuine check: err=%v", err)
-		}
+		// options
+		{
+			lic, err := license.Checkout(
+				CheckoutInclude(),
+				CheckoutTTL(24*time.Hour),
+			)
+			if err != nil {
+				t.Fatalf("Should not fail checkout: err=%v", err)
+			}
 
-		licDataset, err := lic.Decrypt(license.Key)
-		if err != nil {
-			t.Fatalf("Should not fail decrypt: err=%v", err)
-		}
+			err = lic.Verify()
+			switch {
+			case err == ErrLicenseFileNotGenuine:
+				t.Fatalf("Should be a genuine license file: err=%v", err)
+			case err != nil:
+				t.Fatalf("Should not fail genuine check: err=%v", err)
+			}
 
-		switch {
-		case licDataset.License.ID != license.ID:
-			t.Fatalf("Should have the correct license ID: actual=%s expected=%s", licDataset.License.ID, license.ID)
-		case len(licDataset.Entitlements) == 0:
-			t.Fatalf("Should have at least 1 entitlement: entitlements=%s", licDataset.Entitlements)
-		case licDataset.Issued.IsZero():
-			t.Fatalf("Should have an issued timestamp: ts=%v", licDataset.Issued)
-		case licDataset.Expiry.IsZero():
-			t.Fatalf("Should have an expiry timestamp: ts=%v", licDataset.Expiry)
-		case licDataset.TTL == 0:
-			t.Fatalf("Should have a TTL: ttl=%d", licDataset.TTL)
+			dataset, err := lic.Decrypt(license.Key)
+			if err != nil {
+				t.Fatalf("Should not fail decrypt: err=%v", err)
+			}
+
+			switch {
+			case dataset.License.ID != license.ID:
+				t.Fatalf("Should have the correct license ID: actual=%s expected=%s", dataset.License.ID, license.ID)
+			case len(dataset.Entitlements) != 0:
+				t.Fatalf("Should have no entitlements: entitlements=%s", dataset.Entitlements)
+			case dataset.Issued.IsZero():
+				t.Fatalf("Should have an issued timestamp: ts=%v", dataset.Issued)
+			case time.Until(dataset.Expiry) > 24*time.Hour+30*time.Second: // 30s for network lag
+				t.Fatalf("Should have an expiry timestamp: ts=%v", dataset.Expiry)
+			case dataset.TTL == 0:
+				t.Fatalf("Should have a TTL: ttl=%d", dataset.TTL)
+			}
+
+			t.Logf("dataset=%+v", dataset)
 		}
 
 		machine, err := license.Activate(fingerprint)
@@ -115,37 +163,83 @@ func TestValidate(t *testing.T) {
 			t.Fatalf("Should not fail activation: err=%v", err)
 		}
 
-		mic, err := machine.Checkout()
-		if err != nil {
-			t.Fatalf("Should not fail checkout: err=%v", err)
+		// defaults
+		{
+			mic, err := machine.Checkout()
+			if err != nil {
+				t.Fatalf("Should not fail checkout: err=%v", err)
+			}
+
+			err = mic.Verify()
+			switch {
+			case err == ErrLicenseFileNotGenuine:
+				t.Fatalf("Should be a genuine machine file: err=%v", err)
+			case err != nil:
+				t.Fatalf("Should not fail genuine check: err=%v", err)
+			}
+
+			dataset, err := mic.Decrypt(license.Key + machine.Fingerprint)
+			if err != nil {
+				t.Fatalf("Should not fail decrypt: err=%v", err)
+			}
+
+			switch {
+			case dataset.Machine.ID != machine.ID:
+				t.Fatalf("Should have the correct machine ID: actual=%s expected=%s", dataset.Machine.ID, machine.ID)
+			case dataset.License.ID != license.ID:
+				t.Fatalf("Should have the correct license ID: actual=%s expected=%s", dataset.License.ID, license.ID)
+			case len(dataset.Entitlements) == 0:
+				t.Fatalf("Should have at least 1 entitlement: entitlements=%s", dataset.Entitlements)
+			case dataset.Issued.IsZero():
+				t.Fatalf("Should have an issued timestamp: ts=%v", dataset.Issued)
+			case dataset.Expiry.IsZero():
+				t.Fatalf("Should have an expiry timestamp: ts=%v", dataset.Expiry)
+			case dataset.TTL == 0:
+				t.Fatalf("Should have a TTL: ttl=%d", dataset.TTL)
+			}
+
+			t.Logf("dataset=%+v", dataset)
 		}
 
-		err = mic.Verify()
-		switch {
-		case err == ErrLicenseFileNotGenuine:
-			t.Fatalf("Should be a genuine machine file: err=%v", err)
-		case err != nil:
-			t.Fatalf("Should not fail genuine check: err=%v", err)
-		}
+		// options
+		{
+			mic, err := machine.Checkout(
+				CheckoutInclude("license"),
+				CheckoutTTL(24*time.Hour*365),
+			)
+			if err != nil {
+				t.Fatalf("Should not fail checkout: err=%v", err)
+			}
 
-		micDataset, err := mic.Decrypt(license.Key + machine.Fingerprint)
-		if err != nil {
-			t.Fatalf("Should not fail decrypt: err=%v", err)
-		}
+			err = mic.Verify()
+			switch {
+			case err == ErrLicenseFileNotGenuine:
+				t.Fatalf("Should be a genuine machine file: err=%v", err)
+			case err != nil:
+				t.Fatalf("Should not fail genuine check: err=%v", err)
+			}
 
-		switch {
-		case micDataset.Machine.ID != machine.ID:
-			t.Fatalf("Should have the correct machine ID: actual=%s expected=%s", micDataset.Machine.ID, machine.ID)
-		case micDataset.License.ID != license.ID:
-			t.Fatalf("Should have the correct license ID: actual=%s expected=%s", micDataset.License.ID, license.ID)
-		case len(micDataset.Entitlements) == 0:
-			t.Fatalf("Should have at least 1 entitlement: entitlements=%s", micDataset.Entitlements)
-		case micDataset.Issued.IsZero():
-			t.Fatalf("Should have an issued timestamp: ts=%v", micDataset.Issued)
-		case micDataset.Expiry.IsZero():
-			t.Fatalf("Should have an expiry timestamp: ts=%v", micDataset.Expiry)
-		case micDataset.TTL == 0:
-			t.Fatalf("Should have a TTL: ttl=%d", micDataset.TTL)
+			dataset, err := mic.Decrypt(license.Key + machine.Fingerprint)
+			if err != nil {
+				t.Fatalf("Should not fail decrypt: err=%v", err)
+			}
+
+			switch {
+			case dataset.Machine.ID != machine.ID:
+				t.Fatalf("Should have the correct machine ID: actual=%s expected=%s", dataset.Machine.ID, machine.ID)
+			case dataset.License.ID != license.ID:
+				t.Fatalf("Should have the correct license ID: actual=%s expected=%s", dataset.License.ID, license.ID)
+			case len(dataset.Entitlements) != 0:
+				t.Fatalf("Should have no entitlements: entitlements=%s", dataset.Entitlements)
+			case dataset.Issued.IsZero():
+				t.Fatalf("Should have an issued timestamp: ts=%v", dataset.Issued)
+			case time.Until(dataset.Expiry) < 24*time.Hour*365:
+				t.Fatalf("Should have an expiry timestamp: ts=%v", dataset.Expiry)
+			case dataset.TTL == 0:
+				t.Fatalf("Should have a TTL: ttl=%d", dataset.TTL)
+			}
+
+			t.Logf("dataset=%+v", dataset)
 		}
 
 		// _, err = license.Activate(fingerprint)
@@ -260,13 +354,10 @@ func TestValidate(t *testing.T) {
 		}
 
 		t.Logf(
-			"license=%v machines=%v entitlements=%v key=%s lic=%v mic=%v",
+			"license=%+v machines=%+v entitlements=%+v",
 			license,
 			machines,
 			entitlements,
-			keyDataset,
-			licDataset,
-			micDataset,
 		)
 	case err != nil:
 		t.Fatalf("Should not fail validation: err=%v", err)
@@ -292,7 +383,7 @@ func TestLicenseFile(t *testing.T) {
 		t.Fatalf("License file decryption failed: err=%v", err)
 	}
 
-	t.Logf("dataset=%v\n", dataset)
+	t.Logf("dataset=%+v\n", dataset)
 }
 
 func TestMachineFile(t *testing.T) {
@@ -314,7 +405,7 @@ func TestMachineFile(t *testing.T) {
 		t.Fatalf("Machine file decryption failed: err=%v", err)
 	}
 
-	t.Logf("dataset=%v\n", dataset)
+	t.Logf("dataset=%+v", dataset)
 }
 
 func TestLicenseFileNoTTL(t *testing.T) {
@@ -336,7 +427,7 @@ func TestLicenseFileNoTTL(t *testing.T) {
 		t.Fatalf("License file decryption failed: err=%v", err)
 	}
 
-	t.Logf("dataset=%v\n", dataset)
+	t.Logf("dataset=%+v", dataset)
 }
 
 func TestSignedKey(t *testing.T) {
@@ -349,7 +440,7 @@ func TestSignedKey(t *testing.T) {
 		t.Fatalf("License key verification failed: err=%v", err)
 	}
 
-	t.Logf("dataset=%s\n", dataset)
+	t.Logf("dataset=%s", dataset)
 }
 
 func TestUpgrade(t *testing.T) {

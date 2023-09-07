@@ -195,6 +195,17 @@ func (c *Client) new(method string, path string, params interface{}) (*http.Requ
 			in = *bytes.NewBuffer(serialized)
 		}
 
+		if opts, ok := params.(CheckoutOptions); ok {
+			values, err := query.Values(opts)
+			if err != nil {
+				return nil, err
+			}
+
+			if enc := values.Encode(); enc != "" {
+				url += "?" + values.Encode()
+			}
+		}
+
 		if qs, ok := params.(querystring); ok {
 			values, err := query.Values(qs)
 			if err != nil {

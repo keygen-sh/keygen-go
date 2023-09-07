@@ -6,6 +6,4 @@ type querystring struct {
 	Product    string `url:"product,omitempty"`
 	Package    string `url:"package,omitempty"`
 	Limit      int    `url:"limit,omitempty"`
-	Encrypt    bool   `url:"encrypt,omitempty"`
-	Include    string `url:"include,omitempty"`
 }

@@ -81,10 +81,13 @@ To validate a license, configure `keygen.Account` and `keygen.Product` with your
 details. Then prompt the end-user for their license key or token and set `keygen.LicenseKey`
 or `keygen.Token`, respectively.
 
-The `Validate` method accepts zero or more fingerprints, which can be used to scope a license
-validation to a particular device fingerprint and its hardware components. It will return a
-`License` object as well as any validation errors that occur. The `License` object can be
-used to perform additional actions, such as `license.Activate(fingerprint)`.
+The `Validate` method accepts zero or more fingerprints, which can be used to scope a
+license validation to a particular device fingerprint and its hardware components.
+The first fingerprint should be a machine fingerprint, and the rest are optional
+component fingerprints.
+
+It will return a `License` object as well as any validation errors that occur. The `License`
+object can be used to perform additional actions, such as `license.Activate(fingerprint)`.
 
 ```go
 license, err := keygen.Validate(fingerprint)

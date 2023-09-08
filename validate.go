@@ -16,6 +16,9 @@ const (
 	ValidationCodeFingerprintScopeRequired ValidationCode = "FINGERPRINT_SCOPE_REQUIRED"
 	ValidationCodeFingerprintScopeMismatch ValidationCode = "FINGERPRINT_SCOPE_MISMATCH"
 	ValidationCodeFingerprintScopeEmpty    ValidationCode = "FINGERPRINT_SCOPE_EMPTY"
+	ValidationCodeComponentsScopeRequired  ValidationCode = "COMPONENTS_SCOPE_REQUIRED"
+	ValidationCodeComponentsScopeMismatch  ValidationCode = "COMPONENTS_SCOPE_MISMATCH"
+	ValidationCodeComponentsScopeEmpty     ValidationCode = "COMPONENTS_SCOPE_EMPTY"
 	ValidationCodeHeartbeatNotStarted      ValidationCode = "HEARTBEAT_NOT_STARTED"
 	ValidationCodeHeartbeatDead            ValidationCode = "HEARTBEAT_DEAD"
 	ValidationCodeProductScopeRequired     ValidationCode = "PRODUCT_SCOPE_REQUIRED"
@@ -29,7 +32,8 @@ const (
 )
 
 type validate struct {
-	fingerprints []string
+	fingerprint string
+	components  []string
 }
 
 type meta struct {
@@ -37,18 +41,19 @@ type meta struct {
 }
 
 type scope struct {
-	Fingerprints []string `json:"fingerprints"`
-	Product      string   `json:"product"`
-	Environment  *string  `json:"environment,omitempty"`
+	Fingerprint string   `json:"fingerprint,omitempty"`
+	Components  []string `json:"components,omitempty"`
+	Product     string   `json:"product"`
+	Environment *string  `json:"environment,omitempty"`
 }
 
 // GetMeta implements jsonapi.MarshalMeta interface.
 func (v validate) GetMeta() interface{} {
 	if Environment != "" {
-		return meta{Scope: scope{Fingerprints: v.fingerprints, Product: Product, Environment: &Environment}}
+		return meta{Scope: scope{Fingerprint: v.fingerprint, Components: v.components, Product: Product, Environment: &Environment}}
 	}
 
-	return meta{Scope: scope{Fingerprints: v.fingerprints, Environment: nil, Product: Product}}
+	return meta{Scope: scope{Fingerprint: v.fingerprint, Components: v.components, Environment: nil, Product: Product}}
 }
 
 type validation struct {
@@ -66,9 +71,17 @@ func (v *validation) SetMeta(to func(target interface{}) error) error {
 	return to(&v.Result)
 }
 
+// ValidationResult contains the scopes for a validation.
+type ValidationScope struct {
+	scope
+}
+
+// ValidationResult is the result of the validation.
 type ValidationResult struct {
-	Code  ValidationCode `json:"code"`
-	Valid bool           `json:"valid"`
+	Detail string           `json:"detail"`
+	Valid  bool             `json:"valid"`
+	Code   ValidationCode   `json:"code"`
+	Scope  *ValidationScope `json:"scope,omitempty"`
 }
 
 // Validate performs a license validation using the current Token, scoped to any

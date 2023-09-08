@@ -10,18 +10,20 @@ import (
 type ErrorCode string
 
 const (
-	ErrorCodeEnvironmentInvalid      ErrorCode = "ENVIRONMENT_INVALID"
-	ErrorCodeEnvironmentNotSupported ErrorCode = "ENVIRONMENT_NOT_SUPPORTED"
-	ErrorCodeTokenInvalid            ErrorCode = "TOKEN_INVALID"
-	ErrorCodeLicenseInvalid          ErrorCode = "LICENSE_INVALID"
-	ErrorCodeLicenseExpired          ErrorCode = "LICENSE_EXPIRED"
-	ErrorCodeLicenseSuspended        ErrorCode = "LICENSE_SUSPENDED"
-	ErrorCodeFingerprintTaken        ErrorCode = "FINGERPRINT_TAKEN"
-	ErrorCodeMachineLimitExceeded    ErrorCode = "MACHINE_LIMIT_EXCEEDED"
-	ErrorCodeProcessLimitExceeded    ErrorCode = "MACHINE_PROCESS_LIMIT_EXCEEDED"
-	ErrorCodeMachineHeartbeatDead    ErrorCode = "MACHINE_HEARTBEAT_DEAD"
-	ErrorCodeProcessHeartbeatDead    ErrorCode = "PROCESS_HEARTBEAT_DEAD"
-	ErrorCodeNotFound                ErrorCode = "NOT_FOUND"
+	ErrorCodeEnvironmentInvalid           ErrorCode = "ENVIRONMENT_INVALID"
+	ErrorCodeEnvironmentNotSupported      ErrorCode = "ENVIRONMENT_NOT_SUPPORTED"
+	ErrorCodeTokenInvalid                 ErrorCode = "TOKEN_INVALID"
+	ErrorCodeLicenseInvalid               ErrorCode = "LICENSE_INVALID"
+	ErrorCodeLicenseExpired               ErrorCode = "LICENSE_EXPIRED"
+	ErrorCodeLicenseSuspended             ErrorCode = "LICENSE_SUSPENDED"
+	ErrorCodeFingerprintTaken             ErrorCode = "FINGERPRINT_TAKEN"
+	ErrorCodeMachineLimitExceeded         ErrorCode = "MACHINE_LIMIT_EXCEEDED"
+	ErrorCodeProcessLimitExceeded         ErrorCode = "MACHINE_PROCESS_LIMIT_EXCEEDED"
+	ErrorCodeComponentFingerprintConflict ErrorCode = "COMPONENTS_FINGERPRINT_CONFLICT"
+	ErrorCodeComponentFingerprintTaken    ErrorCode = "COMPONENTS_FINGERPRINT_TAKEN"
+	ErrorCodeMachineHeartbeatDead         ErrorCode = "MACHINE_HEARTBEAT_DEAD"
+	ErrorCodeProcessHeartbeatDead         ErrorCode = "PROCESS_HEARTBEAT_DEAD"
+	ErrorCodeNotFound                     ErrorCode = "NOT_FOUND"
 )
 
 // Error represents an API error response.
@@ -116,6 +118,7 @@ var (
 	ErrPublicKeyMissing             = errors.New("public key is missing")
 	ErrPublicKeyInvalid             = errors.New("public key is invalid")
 	ErrValidationFingerprintMissing = errors.New("validation fingerprint scope is missing")
+	ErrValidationComponentsMissing  = errors.New("validation components scope is missing")
 	ErrValidationProductMissing     = errors.New("validation product scope is missing")
 	ErrHeartbeatPingFailed          = errors.New("heartbeat ping failed")
 	ErrHeartbeatRequired            = errors.New("heartbeat is required")
@@ -128,6 +131,9 @@ var (
 	ErrMachineFileNotEncrypted      = errors.New("machine file is not encrypted")
 	ErrMachineFileNotGenuine        = errors.New("machine file is not genuine")
 	ErrMachineFileExpired           = errors.New("machine file is expired")
+	ErrComponentNotActivated        = errors.New("component is not activated")
+	ErrComponentAlreadyActivated    = errors.New("component is already activated")
+	ErrComponentConflict            = errors.New("component is duplicated")
 	ErrProcessLimitExceeded         = errors.New("process limit has been exceeded")
 	ErrLicenseSchemeNotSupported    = errors.New("license scheme is not supported")
 	ErrLicenseSchemeMissing         = errors.New("license scheme is missing")

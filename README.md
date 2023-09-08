@@ -82,9 +82,9 @@ details. Then prompt the end-user for their license key or token and set `keygen
 or `keygen.Token`, respectively.
 
 The `Validate` method accepts zero or more fingerprints, which can be used to scope a license
-validation to a particular fingerprint. It will return a `License` object as well as any
-validation errors that occur. The `License` object can be used to perform additional actions,
-such as `license.Activate(fingerprint)`.
+validation to a particular device fingerprint and its hardware components. It will return a
+`License` object as well as any validation errors that occur. The `License` object can be
+used to perform additional actions, such as `license.Activate(fingerprint)`.
 
 ```go
 license, err := keygen.Validate(fingerprint)

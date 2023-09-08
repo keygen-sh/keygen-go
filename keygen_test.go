@@ -401,7 +401,7 @@ func TestValidate(t *testing.T) {
 				t.Fatalf("Should be scoped to components: scope=%v", license.LastValidation)
 			}
 
-			if _, err = Validate(fingerprint, uuid.NewString()); err != ErrComponentNotActivated {
+			if err := license.Validate(fingerprint, uuid.NewString()); err != ErrComponentNotActivated {
 				t.Fatalf("Should be invalid: err=%v", err)
 			}
 

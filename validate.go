@@ -85,8 +85,10 @@ type ValidationResult struct {
 }
 
 // Validate performs a license validation using the current Token, scoped to any
-// provided fingerprints. It returns a License, and an error if the license is
-// invalid, e.g. ErrLicenseNotActivated or ErrLicenseExpired.
+// provided fingerprints. The first fingerprint should be a machine fingerprint,
+// and the rest are optional component fingerprints. It returns a License, and
+// an error if the license is invalid, e.g. ErrLicenseNotActivated or
+// ErrLicenseExpired.
 func Validate(fingerprints ...string) (*License, error) {
 	client := NewClient()
 	license := &License{}

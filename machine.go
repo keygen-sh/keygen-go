@@ -16,13 +16,14 @@ const (
 )
 
 type machine struct {
-	ID          string `json:"-"`
-	Type        string `json:"-"`
-	Fingerprint string `json:"fingerprint"`
-	Hostname    string `json:"hostname"`
-	Platform    string `json:"platform"`
-	Cores       int    `json:"cores"`
-	LicenseID   string `json:"-"`
+	ID          string     `json:"-"`
+	Type        string     `json:"-"`
+	Fingerprint string     `json:"fingerprint"`
+	Hostname    string     `json:"hostname"`
+	Platform    string     `json:"platform"`
+	Cores       int        `json:"cores"`
+	LicenseID   string     `json:"-"`
+	Components  Components `json:"-"`
 }
 
 // GetID implements the jsonapi.MarshalResourceIdentifier interface.
@@ -43,6 +44,10 @@ func (m machine) GetData() interface{} {
 // GetRelationships implements jsonapi.MarshalRelationships interface.
 func (m machine) GetRelationships() map[string]interface{} {
 	relationships := make(map[string]interface{})
+
+	if len(m.Components) > 0 {
+		relationships["components"] = m.Components
+	}
 
 	relationships["license"] = jsonapi.ResourceObjectIdentifier{
 		Type: "licenses",
@@ -68,6 +73,8 @@ type Machine struct {
 	Updated           time.Time              `json:"updated"`
 	Metadata          map[string]interface{} `json:"metadata"`
 	LicenseID         string                 `json:"-"`
+
+	components []Component `json:"-"`
 }
 
 // GetID implements the jsonapi.MarshalResourceIdentifier interface.
@@ -89,6 +96,7 @@ func (m Machine) GetData() interface{} {
 		Platform:    m.Platform,
 		Cores:       m.Cores,
 		LicenseID:   m.LicenseID,
+		Components:  m.components,
 	}
 }
 
@@ -159,8 +167,7 @@ func (m *Machine) Checkout(options ...CheckoutOption) (*MachineFile, error) {
 
 	opts := CheckoutOptions{Encrypt: true, Include: "license,license.entitlements"}
 	for _, opt := range options {
-		err := opt(&opts)
-		if err != nil {
+		if err := opt(&opts); err != nil {
 			return nil, err
 		}
 	}
@@ -174,6 +181,18 @@ func (m *Machine) Checkout(options ...CheckoutOption) (*MachineFile, error) {
 	}
 
 	return lic, nil
+}
+
+// Components lists up to 100 components for the machine.
+func (m *Machine) Components() (Components, error) {
+	client := NewClient()
+	components := Components{}
+
+	if _, err := client.Get("machines/"+m.ID+"/components", querystring{Limit: 100}, &components); err != nil {
+		return nil, err
+	}
+
+	return components, nil
 }
 
 // Spawn creates a new process for a machine, identified by the provided pid. If

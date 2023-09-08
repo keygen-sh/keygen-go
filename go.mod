@@ -9,12 +9,13 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/hashicorp/go-retryablehttp v0.7.1
 	github.com/keygen-sh/go-update v1.0.0
-	github.com/keygen-sh/jsonapi-go v1.2.0
+	github.com/keygen-sh/jsonapi-go v1.2.1
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20211102120939-d5a936accd94
 )
 
 require (
 	golang.org/x/crypto v0.0.0-20210813211128-0a44fdfbc16e // indirect
 	golang.org/x/net v0.0.0-20210521195947-fe42d452be8f // indirect
-	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
+	golang.org/x/sys v0.0.0-20220319134239-a9b59b0215f8 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

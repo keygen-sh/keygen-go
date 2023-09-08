@@ -387,6 +387,10 @@ func (c *Client) send(req *http.Request, model interface{}) (*Response, error) {
 			return response, ErrMachineLimitExceeded
 		case code == ErrorCodeProcessLimitExceeded:
 			return response, ErrProcessLimitExceeded
+		case code == ErrorCodeComponentFingerprintConflict:
+			return response, ErrComponentConflict
+		case code == ErrorCodeComponentFingerprintTaken:
+			return response, ErrComponentAlreadyActivated
 		case code == ErrorCodeTokenInvalid:
 			return response, &LicenseTokenError{err}
 		case code == ErrorCodeLicenseInvalid:

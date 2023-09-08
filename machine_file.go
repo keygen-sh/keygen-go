@@ -130,6 +130,7 @@ type MachineFileDataset struct {
 	Machine      Machine      `json:"-"`
 	License      License      `json:"-"`
 	Entitlements Entitlements `json:"-"`
+	Components   Components   `json:"-"`
 	Issued       time.Time    `json:"issued"`
 	Expiry       time.Time    `json:"expiry"`
 	TTL          int          `json:"ttl"`
@@ -149,6 +150,13 @@ func (lic *MachineFileDataset) SetMeta(to func(target interface{}) error) error 
 func (lic *MachineFileDataset) SetIncluded(relationships []*jsonapi.ResourceObject, unmarshal func(res *jsonapi.ResourceObject, target interface{}) error) error {
 	for _, relationship := range relationships {
 		switch relationship.Type {
+		case "components":
+			component := &Component{}
+			if err := unmarshal(relationship, component); err != nil {
+				return err
+			}
+
+			lic.Components = append(lic.Components, *component)
 		case "entitlements":
 			entitlement := &Entitlement{}
 			if err := unmarshal(relationship, entitlement); err != nil {

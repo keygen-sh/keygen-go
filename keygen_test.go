@@ -36,6 +36,10 @@ func TestValidate(t *testing.T) {
 		t.Fatalf("Should fingerprint the current machine: err=%v", err)
 	}
 
+	if _, err := Validate(); err != ErrValidationFingerprintMissing {
+		t.Fatalf("Should have a required scope: err=%v", err)
+	}
+
 	license, err := Validate(fingerprint)
 	if err == nil {
 		t.Fatalf("Should not be activated: err=%v", err)
@@ -107,7 +111,7 @@ func TestValidate(t *testing.T) {
 			case dataset.License.ID != license.ID:
 				t.Fatalf("Should have the correct license ID: actual=%s expected=%s", dataset.License.ID, license.ID)
 			case len(dataset.Entitlements) == 0:
-				t.Fatalf("Should have at least 1 entitlement: entitlements=%s", dataset.Entitlements)
+				t.Fatalf("Should have at least 1 entitlement: entitlements=%v", dataset.Entitlements)
 			case dataset.Issued.IsZero():
 				t.Fatalf("Should have an issued timestamp: ts=%v", dataset.Issued)
 			case dataset.Expiry.IsZero():
@@ -146,7 +150,7 @@ func TestValidate(t *testing.T) {
 			case dataset.License.ID != license.ID:
 				t.Fatalf("Should have the correct license ID: actual=%s expected=%s", dataset.License.ID, license.ID)
 			case len(dataset.Entitlements) != 0:
-				t.Fatalf("Should have no entitlements: entitlements=%s", dataset.Entitlements)
+				t.Fatalf("Should have no entitlements: entitlements=%v", dataset.Entitlements)
 			case dataset.Issued.IsZero():
 				t.Fatalf("Should have an issued timestamp: ts=%v", dataset.Issued)
 			case time.Until(dataset.Expiry) > 24*time.Hour+30*time.Second: // 30s for network lag
@@ -189,7 +193,7 @@ func TestValidate(t *testing.T) {
 			case dataset.License.ID != license.ID:
 				t.Fatalf("Should have the correct license ID: actual=%s expected=%s", dataset.License.ID, license.ID)
 			case len(dataset.Entitlements) == 0:
-				t.Fatalf("Should have at least 1 entitlement: entitlements=%s", dataset.Entitlements)
+				t.Fatalf("Should have at least 1 entitlement: entitlements=%v", dataset.Entitlements)
 			case dataset.Issued.IsZero():
 				t.Fatalf("Should have an issued timestamp: ts=%v", dataset.Issued)
 			case dataset.Expiry.IsZero():
@@ -204,7 +208,7 @@ func TestValidate(t *testing.T) {
 		// options
 		{
 			mic, err := machine.Checkout(
-				CheckoutInclude("license"),
+				CheckoutInclude("license", "components"),
 				CheckoutTTL(24*time.Hour*365),
 			)
 			if err != nil {
@@ -230,7 +234,9 @@ func TestValidate(t *testing.T) {
 			case dataset.License.ID != license.ID:
 				t.Fatalf("Should have the correct license ID: actual=%s expected=%s", dataset.License.ID, license.ID)
 			case len(dataset.Entitlements) != 0:
-				t.Fatalf("Should have no entitlements: entitlements=%s", dataset.Entitlements)
+				t.Fatalf("Should have no entitlements: entitlements=%v", dataset.Entitlements)
+			case len(dataset.Components) != 0:
+				t.Fatalf("Should have no components: components=%v", dataset.Components)
 			case dataset.Issued.IsZero():
 				t.Fatalf("Should have an issued timestamp: ts=%v", dataset.Issued)
 			case time.Until(dataset.Expiry) < 24*time.Hour*365:
@@ -351,6 +357,95 @@ func TestValidate(t *testing.T) {
 		entitlements, err := license.Entitlements()
 		if err != nil {
 			t.Fatalf("Should not fail to list entitlements: err=%v", err)
+		}
+
+		if len(entitlements) == 0 {
+			t.Fatalf("Should have entitlements: entitlements=%v", entitlements)
+		}
+
+		// Components
+		{
+			board := uuid.NewString()
+			disk := uuid.NewString()
+			cpu := uuid.NewString()
+			gpu := uuid.NewString()
+
+			machine, err := license.Activate(fingerprint,
+				Component{Name: "Board", Fingerprint: board},
+				Component{Name: "Drive", Fingerprint: disk},
+				Component{Name: "CPU", Fingerprint: cpu},
+				Component{Name: "GPU", Fingerprint: gpu},
+			)
+			if err != nil {
+				t.Fatalf("Should not fail reactivation: err=%v", err)
+			}
+
+			components, err := machine.Components()
+			if err != nil {
+				t.Fatalf("Should not fail to list components: err=%v", err)
+			}
+
+			if len(components) != 4 {
+				t.Fatalf("Should have components: components=%v", components)
+			}
+
+			license, err = Validate(fingerprint, board, disk, gpu, cpu)
+			if err != nil {
+				t.Fatalf("Should be valid: err=%v", err)
+			}
+
+			switch {
+			case license.LastValidation.Scope.Fingerprint != fingerprint:
+				t.Fatalf("Should be scoped to fingerprint: scope=%v", license.LastValidation)
+			case len(license.LastValidation.Scope.Components) != 4:
+				t.Fatalf("Should be scoped to components: scope=%v", license.LastValidation)
+			}
+
+			if _, err = Validate(fingerprint, uuid.NewString()); err != ErrComponentNotActivated {
+				t.Fatalf("Should be invalid: err=%v", err)
+			}
+
+			mic, err := machine.Checkout(
+				CheckoutInclude("components", "license", "license.entitlements"),
+			)
+			if err != nil {
+				t.Fatalf("Should not fail checkout: err=%v", err)
+			}
+
+			err = mic.Verify()
+			switch {
+			case err == ErrLicenseFileNotGenuine:
+				t.Fatalf("Should be a genuine machine file: err=%v", err)
+			case err != nil:
+				t.Fatalf("Should not fail genuine check: err=%v", err)
+			}
+
+			dataset, err := mic.Decrypt(license.Key + machine.Fingerprint)
+			if err != nil {
+				t.Fatalf("Should not fail decrypt: err=%v", err)
+			}
+
+			switch {
+			case dataset.Machine.ID != machine.ID:
+				t.Fatalf("Should have the correct machine ID: actual=%s expected=%s", dataset.Machine.ID, machine.ID)
+			case dataset.License.ID != license.ID:
+				t.Fatalf("Should have the correct license ID: actual=%s expected=%s", dataset.License.ID, license.ID)
+			case len(dataset.Entitlements) == 0:
+				t.Fatalf("Should have entitlements: entitlements=%v", dataset.Entitlements)
+			case len(dataset.Components) != 4:
+				t.Fatalf("Should have components: components=%v", dataset.Components)
+			case dataset.Issued.IsZero():
+				t.Fatalf("Should have an issued timestamp: ts=%v", dataset.Issued)
+			case dataset.Expiry.IsZero():
+				t.Fatalf("Should have an expiry timestamp: ts=%v", dataset.Expiry)
+			case dataset.TTL == 0:
+				t.Fatalf("Should have a TTL: ttl=%d", dataset.TTL)
+			}
+
+			err = machine.Deactivate()
+			if err != nil {
+				t.Fatalf("Should not fail deactivation: err=%v", err)
+			}
 		}
 
 		t.Logf(

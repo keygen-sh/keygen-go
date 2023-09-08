@@ -57,13 +57,25 @@ func (l *License) SetRelationships(relationships map[string]interface{}) error {
 	return nil
 }
 
-// Validate performs a license validation, scoped to any provided fingerprints. It
-// returns an error if the license is invalid, e.g. ErrLicenseNotActivated,
-// ErrLicenseExpired or ErrLicenseTooManyMachines.
+// Validate performs a license validation, scoped to an optional device fingerprint
+// and an optional array of hardware component fingerprints. It returns an error
+// if the license is invalid, e.g. ErrLicenseNotActivated, ErrLicenseExpired or
+// ErrLicenseTooManyMachines.
 func (l *License) Validate(fingerprints ...string) error {
 	client := NewClient()
-	params := &validate{fingerprints}
 	validation := &validation{}
+
+	// split up fingerprints (first is machine, rest are components)
+	var params validate
+	if n := len(fingerprints); n > 0 {
+		if n > 1 {
+			params = validate{fingerprint: fingerprints[0], components: fingerprints[1:]}
+		} else {
+			params = validate{fingerprint: fingerprints[0]}
+		}
+	} else {
+		params = validate{}
+	}
 
 	if _, err := client.Post("licenses/"+l.ID+"/actions/validate", params, validation); err != nil {
 		if _, ok := err.(*NotFoundError); ok {
@@ -100,6 +112,11 @@ func (l *License) Validate(fingerprints ...string) error {
 	case validation.Result.Code == ValidationCodeFingerprintScopeRequired ||
 		validation.Result.Code == ValidationCodeFingerprintScopeEmpty:
 		return ErrValidationFingerprintMissing
+	case validation.Result.Code == ValidationCodeComponentsScopeRequired ||
+		validation.Result.Code == ValidationCodeComponentsScopeEmpty:
+		return ErrValidationComponentsMissing
+	case validation.Result.Code == ValidationCodeComponentsScopeMismatch:
+		return ErrComponentNotActivated
 	case validation.Result.Code == ValidationCodeHeartbeatNotStarted:
 		return ErrHeartbeatRequired
 	case validation.Result.Code == ValidationCodeHeartbeatDead:
@@ -130,7 +147,7 @@ func (l *License) Verify() ([]byte, error) {
 // fingerprint. If the activation is successful, the new machine will be returned. An
 // error will be returned if the activation fails, e.g. ErrMachineLimitExceeded
 // or ErrMachineAlreadyActivated.
-func (l *License) Activate(fingerprint string) (*Machine, error) {
+func (l *License) Activate(fingerprint string, components ...Component) (*Machine, error) {
 	client := NewClient()
 	hostname, _ := os.Hostname()
 	params := &Machine{
@@ -139,6 +156,7 @@ func (l *License) Activate(fingerprint string) (*Machine, error) {
 		Platform:    runtime.GOOS + "/" + runtime.GOARCH,
 		Cores:       runtime.NumCPU(),
 		LicenseID:   l.ID,
+		components:  components,
 	}
 
 	machine := &Machine{}
@@ -207,8 +225,7 @@ func (l *License) Checkout(options ...CheckoutOption) (*LicenseFile, error) {
 
 	opts := CheckoutOptions{Encrypt: true, Include: "entitlements"}
 	for _, opt := range options {
-		err := opt(&opts)
-		if err != nil {
+		if err := opt(&opts); err != nil {
 			return nil, err
 		}
 	}

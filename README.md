@@ -168,7 +168,7 @@ import (
 func main() {
   keygen.Account = "YOUR_KEYGEN_ACCOUNT_ID"
   keygen.Product = "YOUR_KEYGEN_PRODUCT_ID"
-  keygen.LicenseKey = "key/..."
+  keygen.LicenseKey = "KEYGEN_LICENSE_KEY"
 
   fingerprint, err := machineid.ProtectedID(keygen.Product)
   if err != nil {
@@ -213,7 +213,7 @@ func main() {
   keygen.PublicKey = "YOUR_KEYGEN_PUBLIC_KEY"
   keygen.Account = "YOUR_KEYGEN_ACCOUNT_ID"
   keygen.Product = "YOUR_KEYGEN_PRODUCT_ID"
-  keygen.LicenseKey = "key/..."
+  keygen.LicenseKey = "KEYGEN_LICENSE_KEY"
 
   fmt.Printf("Current version: %s\n", CurrentVersion)
   fmt.Println("Checking for upgrades...")
@@ -264,7 +264,7 @@ import (
 func main() {
   keygen.Account = "YOUR_KEYGEN_ACCOUNT_ID"
   keygen.Product = "YOUR_KEYGEN_PRODUCT_ID"
-  keygen.LicenseKey = "key/..."
+  keygen.LicenseKey = "KEYGEN_LICENSE_KEY"
 
   // The current device's fingerprint (could be e.g. MAC, mobo ID, GUID, etc.)
   fingerprint := uuid.New().String()
@@ -361,7 +361,7 @@ func main() {
   }
 
   // Use the license key to decrypt the license file
-  dataset, err := lic.Decrypt("key/...")
+  dataset, err := lic.Decrypt("KEYGEN_LICENSE_KEY")
   switch {
   case err == keygen.ErrSystemClockUnsynced:
     panic("system clock tampering detected!")
@@ -395,7 +395,7 @@ func main() {
   keygen.PublicKey = "YOUR_KEYGEN_PUBLIC_KEY"
 
   // Verify the license key's signature and decode embedded dataset
-  license := &keygen.License{Scheme: keygen.SchemeCodeEd25519, Key: "key/..."}
+  license := &keygen.License{Scheme: keygen.SchemeCodeEd25519, Key: "A_SIGNED_KEYGEN_LICENSE_KEY"}
   dataset, err := license.Verify()
   switch {
   case err == keygen.ErrLicenseKeyNotGenuine:
@@ -560,7 +560,7 @@ func validate() (*keygen.License, error) {
 func main() {
   keygen.Account = "YOUR_KEYGEN_ACCOUNT_ID"
   keygen.Product = "YOUR_KEYGEN_PRODUCT_ID"
-  keygen.LicenseKey = "key/..."
+  keygen.LicenseKey = "KEYGEN_LICENSE_KEY"
 
   license, err := validate()
   if err != nil {
@@ -597,7 +597,7 @@ func main() {
   keygen.HTTPClient = c.StandardClient()
   keygen.Account = "YOUR_KEYGEN_ACCOUNT_ID"
   keygen.Product = "YOUR_KEYGEN_PRODUCT_ID"
-  keygen.LicenseKey = "key/..."
+  keygen.LicenseKey = "KEYGEN_LICENSE_KEY"
 
   // Use SDK as you would normally
   keygen.Validate()

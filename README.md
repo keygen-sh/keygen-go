@@ -168,7 +168,7 @@ import (
 func main() {
   keygen.Account = "YOUR_KEYGEN_ACCOUNT_ID"
   keygen.Product = "YOUR_KEYGEN_PRODUCT_ID"
-  keygen.LicenseKey = "KEYGEN_LICENSE_KEY"
+  keygen.LicenseKey = "A_KEYGEN_LICENSE_KEY"
 
   fingerprint, err := machineid.ProtectedID(keygen.Product)
   if err != nil {
@@ -213,7 +213,7 @@ func main() {
   keygen.PublicKey = "YOUR_KEYGEN_PUBLIC_KEY"
   keygen.Account = "YOUR_KEYGEN_ACCOUNT_ID"
   keygen.Product = "YOUR_KEYGEN_PRODUCT_ID"
-  keygen.LicenseKey = "KEYGEN_LICENSE_KEY"
+  keygen.LicenseKey = "A_KEYGEN_LICENSE_KEY"
 
   fmt.Printf("Current version: %s\n", CurrentVersion)
   fmt.Println("Checking for upgrades...")
@@ -264,7 +264,7 @@ import (
 func main() {
   keygen.Account = "YOUR_KEYGEN_ACCOUNT_ID"
   keygen.Product = "YOUR_KEYGEN_PRODUCT_ID"
-  keygen.LicenseKey = "KEYGEN_LICENSE_KEY"
+  keygen.LicenseKey = "A_KEYGEN_LICENSE_KEY"
 
   // The current device's fingerprint (could be e.g. MAC, mobo ID, GUID, etc.)
   fingerprint := uuid.New().String()
@@ -361,7 +361,7 @@ func main() {
   }
 
   // Use the license key to decrypt the license file
-  dataset, err := lic.Decrypt("KEYGEN_LICENSE_KEY")
+  dataset, err := lic.Decrypt("A_KEYGEN_LICENSE_KEY")
   switch {
   case err == keygen.ErrSystemClockUnsynced:
     panic("system clock tampering detected!")
@@ -560,7 +560,7 @@ func validate() (*keygen.License, error) {
 func main() {
   keygen.Account = "YOUR_KEYGEN_ACCOUNT_ID"
   keygen.Product = "YOUR_KEYGEN_PRODUCT_ID"
-  keygen.LicenseKey = "KEYGEN_LICENSE_KEY"
+  keygen.LicenseKey = "A_KEYGEN_LICENSE_KEY"
 
   license, err := validate()
   if err != nil {
@@ -597,7 +597,7 @@ func main() {
   keygen.HTTPClient = c.StandardClient()
   keygen.Account = "YOUR_KEYGEN_ACCOUNT_ID"
   keygen.Product = "YOUR_KEYGEN_PRODUCT_ID"
-  keygen.LicenseKey = "KEYGEN_LICENSE_KEY"
+  keygen.LicenseKey = "A_KEYGEN_LICENSE_KEY"
 
   // Use SDK as you would normally
   keygen.Validate()

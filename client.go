@@ -172,7 +172,14 @@ func (c *Client) new(method string, path string, params interface{}) (*http.Requ
 	}
 
 	if c.APIURL == "" {
-		c.APIURL = APIURL
+		switch {
+		case strings.HasPrefix(APIURL, "https://"):
+			c.APIURL = APIURL
+		case strings.HasPrefix(APIURL, "http://"):
+			c.APIURL = APIURL
+		default:
+			c.APIURL = "https://" + APIURL
+		}
 	}
 
 	// Support for custom domains

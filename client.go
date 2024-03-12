@@ -172,14 +172,12 @@ func (c *Client) new(method string, path string, params interface{}) (*http.Requ
 	}
 
 	if c.APIURL == "" {
-		switch {
-		case strings.HasPrefix(APIURL, "https://"):
-			c.APIURL = APIURL
-		case strings.HasPrefix(APIURL, "http://"):
-			c.APIURL = APIURL
-		default:
-			c.APIURL = "https://" + APIURL
-		}
+		c.APIURL = APIURL
+	}
+
+	// Add scheme if not present (e.g. with self-hosted KEYGEN_HOST env var via the CLI)
+	if !strings.HasPrefix(c.APIURL, "https://") && !strings.HasPrefix(c.APIURL, "http://") {
+		c.APIURL = "https://" + c.APIURL
 	}
 
 	// Support for custom domains

@@ -10,7 +10,7 @@ import (
 
 const (
 	// The current version of the SDK.
-	SDKVersion = "2.8.1"
+	SDKVersion = "2.8.2"
 )
 
 var (

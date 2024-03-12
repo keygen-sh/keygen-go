@@ -175,16 +175,21 @@ func (c *Client) new(method string, path string, params interface{}) (*http.Requ
 		c.APIURL = APIURL
 	}
 
+	// Local vars so we don't mutate the client
+	account := c.Account
+	prefix := c.APIPrefix
+	host := c.APIURL
+
 	// Add scheme if not present (e.g. with self-hosted KEYGEN_HOST env var via the CLI)
-	if !strings.HasPrefix(c.APIURL, "https://") && !strings.HasPrefix(c.APIURL, "http://") {
-		c.APIURL = "https://" + c.APIURL
+	if !strings.HasPrefix(host, "https://") && !strings.HasPrefix(host, "http://") {
+		host = "https://" + host
 	}
 
 	// Support for custom domains
-	if c.APIURL == "https://api.keygen.sh" {
-		url = fmt.Sprintf("%s/%s/accounts/%s/%s", c.APIURL, c.APIPrefix, c.Account, path)
+	if host == "https://api.keygen.sh" {
+		url = fmt.Sprintf("%s/%s/accounts/%s/%s", host, prefix, account, path)
 	} else {
-		url = fmt.Sprintf("%s/%s/%s", c.APIURL, c.APIPrefix, path)
+		url = fmt.Sprintf("%s/%s/%s", host, prefix, path)
 	}
 
 	ua := strings.Join([]string{userAgent, c.UserAgent}, " ")

@@ -20,6 +20,7 @@ type machine struct {
 	Type        string     `json:"-"`
 	Fingerprint string     `json:"fingerprint"`
 	Hostname    string     `json:"hostname"`
+	Ip          string     `json:"ip"`
 	Platform    string     `json:"platform"`
 	Cores       int        `json:"cores"`
 	LicenseID   string     `json:"-"`

@@ -65,6 +65,7 @@ type Machine struct {
 	Fingerprint       string                 `json:"fingerprint"`
 	Hostname          string                 `json:"hostname"`
 	Platform          string                 `json:"platform"`
+	IP                string                 `json:"ip"`
 	Cores             int                    `json:"cores"`
 	RequireHeartbeat  bool                   `json:"requireHeartbeat"`
 	HeartbeatStatus   HeartbeatStatusCode    `json:"heartbeatStatus"`

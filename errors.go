@@ -12,10 +12,14 @@ type ErrorCode string
 const (
 	ErrorCodeEnvironmentInvalid           ErrorCode = "ENVIRONMENT_INVALID"
 	ErrorCodeEnvironmentNotSupported      ErrorCode = "ENVIRONMENT_NOT_SUPPORTED"
+	ErrorCodeTokenFormatInvalid           ErrorCode = "TOKEN_FORMAT_INVALID"
 	ErrorCodeTokenInvalid                 ErrorCode = "TOKEN_INVALID"
+	ErrorCodeTokenExpired                 ErrorCode = "TOKEN_EXPIRED"
+	ErrorCodeTokenNotAllowed              ErrorCode = "TOKEN_NOT_ALLOWED"
 	ErrorCodeLicenseInvalid               ErrorCode = "LICENSE_INVALID"
 	ErrorCodeLicenseExpired               ErrorCode = "LICENSE_EXPIRED"
 	ErrorCodeLicenseSuspended             ErrorCode = "LICENSE_SUSPENDED"
+	ErrorCodeLicenseNotAllowed            ErrorCode = "LICENSE_NOT_ALLOWED"
 	ErrorCodeFingerprintTaken             ErrorCode = "FINGERPRINT_TAKEN"
 	ErrorCodeMachineLimitExceeded         ErrorCode = "MACHINE_LIMIT_EXCEEDED"
 	ErrorCodeProcessLimitExceeded         ErrorCode = "MACHINE_PROCESS_LIMIT_EXCEEDED"
@@ -140,6 +144,7 @@ var (
 	ErrLicenseKeyMissing            = errors.New("license key is missing")
 	ErrLicenseKeyNotGenuine         = errors.New("license key is not genuine")
 	ErrLicenseNotActivated          = errors.New("license is not activated")
+	ErrLicenseNotAllowed            = errors.New("license authentication is not allowed by policy")
 	ErrLicenseExpired               = errors.New("license is expired")
 	ErrLicenseSuspended             = errors.New("license is suspended")
 	ErrLicenseTooManyMachines       = errors.New("license has too many machines")
@@ -152,5 +157,9 @@ var (
 	ErrLicenseFileNotGenuine        = errors.New("license file is not genuine")
 	ErrLicenseFileExpired           = errors.New("license file is expired")
 	ErrLicenseFileSecretMissing     = errors.New("license file secret is missing")
+	ErrTokenNotAllowed              = errors.New("token authentication is not allowed by policy")
+	ErrTokenFormatInvalid           = errors.New("token format is invalid")
+	ErrTokenInvalid                 = errors.New("token is invalid")
+	ErrTokenExpired                 = errors.New("token is expired")
 	ErrSystemClockUnsynced          = errors.New("system clock is out of sync")
 )

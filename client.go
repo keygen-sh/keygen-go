@@ -374,6 +374,16 @@ func (c *Client) send(req *http.Request, model interface{}) (*Response, error) {
 
 			// Handle certain license auth error codes so that we emit helpful errors
 			switch {
+			case code == ErrorCodeTokenNotAllowed:
+				return response, ErrTokenNotAllowed
+			case code == ErrorCodeTokenFormatInvalid:
+				return response, ErrTokenFormatInvalid
+			case code == ErrorCodeTokenInvalid:
+				return response, ErrTokenInvalid
+			case code == ErrorCodeTokenExpired:
+				return response, ErrTokenExpired
+			case code == ErrorCodeLicenseNotAllowed:
+				return response, ErrLicenseNotAllowed
 			case code == ErrorCodeLicenseSuspended:
 				return response, ErrLicenseSuspended
 			case code == ErrorCodeLicenseExpired:

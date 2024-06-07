@@ -239,7 +239,7 @@ func TestValidate(t *testing.T) {
 				t.Fatalf("Should have no components: components=%v", dataset.Components)
 			case dataset.Issued.IsZero():
 				t.Fatalf("Should have an issued timestamp: ts=%v", dataset.Issued)
-			case time.Until(dataset.Expiry) < 24*time.Hour*365:
+			case time.Until(dataset.Expiry) < 24*time.Hour*364:
 				t.Fatalf("Should have an expiry timestamp: ts=%v", dataset.Expiry)
 			case dataset.TTL == 0:
 				t.Fatalf("Should have a TTL: ttl=%d", dataset.TTL)

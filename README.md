@@ -6,6 +6,12 @@
 Package [`keygen`](https://pkg.go.dev/github.com/keygen-sh/keygen-go/v2) allows Go programs to
 license and remotely update themselves using the [keygen.sh](https://keygen.sh) service.
 
+## Installing
+
+```
+go get github.com/keygen-sh/keygen-go/v2
+```
+
 ## Config
 
 ### keygen.Account

@@ -96,7 +96,8 @@ It will return a `License` object as well as any validation errors that occur. T
 object can be used to perform additional actions, such as `license.Activate(fingerprint)`.
 
 ```go
-license, err := keygen.Validate(context.Background(), fingerprint)
+ctx := context.Background()
+license, err := keygen.Validate(ctx, fingerprint)
 switch {
 case err == keygen.ErrLicenseNotActivated:
   panic("license is not activated!")

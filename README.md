@@ -1,15 +1,15 @@
 # Keygen Go SDK
 
-[![godoc reference](https://godoc.org/github.com/keygen-sh/keygen-go/v2?status.png)](https://godoc.org/github.com/keygen-sh/keygen-go/v2)
+[![godoc reference](https://godoc.org/github.com/keygen-sh/keygen-go/v3?status.png)](https://godoc.org/github.com/keygen-sh/keygen-go/v3)
 [![CI](https://github.com/keygen-sh/keygen-go/actions/workflows/test.yml/badge.svg)](https://github.com/keygen-sh/keygen-go/actions)
 
-Package [`keygen`](https://pkg.go.dev/github.com/keygen-sh/keygen-go/v2) allows Go programs to
+Package [`keygen`](https://pkg.go.dev/github.com/keygen-sh/keygen-go/v3) allows Go programs to
 license and remotely update themselves using the [keygen.sh](https://keygen.sh) service.
 
 ## Installing
 
 ```
-go get github.com/keygen-sh/keygen-go/v2
+go get github.com/keygen-sh/keygen-go/v3
 ```
 
 ## Config
@@ -168,7 +168,7 @@ package main
 
 import (
   "github.com/denisbrodbeck/machineid"
-  "github.com/keygen-sh/keygen-go/v2"
+  "github.com/keygen-sh/keygen-go/v3"
 )
 
 func main() {
@@ -210,7 +210,7 @@ Check for an upgrade and automatically replace the current binary with the newes
 ```go
 package main
 
-import "github.com/keygen-sh/keygen-go/v2"
+import "github.com/keygen-sh/keygen-go/v3"
 
 // The current version of the program
 const CurrentVersion = "1.0.0"
@@ -264,7 +264,7 @@ package main
 
 import (
   "github.com/google/uuid"
-  "github.com/keygen-sh/keygen-go/v2"
+  "github.com/keygen-sh/keygen-go/v3"
 )
 
 func main() {
@@ -345,7 +345,7 @@ Requires that `keygen.PublicKey` is set.
 ```go
 package main
 
-import "github.com/keygen-sh/keygen-go/v2"
+import "github.com/keygen-sh/keygen-go/v3"
 
 func main() {
   keygen.PublicKey = "YOUR_KEYGEN_PUBLIC_KEY"
@@ -395,7 +395,7 @@ Requires that `keygen.PublicKey` is set.
 ```go
 package main
 
-import "github.com/keygen-sh/keygen-go/v2"
+import "github.com/keygen-sh/keygen-go/v3"
 
 func main() {
   keygen.PublicKey = "YOUR_KEYGEN_PUBLIC_KEY"
@@ -430,7 +430,7 @@ import (
   "log"
   "net/http"
 
-  "github.com/keygen-sh/keygen-go/v2"
+  "github.com/keygen-sh/keygen-go/v3"
 )
 
 func main() {
@@ -463,7 +463,7 @@ key does not exist. You can handle this accordingly.
 ```go
 package main
 
-import "github.com/keygen-sh/keygen-go/v2"
+import "github.com/keygen-sh/keygen-go/v3"
 
 func getLicense() (*keygen.License, error) {
   keygen.LicenseKey = promptForLicenseKey()
@@ -503,7 +503,7 @@ token does not exist or has expired. You can handle this accordingly.
 ```go
 package main
 
-import "github.com/keygen-sh/keygen-go/v2"
+import "github.com/keygen-sh/keygen-go/v3"
 
 func getLicense() (*keygen.License, error) {
   keygen.Token = promptForLicenseToken()
@@ -544,7 +544,7 @@ determine how long to wait before retrying a request.
 ```go
 package main
 
-import "github.com/keygen-sh/keygen-go/v2"
+import "github.com/keygen-sh/keygen-go/v3"
 
 func validate() (*keygen.License, error) {
   license, err := keygen.Validate()
@@ -590,7 +590,7 @@ package main
 
 import (
   "github.com/hashicorp/go-retryablehttp"
-  "github.com/keygen-sh/keygen-go/v2"
+  "github.com/keygen-sh/keygen-go/v3"
 )
 
 func main() {
@@ -625,7 +625,7 @@ package main
 import (
   "testing"
 
-  "github.com/keygen-sh/keygen-go/v2"
+  "github.com/keygen-sh/keygen-go/v3"
   "gopkg.in/h2non/gock.v1"
 )
 

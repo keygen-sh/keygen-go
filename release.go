@@ -2,6 +2,7 @@ package keygen
 
 import (
 	"bytes"
+	"context"
 	"crypto"
 	"encoding/base64"
 	"encoding/hex"
@@ -48,8 +49,8 @@ func (r *Release) SetData(to func(target interface{}) error) error {
 }
 
 // Install performs an update of the current executable to the new Release.
-func (r *Release) Install() error {
-	artifact, err := r.artifact()
+func (r *Release) Install(ctx context.Context) error {
+	artifact, err := r.artifact(ctx)
 	if err != nil {
 		return err
 	}
@@ -91,7 +92,7 @@ func (r *Release) Install() error {
 	return nil
 }
 
-func (r *Release) artifact() (*Artifact, error) {
+func (r *Release) artifact(ctx context.Context) (*Artifact, error) {
 	client := NewClient()
 	artifact := &Artifact{}
 
@@ -100,7 +101,7 @@ func (r *Release) artifact() (*Artifact, error) {
 		return nil, err
 	}
 
-	res, err := client.Get("releases/"+r.ID+"/artifacts/"+filename, nil, artifact)
+	res, err := client.Get(ctx, "releases/"+r.ID+"/artifacts/"+filename, nil, artifact)
 	if err != nil {
 		return nil, err
 	}

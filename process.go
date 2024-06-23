@@ -1,6 +1,7 @@
 package keygen
 
 import (
+	"context"
 	"time"
 
 	"github.com/keygen-sh/jsonapi-go"
@@ -106,18 +107,18 @@ func (p *Processes) SetData(to func(target interface{}) error) error {
 
 // Kill deletes the current Process. An error will be returned if the process
 // deletion fails.
-func (p *Process) Kill() error {
+func (p *Process) Kill(ctx context.Context) error {
 	client := NewClient()
 
-	if _, err := client.Delete("processes/"+p.ID, nil, nil); err != nil {
+	if _, err := client.Delete(ctx, "processes/"+p.ID, nil, nil); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (p *Process) monitor() error {
-	if err := p.ping(); err != nil {
+func (p *Process) monitor(ctx context.Context) error {
+	if err := p.ping(ctx); err != nil {
 		return err
 	}
 
@@ -125,7 +126,7 @@ func (p *Process) monitor() error {
 		t := (time.Duration(p.Interval) * time.Second) - (30 * time.Second)
 
 		for range time.Tick(t) {
-			if err := p.ping(); err != nil {
+			if err := p.ping(ctx); err != nil {
 				panic(err)
 			}
 		}
@@ -134,10 +135,10 @@ func (p *Process) monitor() error {
 	return nil
 }
 
-func (p *Process) ping() error {
+func (p *Process) ping(ctx context.Context) error {
 	client := NewClient()
 
-	if _, err := client.Post("processes/"+p.ID+"/actions/ping", nil, p); err != nil {
+	if _, err := client.Post(ctx, "processes/"+p.ID+"/actions/ping", nil, p); err != nil {
 		return err
 	}
 

@@ -1,5 +1,7 @@
 package keygen
 
+import "context"
+
 type ValidationCode string
 
 const (
@@ -89,15 +91,15 @@ type ValidationResult struct {
 // and the rest are optional component fingerprints. It returns a License, and
 // an error if the license is invalid, e.g. ErrLicenseNotActivated or
 // ErrLicenseExpired.
-func Validate(fingerprints ...string) (*License, error) {
+func Validate(ctx context.Context, fingerprints ...string) (*License, error) {
 	client := NewClient()
 	license := &License{}
 
-	if _, err := client.Get("me", nil, license); err != nil {
+	if _, err := client.Get(ctx, "me", nil, license); err != nil {
 		return nil, err
 	}
 
-	if err := license.Validate(fingerprints...); err != nil {
+	if err := license.Validate(ctx, fingerprints...); err != nil {
 		return license, err
 	}
 

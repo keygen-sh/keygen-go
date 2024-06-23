@@ -2,6 +2,7 @@ package keygen
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -111,8 +112,8 @@ func NewClientWithOptions(options *ClientOptions) *Client {
 }
 
 // Post is a convenience helper for performing POST requests.
-func (c *Client) Post(path string, params interface{}, model interface{}) (*Response, error) {
-	req, err := c.new(http.MethodPost, path, params)
+func (c *Client) Post(ctx context.Context, path string, params interface{}, model interface{}) (*Response, error) {
+	req, err := c.new(ctx, http.MethodPost, path, params)
 	if err != nil {
 		return nil, err
 	}
@@ -121,8 +122,8 @@ func (c *Client) Post(path string, params interface{}, model interface{}) (*Resp
 }
 
 // Get is a convenience helper for performing GET requests.
-func (c *Client) Get(path string, params interface{}, model interface{}) (*Response, error) {
-	req, err := c.new(http.MethodGet, path, params)
+func (c *Client) Get(ctx context.Context, path string, params interface{}, model interface{}) (*Response, error) {
+	req, err := c.new(ctx, http.MethodGet, path, params)
 	if err != nil {
 		return nil, err
 	}
@@ -131,8 +132,8 @@ func (c *Client) Get(path string, params interface{}, model interface{}) (*Respo
 }
 
 // Put is a convenience helper for performing PUT requests.
-func (c *Client) Put(path string, params interface{}, model interface{}) (*Response, error) {
-	req, err := c.new(http.MethodPut, path, params)
+func (c *Client) Put(ctx context.Context, path string, params interface{}, model interface{}) (*Response, error) {
+	req, err := c.new(ctx, http.MethodPut, path, params)
 	if err != nil {
 		return nil, err
 	}
@@ -141,8 +142,8 @@ func (c *Client) Put(path string, params interface{}, model interface{}) (*Respo
 }
 
 // Patch is a convenience helper for performing PATCH requests.
-func (c *Client) Patch(path string, params interface{}, model interface{}) (*Response, error) {
-	req, err := c.new(http.MethodPatch, path, params)
+func (c *Client) Patch(ctx context.Context, path string, params interface{}, model interface{}) (*Response, error) {
+	req, err := c.new(ctx, http.MethodPatch, path, params)
 	if err != nil {
 		return nil, err
 	}
@@ -151,8 +152,8 @@ func (c *Client) Patch(path string, params interface{}, model interface{}) (*Res
 }
 
 // Delete is a convenience helper for performing DELETE requests.
-func (c *Client) Delete(path string, params interface{}, model interface{}) (*Response, error) {
-	req, err := c.new(http.MethodDelete, path, params)
+func (c *Client) Delete(ctx context.Context, path string, params interface{}, model interface{}) (*Response, error) {
+	req, err := c.new(ctx, http.MethodDelete, path, params)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +161,7 @@ func (c *Client) Delete(path string, params interface{}, model interface{}) (*Re
 	return c.send(req, model)
 }
 
-func (c *Client) new(method string, path string, params interface{}) (*http.Request, error) {
+func (c *Client) new(ctx context.Context, method string, path string, params interface{}) (*http.Request, error) {
 	var url string
 
 	if c.APIVersion == "" {
@@ -260,7 +261,7 @@ func (c *Client) new(method string, path string, params interface{}) (*http.Requ
 	req.Header.Add("Accept", jsonapi.ContentType)
 	req.Header.Add("User-Agent", ua)
 
-	return req, nil
+	return req.WithContext(ctx), nil
 }
 
 func (c *Client) send(req *http.Request, model interface{}) (*Response, error) {

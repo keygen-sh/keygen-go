@@ -2,6 +2,7 @@ package keygen
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
 	"os"
@@ -31,16 +32,17 @@ func init() {
 }
 
 func TestValidate(t *testing.T) {
+	ctx := context.Background()
 	fingerprint, err := machineid.ProtectedID(Account)
 	if err != nil {
 		t.Fatalf("Should fingerprint the current machine: err=%v", err)
 	}
 
-	if _, err := Validate(); err != ErrValidationFingerprintMissing {
+	if _, err := Validate(ctx); err != ErrValidationFingerprintMissing {
 		t.Fatalf("Should have a required scope: err=%v", err)
 	}
 
-	license, err := Validate(fingerprint)
+	license, err := Validate(ctx, fingerprint)
 	if err == nil {
 		t.Fatalf("Should not be activated: err=%v", err)
 	}
@@ -89,7 +91,7 @@ func TestValidate(t *testing.T) {
 
 		// defaults
 		{
-			lic, err := license.Checkout()
+			lic, err := license.Checkout(ctx)
 			if err != nil {
 				t.Fatalf("Should not fail checkout: err=%v", err)
 			}
@@ -126,6 +128,7 @@ func TestValidate(t *testing.T) {
 		// options
 		{
 			lic, err := license.Checkout(
+				ctx,
 				CheckoutInclude(),
 				CheckoutTTL(24*time.Hour),
 			)
@@ -162,14 +165,14 @@ func TestValidate(t *testing.T) {
 			t.Logf("dataset=%+v", dataset)
 		}
 
-		machine, err := license.Activate(fingerprint)
+		machine, err := license.Activate(ctx, fingerprint)
 		if err != nil {
 			t.Fatalf("Should not fail activation: err=%v", err)
 		}
 
 		// defaults
 		{
-			mic, err := machine.Checkout()
+			mic, err := machine.Checkout(ctx)
 			if err != nil {
 				t.Fatalf("Should not fail checkout: err=%v", err)
 			}
@@ -208,6 +211,7 @@ func TestValidate(t *testing.T) {
 		// options
 		{
 			mic, err := machine.Checkout(
+				ctx,
 				CheckoutInclude("license", "components"),
 				CheckoutTTL(24*time.Hour*365),
 			)
@@ -256,17 +260,17 @@ func TestValidate(t *testing.T) {
 		// 	t.Fatalf("Should fail duplicate activation: err=%v", err)
 		// }
 
-		_, err = license.Activate(uuid.New().String())
+		_, err = license.Activate(ctx, uuid.New().String())
 		if err != ErrMachineLimitExceeded {
 			t.Fatalf("Should fail over-limit activation: license=%v err=%v", license, err)
 		}
 
 		// Check if there are any race conditions
 		for i := 0; i <= 5; i++ {
-			go license.Machine(machine.Fingerprint)
+			go license.Machine(ctx, machine.Fingerprint)
 		}
 
-		err = machine.Monitor()
+		err = machine.Monitor(ctx)
 		if err != nil {
 			t.Fatalf("Should not fail to send first hearbeat ping: err=%v", err)
 		}
@@ -282,7 +286,7 @@ func TestValidate(t *testing.T) {
 		processes := []*Process{}
 
 		for i := 0; i < 5; i++ {
-			process, err := machine.Spawn(uuid.New().String())
+			process, err := machine.Spawn(ctx, uuid.New().String())
 			if err != nil {
 				t.Fatalf("Should not fail spawning process: err=%v", err)
 			}
@@ -294,12 +298,12 @@ func TestValidate(t *testing.T) {
 			processes = append(processes, process)
 		}
 
-		_, err = machine.Spawn(uuid.New().String())
+		_, err = machine.Spawn(ctx, uuid.New().String())
 		if err != ErrProcessLimitExceeded {
 			t.Fatalf("Should fail over-limit spawn: machine=%v err=%v", machine, err)
 		}
 
-		procs, err := machine.Processes()
+		procs, err := machine.Processes(ctx)
 		if err != nil {
 			t.Fatalf("Should not fail listing processes: err=%v", err)
 		}
@@ -309,28 +313,28 @@ func TestValidate(t *testing.T) {
 		}
 
 		for _, process := range processes {
-			err = process.Kill()
+			err = process.Kill(ctx)
 			if err != nil {
 				t.Fatalf("Should not fail killing process: err=%v", err)
 			}
 		}
 
-		_, err = license.Machine(fingerprint)
+		_, err = license.Machine(ctx, fingerprint)
 		if err != nil {
 			t.Fatalf("Should not fail to retrieve the current machine: err=%v", err)
 		}
 
-		_, err = license.Machine("<invalid>")
+		_, err = license.Machine(ctx, "<invalid>")
 		if err == nil {
 			t.Fatalf("Should fail to retrieve invalid machine: err=%v", err)
 		}
 
-		machines, err := license.Machines()
+		machines, err := license.Machines(ctx)
 		if err != nil {
 			t.Fatalf("Should not fail to list machines: err=%v", err)
 		}
 
-		l, err := Validate(fingerprint)
+		l, err := Validate(ctx, fingerprint)
 		if err != nil {
 			t.Fatalf("Should not fail revalidation: err=%v", err)
 		}
@@ -343,18 +347,18 @@ func TestValidate(t *testing.T) {
 		}
 
 		for _, machine := range machines {
-			err = machine.Deactivate()
+			err = machine.Deactivate(ctx)
 			if err != nil {
 				t.Fatalf("Should not fail deactivation: err=%v", err)
 			}
 		}
 
-		err = license.Deactivate(fingerprint)
+		err = license.Deactivate(ctx, fingerprint)
 		if e, ok := err.(*NotFoundError); !ok {
 			t.Fatalf("Should already be deactivated: err=%v", e)
 		}
 
-		entitlements, err := license.Entitlements()
+		entitlements, err := license.Entitlements(ctx)
 		if err != nil {
 			t.Fatalf("Should not fail to list entitlements: err=%v", err)
 		}
@@ -370,7 +374,9 @@ func TestValidate(t *testing.T) {
 			cpu := uuid.NewString()
 			gpu := uuid.NewString()
 
-			machine, err := license.Activate(fingerprint,
+			machine, err := license.Activate(
+				ctx,
+				fingerprint,
 				Component{Name: "Board", Fingerprint: board},
 				Component{Name: "Drive", Fingerprint: disk},
 				Component{Name: "CPU", Fingerprint: cpu},
@@ -380,7 +386,7 @@ func TestValidate(t *testing.T) {
 				t.Fatalf("Should not fail reactivation: err=%v", err)
 			}
 
-			components, err := machine.Components()
+			components, err := machine.Components(ctx)
 			if err != nil {
 				t.Fatalf("Should not fail to list components: err=%v", err)
 			}
@@ -389,7 +395,7 @@ func TestValidate(t *testing.T) {
 				t.Fatalf("Should have components: components=%v", components)
 			}
 
-			license, err = Validate(fingerprint, board, disk, gpu, cpu)
+			license, err = Validate(ctx, fingerprint, board, disk, gpu, cpu)
 			if err != nil {
 				t.Fatalf("Should be valid: err=%v", err)
 			}
@@ -401,11 +407,12 @@ func TestValidate(t *testing.T) {
 				t.Fatalf("Should be scoped to components: scope=%v", license.LastValidation)
 			}
 
-			if err := license.Validate(fingerprint, uuid.NewString()); err != ErrComponentNotActivated {
+			if err := license.Validate(ctx, fingerprint, uuid.NewString()); err != ErrComponentNotActivated {
 				t.Fatalf("Should be invalid: err=%v", err)
 			}
 
 			mic, err := machine.Checkout(
+				ctx,
 				CheckoutInclude("components", "license", "license.entitlements"),
 			)
 			if err != nil {
@@ -442,7 +449,7 @@ func TestValidate(t *testing.T) {
 				t.Fatalf("Should have a TTL: ttl=%d", dataset.TTL)
 			}
 
-			err = machine.Deactivate()
+			err = machine.Deactivate(ctx)
 			if err != nil {
 				t.Fatalf("Should not fail deactivation: err=%v", err)
 			}
@@ -539,6 +546,7 @@ func TestSignedKey(t *testing.T) {
 }
 
 func TestUpgrade(t *testing.T) {
+	ctx := context.Background()
 	opts := UpgradeOptions{
 		PublicKey:      os.Getenv("PERSONAL_PUBLIC_KEY"),
 		Filename:       `test_{{.platform}}_{{.arch}}{{if .ext}}.{{.ext}}{{end}}`,
@@ -546,7 +554,7 @@ func TestUpgrade(t *testing.T) {
 		Channel:        "stable",
 	}
 
-	upgrade, err := Upgrade(opts)
+	upgrade, err := Upgrade(ctx, opts)
 	switch {
 	case err == ErrUpgradeNotAvailable:
 		t.Fatalf("Should have an upgrade available: err=%v", err)
@@ -554,7 +562,7 @@ func TestUpgrade(t *testing.T) {
 		t.Fatalf("Should not fail upgrade: err=%v", err)
 	}
 
-	err = upgrade.Install()
+	err = upgrade.Install(ctx)
 	if err != nil {
 		t.Fatalf("Should not fail installing upgrade: err=%v", err)
 	}
@@ -562,7 +570,7 @@ func TestUpgrade(t *testing.T) {
 	// Latest version
 	opts.CurrentVersion = "1.0.1"
 
-	_, err = Upgrade(opts)
+	_, err = Upgrade(ctx, opts)
 	if err != ErrUpgradeNotAvailable {
 		t.Fatalf("Should not have an upgrade available: err=%v", err)
 	}
@@ -570,7 +578,7 @@ func TestUpgrade(t *testing.T) {
 	// Future version
 	opts.CurrentVersion = "2.0.0"
 
-	_, err = Upgrade(opts)
+	_, err = Upgrade(ctx, opts)
 	if err != ErrUpgradeNotAvailable {
 		t.Fatalf("Should not have an upgrade available: err=%v", err)
 	}
@@ -578,7 +586,7 @@ func TestUpgrade(t *testing.T) {
 	// Invalid version
 	opts.CurrentVersion = "<not set>"
 
-	_, err = Upgrade(opts)
+	_, err = Upgrade(ctx, opts)
 	if err != ErrUpgradeNotAvailable {
 		t.Fatalf("Should not have an upgrade available: err=%v", err)
 	}
@@ -587,7 +595,7 @@ func TestUpgrade(t *testing.T) {
 	opts.CurrentVersion = "1.0.0"
 	opts.Product = uuid.NewString()
 
-	_, err = Upgrade(opts)
+	_, err = Upgrade(ctx, opts)
 	if err != ErrUpgradeNotAvailable {
 		t.Fatalf("Should not have an upgrade available: err=%v", err)
 	}

@@ -1,6 +1,7 @@
 package keygen
 
 import (
+	"context"
 	"time"
 
 	"github.com/keygen-sh/jsonapi-go"
@@ -128,10 +129,10 @@ func (m *Machines) SetData(to func(target interface{}) error) error {
 
 // Deactivate performs a machine deactivation for the current Machine. An error
 // will be returned if the machine deactivation fails.
-func (m *Machine) Deactivate() error {
+func (m *Machine) Deactivate(ctx context.Context) error {
 	client := NewClient()
 
-	if _, err := client.Delete("machines/"+m.ID, nil, nil); err != nil {
+	if _, err := client.Delete(ctx, "machines/"+m.ID, nil, nil); err != nil {
 		return err
 	}
 
@@ -142,8 +143,8 @@ func (m *Machine) Deactivate() error {
 // error channel will be returned, where any ping errors will be emitted. Pings are
 // sent according to the machine's required heartbeat window, minus 30 seconds to
 // account for any network lag. Panics if a heartbeat ping fails after first ping.
-func (m *Machine) Monitor() error {
-	if err := m.ping(); err != nil {
+func (m *Machine) Monitor(ctx context.Context) error {
+	if err := m.ping(ctx); err != nil {
 		return err
 	}
 
@@ -151,7 +152,7 @@ func (m *Machine) Monitor() error {
 		t := (time.Duration(m.HeartbeatDuration) * time.Second) - (30 * time.Second)
 
 		for range time.Tick(t) {
-			if err := m.ping(); err != nil {
+			if err := m.ping(ctx); err != nil {
 				panic(err)
 			}
 		}
@@ -161,7 +162,7 @@ func (m *Machine) Monitor() error {
 }
 
 // Checkout generates an encrypted machine file. Returns a MachineFile.
-func (m *Machine) Checkout(options ...CheckoutOption) (*MachineFile, error) {
+func (m *Machine) Checkout(ctx context.Context, options ...CheckoutOption) (*MachineFile, error) {
 	client := NewClient()
 	license := &License{}
 	lic := &MachineFile{}
@@ -173,11 +174,11 @@ func (m *Machine) Checkout(options ...CheckoutOption) (*MachineFile, error) {
 		}
 	}
 
-	if _, err := client.Get("me", nil, license); err != nil {
+	if _, err := client.Get(ctx, "me", nil, license); err != nil {
 		return nil, err
 	}
 
-	if _, err := client.Post("machines/"+m.ID+"/actions/check-out", opts, lic); err != nil {
+	if _, err := client.Post(ctx, "machines/"+m.ID+"/actions/check-out", opts, lic); err != nil {
 		return nil, err
 	}
 
@@ -185,11 +186,11 @@ func (m *Machine) Checkout(options ...CheckoutOption) (*MachineFile, error) {
 }
 
 // Components lists up to 100 components for the machine.
-func (m *Machine) Components() (Components, error) {
+func (m *Machine) Components(ctx context.Context) (Components, error) {
 	client := NewClient()
 	components := Components{}
 
-	if _, err := client.Get("machines/"+m.ID+"/components", querystring{Limit: 100}, &components); err != nil {
+	if _, err := client.Get(ctx, "machines/"+m.ID+"/components", querystring{Limit: 100}, &components); err != nil {
 		return nil, err
 	}
 
@@ -201,7 +202,7 @@ func (m *Machine) Components() (Components, error) {
 // will be returned, e.g. ErrProcessLimitExceeded. Automatically starts a loop
 // that sends heartbeat pings according to the process's Interval. Panics if a
 // heartbeat ping fails after first ping.
-func (m *Machine) Spawn(pid string) (*Process, error) {
+func (m *Machine) Spawn(ctx context.Context, pid string) (*Process, error) {
 	client := NewClient()
 	params := &Process{
 		Pid:       pid,
@@ -209,11 +210,11 @@ func (m *Machine) Spawn(pid string) (*Process, error) {
 	}
 
 	process := &Process{}
-	if _, err := client.Post("processes", params, process); err != nil {
+	if _, err := client.Post(ctx, "processes", params, process); err != nil {
 		return nil, err
 	}
 
-	if err := process.monitor(); err != nil {
+	if err := process.monitor(ctx); err != nil {
 		return process, err
 	}
 
@@ -221,21 +222,21 @@ func (m *Machine) Spawn(pid string) (*Process, error) {
 }
 
 // Processes lists up to 100 processes for the machine.
-func (m *Machine) Processes() (Processes, error) {
+func (m *Machine) Processes(ctx context.Context) (Processes, error) {
 	client := NewClient()
 	processes := Processes{}
 
-	if _, err := client.Get("machines/"+m.ID+"/processes", querystring{Limit: 100}, &processes); err != nil {
+	if _, err := client.Get(ctx, "machines/"+m.ID+"/processes", querystring{Limit: 100}, &processes); err != nil {
 		return nil, err
 	}
 
 	return processes, nil
 }
 
-func (m *Machine) ping() error {
+func (m *Machine) ping(ctx context.Context) error {
 	client := NewClient()
 
-	if _, err := client.Post("machines/"+m.ID+"/actions/ping", nil, m); err != nil {
+	if _, err := client.Post(ctx, "machines/"+m.ID+"/actions/ping", nil, m); err != nil {
 		return err
 	}
 

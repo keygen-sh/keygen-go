@@ -1,6 +1,7 @@
 package keygen
 
 import (
+	"context"
 	"os"
 	"runtime"
 	"time"
@@ -61,7 +62,7 @@ func (l *License) SetRelationships(relationships map[string]interface{}) error {
 // and an optional array of hardware component fingerprints. It returns an error
 // if the license is invalid, e.g. ErrLicenseNotActivated, ErrLicenseExpired or
 // ErrLicenseTooManyMachines.
-func (l *License) Validate(fingerprints ...string) error {
+func (l *License) Validate(ctx context.Context, fingerprints ...string) error {
 	client := NewClient()
 	validation := &validation{}
 
@@ -77,7 +78,7 @@ func (l *License) Validate(fingerprints ...string) error {
 		params = validate{}
 	}
 
-	if _, err := client.Post("licenses/"+l.ID+"/actions/validate", params, validation); err != nil {
+	if _, err := client.Post(ctx, "licenses/"+l.ID+"/actions/validate", params, validation); err != nil {
 		if _, ok := err.(*NotFoundError); ok {
 			return ErrLicenseInvalid
 		}
@@ -147,7 +148,7 @@ func (l *License) Verify() ([]byte, error) {
 // fingerprint. If the activation is successful, the new machine will be returned. An
 // error will be returned if the activation fails, e.g. ErrMachineLimitExceeded
 // or ErrMachineAlreadyActivated.
-func (l *License) Activate(fingerprint string, components ...Component) (*Machine, error) {
+func (l *License) Activate(ctx context.Context, fingerprint string, components ...Component) (*Machine, error) {
 	client := NewClient()
 	hostname, _ := os.Hostname()
 	params := &Machine{
@@ -160,7 +161,7 @@ func (l *License) Activate(fingerprint string, components ...Component) (*Machin
 	}
 
 	machine := &Machine{}
-	if _, err := client.Post("machines", params, machine); err != nil {
+	if _, err := client.Post(ctx, "machines", params, machine); err != nil {
 		return nil, err
 	}
 
@@ -170,10 +171,10 @@ func (l *License) Activate(fingerprint string, components ...Component) (*Machin
 // Deactivate performs a machine deactivation, identified by the provided ID. The ID
 // can be the machine's UUID or the machine's fingerprint. An error will be returned
 // if the machine deactivation fails.
-func (l *License) Deactivate(id string) error {
+func (l *License) Deactivate(ctx context.Context, id string) error {
 	client := NewClient()
 
-	_, err := client.Delete("machines/"+id, nil, nil)
+	_, err := client.Delete(ctx, "machines/"+id, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -183,11 +184,11 @@ func (l *License) Deactivate(id string) error {
 
 // Machine retreives a machine, identified by the provided ID. The ID can be the machine's
 // UUID or the machine's fingerprint. An error will be returned if it does not exist.
-func (l *License) Machine(id string) (*Machine, error) {
+func (l *License) Machine(ctx context.Context, id string) (*Machine, error) {
 	client := NewClient()
 	machine := &Machine{}
 
-	if _, err := client.Get("machines/"+id, nil, machine); err != nil {
+	if _, err := client.Get(ctx, "machines/"+id, nil, machine); err != nil {
 		return nil, err
 	}
 
@@ -195,11 +196,11 @@ func (l *License) Machine(id string) (*Machine, error) {
 }
 
 // Machines lists up to 100 machines for the license.
-func (l *License) Machines() (Machines, error) {
+func (l *License) Machines(ctx context.Context) (Machines, error) {
 	client := NewClient()
 	machines := Machines{}
 
-	if _, err := client.Get("licenses/"+l.ID+"/machines", querystring{Limit: 100}, &machines); err != nil {
+	if _, err := client.Get(ctx, "licenses/"+l.ID+"/machines", querystring{Limit: 100}, &machines); err != nil {
 		return nil, err
 	}
 
@@ -207,11 +208,11 @@ func (l *License) Machines() (Machines, error) {
 }
 
 // Machines lists up to 100 entitlements for the license.
-func (l *License) Entitlements() (Entitlements, error) {
+func (l *License) Entitlements(ctx context.Context) (Entitlements, error) {
 	client := NewClient()
 	entitlements := Entitlements{}
 
-	if _, err := client.Get("licenses/"+l.ID+"/entitlements", querystring{Limit: 100}, &entitlements); err != nil {
+	if _, err := client.Get(ctx, "licenses/"+l.ID+"/entitlements", querystring{Limit: 100}, &entitlements); err != nil {
 		return nil, err
 	}
 
@@ -219,7 +220,7 @@ func (l *License) Entitlements() (Entitlements, error) {
 }
 
 // Checkout generates an encrypted license file. Returns a LicenseFile.
-func (l *License) Checkout(options ...CheckoutOption) (*LicenseFile, error) {
+func (l *License) Checkout(ctx context.Context, options ...CheckoutOption) (*LicenseFile, error) {
 	client := NewClient()
 	lic := &LicenseFile{}
 
@@ -230,7 +231,7 @@ func (l *License) Checkout(options ...CheckoutOption) (*LicenseFile, error) {
 		}
 	}
 
-	if _, err := client.Post("licenses/"+l.ID+"/actions/check-out", opts, lic); err != nil {
+	if _, err := client.Post(ctx, "licenses/"+l.ID+"/actions/check-out", opts, lic); err != nil {
 		return nil, err
 	}
 

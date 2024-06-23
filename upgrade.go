@@ -1,5 +1,7 @@
 package keygen
 
+import "context"
+
 type UpgradeOptions struct {
 	// CurrentVersion is the current version of the program. This will be used by
 	// Keygen to determine if an upgrade is available.
@@ -50,7 +52,7 @@ type UpgradeOptions struct {
 
 // Upgrade checks if an upgrade is available for the provided version. Returns a
 // Release and any errors that occurred, e.g. ErrUpgradeNotAvailable.
-func Upgrade(options UpgradeOptions) (*Release, error) {
+func Upgrade(ctx context.Context, options UpgradeOptions) (*Release, error) {
 	if options.PublicKey == PublicKey {
 		panic("You MUST use a personal public key. This MUST NOT be your Keygen account's public key.")
 	}
@@ -75,7 +77,7 @@ func Upgrade(options UpgradeOptions) (*Release, error) {
 	params := querystring{Product: options.Product, Package: options.Package, Constraint: options.Constraint, Channel: options.Channel}
 	release := &Release{}
 
-	if _, err := client.Get("releases/"+options.CurrentVersion+"/upgrade", params, release); err != nil {
+	if _, err := client.Get(ctx, "releases/"+options.CurrentVersion+"/upgrade", params, release); err != nil {
 		switch err.(type) {
 		case *NotFoundError:
 			return nil, ErrUpgradeNotAvailable

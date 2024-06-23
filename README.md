@@ -96,7 +96,7 @@ It will return a `License` object as well as any validation errors that occur. T
 object can be used to perform additional actions, such as `license.Activate(fingerprint)`.
 
 ```go
-license, err := keygen.Validate(fingerprint)
+license, err := keygen.Validate(context.Background(), fingerprint)
 switch {
 case err == keygen.ErrLicenseNotActivated:
   panic("license is not activated!")
@@ -126,8 +126,10 @@ You can read more about generating a personal keypair and about code signing [he
 ```go
 opts := keygen.UpgradeOptions{CurrentVersion: "1.0.0", Channel: "stable", PublicKey: "5ec69b78d4b5d4b624699cef5faf3347dc4b06bb807ed4a2c6740129f1db7159"}
 
+ctx := context.Background()
+
 // Check for an upgrade
-release, err := keygen.Upgrade(opts)
+release, err := keygen.Upgrade(ctx, opts)
 switch {
 case err == keygen.ErrUpgradeNotAvailable:
   fmt.Println("No upgrade available, already at the latest version!")
@@ -140,7 +142,7 @@ case err != nil:
 }
 
 // Install the upgrade
-if err := release.Install(); err != nil {
+if err := release.Install(ctx); err != nil {
   panic("upgrade install failed!")
 }
 
@@ -167,6 +169,8 @@ is cross-platform, using the operating system's native GUID.
 package main
 
 import (
+  "context"
+
   "github.com/denisbrodbeck/machineid"
   "github.com/keygen-sh/keygen-go/v3"
 )
@@ -181,12 +185,14 @@ func main() {
     panic(err)
   }
 
+  ctx := context.Background()
+
   // Validate the license for the current fingerprint
-  license, err := keygen.Validate(fingerprint)
+  license, err := keygen.Validate(ctx, fingerprint)
   switch {
   case err == keygen.ErrLicenseNotActivated:
     // Activate the current fingerprint
-    machine, err := license.Activate(fingerprint)
+    machine, err := license.Activate(ctx, fingerprint)
     switch {
     case err == keygen.ErrMachineLimitExceeded:
       panic("machine limit has been exceeded!")
@@ -210,7 +216,11 @@ Check for an upgrade and automatically replace the current binary with the newes
 ```go
 package main
 
-import "github.com/keygen-sh/keygen-go/v3"
+import (
+  "context"
+
+  "github.com/keygen-sh/keygen-go/v3"
+)
 
 // The current version of the program
 const CurrentVersion = "1.0.0"
@@ -224,10 +234,12 @@ func main() {
   fmt.Printf("Current version: %s\n", CurrentVersion)
   fmt.Println("Checking for upgrades...")
 
+  ctx := context.Background()
+
   opts := keygen.UpgradeOptions{CurrentVersion: CurrentVersion, Channel: "stable", PublicKey: "YOUR_COMPANY_PUBLIC_KEY"}
 
   // Check for upgrade
-  release, err := keygen.Upgrade(opts)
+  release, err := keygen.Upgrade(ctx, opts)
   switch {
   case err == keygen.ErrUpgradeNotAvailable:
     fmt.Println("No upgrade available, already at the latest version!")
@@ -243,7 +255,7 @@ func main() {
   fmt.Println("Installing upgrade...")
 
   // Download the upgrade and install it
-  err = release.Install()
+  err = release.Install(ctx)
   if err != nil {
     panic("upgrade install failed!")
   }
@@ -263,6 +275,8 @@ nodes in cloud-based scenarios, since nodes may share underlying hardware.
 package main
 
 import (
+  "context"
+
   "github.com/google/uuid"
   "github.com/keygen-sh/keygen-go/v3"
 )
@@ -275,15 +289,17 @@ func main() {
   // The current device's fingerprint (could be e.g. MAC, mobo ID, GUID, etc.)
   fingerprint := uuid.New().String()
 
+  ctx := context.Background()
+
   // Keep our example process alive
   done := make(chan bool, 1)
 
   // Validate the license for the current fingerprint
-  license, err := keygen.Validate(fingerprint)
+  license, err := keygen.Validate(ctx, fingerprint)
   switch {
   case err == keygen.ErrLicenseNotActivated:
     // Activate the current fingerprint
-    machine, err := license.Activate(fingerprint)
+    machine, err := license.Activate(ctx, fingerprint)
     if err != nil {
       fmt.Println("machine activation failed!")
 
@@ -299,7 +315,7 @@ func main() {
       for sig := range sigs {
         fmt.Printf("Caught %v, deactivating machine and gracefully exiting...\n", sig)
 
-        if err := machine.Deactivate(); err != nil {
+        if err := machine.Deactivate(ctx); err != nil {
           panic(err)
         }
 
@@ -311,7 +327,7 @@ func main() {
     }()
 
     // Start a heartbeat monitor for the current machine
-    if err := machine.Monitor(); err != nil {
+    if err := machine.Monitor(ctx); err != nil {
       fmt.Println("Machine heartbeat monitor failed to start!")
 
       panic(err)
@@ -463,17 +479,21 @@ key does not exist. You can handle this accordingly.
 ```go
 package main
 
-import "github.com/keygen-sh/keygen-go/v3"
+import (
+  "context"
+  
+  "github.com/keygen-sh/keygen-go/v3"
+)
 
-func getLicense() (*keygen.License, error) {
+func getLicense(ctx context.Context) (*keygen.License, error) {
   keygen.LicenseKey = promptForLicenseKey()
 
-  license, err := keygen.Validate()
+  license, err := keygen.Validate(ctx)
   if err != nil {
     if _, ok := err.(*keygen.LicenseKeyError); ok {
       fmt.Println("License key does not exist!")
 
-      return getLicense()
+      return getLicense(ctx)
     }
 
     return nil, err
@@ -486,7 +506,9 @@ func main() {
   keygen.Account = "..."
   keygen.Product = "..."
 
-  license, err := getLicense()
+  ctx := context.Background()
+
+  license, err := getLicense(ctx)
   if err != nil {
     panic(err)
   }
@@ -505,15 +527,15 @@ package main
 
 import "github.com/keygen-sh/keygen-go/v3"
 
-func getLicense() (*keygen.License, error) {
+func getLicense(ctx context.Context) (*keygen.License, error) {
   keygen.Token = promptForLicenseToken()
 
-  license, err := keygen.Validate()
+  license, err := keygen.Validate(ctx)
   if err != nil {
     if _, ok := err.(*keygen.LicenseTokenError); ok {
       fmt.Println("License token does not exist!")
 
-      return getLicense()
+      return getLicense(ctx)
     }
 
     return nil, err
@@ -526,7 +548,9 @@ func main() {
   keygen.Account = "..."
   keygen.Product = "..."
 
-  license, err := getLicense()
+  ctx := context.Background()
+
+  license, err := getLicense(ctx)
   if err != nil {
     panic(err)
   }
@@ -546,15 +570,15 @@ package main
 
 import "github.com/keygen-sh/keygen-go/v3"
 
-func validate() (*keygen.License, error) {
-  license, err := keygen.Validate()
+func validate(ctx context.Context) (*keygen.License, error) {
+  license, err := keygen.Validate(ctx)
   if err != nil {
     if e, ok := err.(*keygen.RateLimitError); ok {
       // Sleep until our rate limit window is passed
       time.Sleep(time.Duration(e.RetryAfter) * time.Second)
 
       // Retry validate
-      return validate()
+      return validate(ctx)
     }
 
     return nil, err
@@ -568,7 +592,9 @@ func main() {
   keygen.Product = "YOUR_KEYGEN_PRODUCT_ID"
   keygen.LicenseKey = "A_KEYGEN_LICENSE_KEY"
 
-  license, err := validate()
+  ctx := context.Background()
+
+  license, err := validate(ctx)
   if err != nil {
     panic(err)
   }
@@ -589,6 +615,8 @@ to implement automatic retries.
 package main
 
 import (
+  "context"
+
   "github.com/hashicorp/go-retryablehttp"
   "github.com/keygen-sh/keygen-go/v3"
 )
@@ -605,8 +633,10 @@ func main() {
   keygen.Product = "YOUR_KEYGEN_PRODUCT_ID"
   keygen.LicenseKey = "A_KEYGEN_LICENSE_KEY"
 
+  ctx := context.Background()
+
   // Use SDK as you would normally
-  keygen.Validate()
+  keygen.Validate(ctx)
 }
 ```
 
@@ -623,6 +653,7 @@ To do so in Go, you can utilize [`gock`](https://github.com/h2non/gock) or [`htt
 package main
 
 import (
+  "context"
   "testing"
 
   "github.com/keygen-sh/keygen-go/v3"
@@ -637,6 +668,7 @@ func init() {
 }
 
 func TestExample(t *testing.T) {
+  ctx := context.Background()
   defer gock.Off()
 
   // Intercept Keygen's HTTP client
@@ -664,7 +696,7 @@ func TestExample(t *testing.T) {
   keygen.MaxClockDrift = -1
 
   // Use SDK as you would normally
-  _, err := keygen.Validate()
+  _, err := keygen.Validate(ctx)
   if err != nil {
     t.Fatalf("Should not fail mock validation: err=%v", err)
   }

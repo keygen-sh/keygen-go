@@ -18,7 +18,7 @@ var (
 	APIURL = "https://api.keygen.sh"
 
 	// APIVersion is the currently supported API version.
-	APIVersion = "1.5"
+	APIVersion = "1.7"
 
 	// APIPrefix is the major version prefix included in all API URLs.
 	APIPrefix = "v1"

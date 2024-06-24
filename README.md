@@ -81,7 +81,7 @@ keygen.Logger = &CustomLogger{Level: keygen.LogLevelDebug}
 
 The following top-level functions are available. We recommend starting here.
 
-### keygen.Validate(fingerprints ...string)
+### keygen.Validate(ctx, fingerprints ...string)
 
 To validate a license, configure `keygen.Account` and `keygen.Product` with your Keygen account
 details. Then prompt the end-user for their license key or token and set `keygen.LicenseKey`
@@ -96,8 +96,7 @@ It will return a `License` object as well as any validation errors that occur. T
 object can be used to perform additional actions, such as `license.Activate(fingerprint)`.
 
 ```go
-ctx := context.Background()
-license, err := keygen.Validate(ctx, fingerprint)
+license, err := keygen.Validate(context.Background(), fingerprint)
 switch {
 case err == keygen.ErrLicenseNotActivated:
   panic("license is not activated!")
@@ -110,7 +109,7 @@ case err != nil:
 fmt.Println("License is valid!")
 ```
 
-### keygen.Upgrade(options keygen.UpgradeOptions)
+### keygen.Upgrade(ctx, options keygen.UpgradeOptions)
 
 Check for an upgrade. When an upgrade is available, a `Release` will be returned which will
 allow the update to be installed, replacing the currently running binary. When an upgrade
@@ -482,7 +481,7 @@ package main
 
 import (
   "context"
-  
+
   "github.com/keygen-sh/keygen-go/v3"
 )
 

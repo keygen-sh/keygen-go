@@ -81,7 +81,7 @@ keygen.Logger = &CustomLogger{Level: keygen.LogLevelDebug}
 
 The following top-level functions are available. We recommend starting here.
 
-### keygen.Validate(fingerprints ...string)
+### keygen.Validate(ctx, fingerprints ...string)
 
 To validate a license, configure `keygen.Account` and `keygen.Product` with your Keygen account
 details. Then prompt the end-user for their license key or token and set `keygen.LicenseKey`
@@ -96,8 +96,7 @@ It will return a `License` object as well as any validation errors that occur. T
 object can be used to perform additional actions, such as `license.Activate(fingerprint)`.
 
 ```go
-ctx := context.Background()
-license, err := keygen.Validate(ctx, fingerprint)
+license, err := keygen.Validate(context.Background(), fingerprint)
 switch {
 case err == keygen.ErrLicenseNotActivated:
   panic("license is not activated!")
@@ -110,7 +109,7 @@ case err != nil:
 fmt.Println("License is valid!")
 ```
 
-### keygen.Upgrade(options keygen.UpgradeOptions)
+### keygen.Upgrade(ctx, options keygen.UpgradeOptions)
 
 Check for an upgrade. When an upgrade is available, a `Release` will be returned which will
 allow the update to be installed, replacing the currently running binary. When an upgrade
@@ -126,7 +125,6 @@ You can read more about generating a personal keypair and about code signing [he
 
 ```go
 opts := keygen.UpgradeOptions{CurrentVersion: "1.0.0", Channel: "stable", PublicKey: "5ec69b78d4b5d4b624699cef5faf3347dc4b06bb807ed4a2c6740129f1db7159"}
-
 ctx := context.Background()
 
 // Check for an upgrade
@@ -236,7 +234,6 @@ func main() {
   fmt.Println("Checking for upgrades...")
 
   ctx := context.Background()
-
   opts := keygen.UpgradeOptions{CurrentVersion: CurrentVersion, Channel: "stable", PublicKey: "YOUR_COMPANY_PUBLIC_KEY"}
 
   // Check for upgrade
@@ -287,10 +284,10 @@ func main() {
   keygen.Product = "YOUR_KEYGEN_PRODUCT_ID"
   keygen.LicenseKey = "A_KEYGEN_LICENSE_KEY"
 
+  ctx := context.Background()
+
   // The current device's fingerprint (could be e.g. MAC, mobo ID, GUID, etc.)
   fingerprint := uuid.New().String()
-
-  ctx := context.Background()
 
   // Keep our example process alive
   done := make(chan bool, 1)
@@ -482,7 +479,7 @@ package main
 
 import (
   "context"
-  
+
   "github.com/keygen-sh/keygen-go/v3"
 )
 

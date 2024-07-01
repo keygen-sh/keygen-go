@@ -99,11 +99,12 @@ func (lic *LicenseFile) Decrypt(key string) (*LicenseFileDataset, error) {
 }
 
 func (lic *LicenseFile) certificate() (*certificate, error) {
-	payload := lic.Certificate
+	payload := strings.TrimSpace(lic.Certificate)
 
 	// Remove header and footer
-	payload = strings.TrimPrefix(payload, "-----BEGIN LICENSE FILE-----\n")
-	payload = strings.TrimSuffix(payload, "-----END LICENSE FILE-----\n")
+	payload = strings.TrimPrefix(payload, "-----BEGIN LICENSE FILE-----")
+	payload = strings.TrimSuffix(payload, "-----END LICENSE FILE-----")
+	payload = strings.TrimSpace(payload)
 
 	// Decode
 	dec, err := base64.StdEncoding.DecodeString(payload)

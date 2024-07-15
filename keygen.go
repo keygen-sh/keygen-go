@@ -51,7 +51,7 @@ var (
 
 	// Logger is a leveled logger implementation used for printing debug,
 	// informational, warning, and error messages.
-	Logger LeveledLogger = &logger{Level: LogLevelError}
+	Logger LeveledLogger = NewLogger(LogLevelError)
 
 	// Program is the name of the current program, used when installing
 	// upgrades. Defaults to the current program name.

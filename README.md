@@ -165,6 +165,10 @@ Validate the license for a particular device fingerprint, and activate when need
 using [`machineid`](https://github.com/denisbrodbeck/machineid) for fingerprinting, which
 is cross-platform, using the operating system's native GUID.
 
+> ⚠️ While `machineid` is cross-platform, usually Docker images do not ship with a machineid file
+> and causes `machineid` to fail. To solve this, you must either install `dbus` on
+> your docker image or add the file manually during the image build.
+
 ```go
 package main
 

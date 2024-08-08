@@ -162,7 +162,7 @@ Below are various implementation examples, covering common licensing scenarios a
 ### License Activation
 
 Validate the license for a particular device fingerprint, and activate when needed. We're
-using [`machineid`](https://github.com/denisbrodbeck/machineid) for fingerprinting, which
+using [`machineid`](https://github.com/keygen-sh/machineid) for fingerprinting, which
 is cross-platform, using the operating system's native GUID.
 
 ```go
@@ -171,8 +171,8 @@ package main
 import (
   "context"
 
-  "github.com/denisbrodbeck/machineid"
   "github.com/keygen-sh/keygen-go/v3"
+  "github.com/keygen-sh/machineid"
 )
 
 func main() {

@@ -104,11 +104,12 @@ func (lic *MachineFile) Decrypt(key string) (*MachineFileDataset, error) {
 }
 
 func (lic *MachineFile) certificate() (*certificate, error) {
-	payload := lic.Certificate
+	payload := strings.TrimSpace(lic.Certificate)
 
 	// Remove header and footer
-	payload = strings.TrimPrefix(payload, "-----BEGIN MACHINE FILE-----\n")
-	payload = strings.TrimSuffix(payload, "-----END MACHINE FILE-----\n")
+	payload = strings.TrimPrefix(payload, "-----BEGIN MACHINE FILE-----")
+	payload = strings.TrimSuffix(payload, "-----END MACHINE FILE-----")
+	payload = strings.TrimSpace(payload)
 
 	// Decode
 	dec, err := base64.StdEncoding.DecodeString(payload)

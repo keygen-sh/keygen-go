@@ -74,7 +74,9 @@ func (lic *MachineFile) Decrypt(key string) (*MachineFileDataset, error) {
 	switch {
 	case cert.Alg == "aes-256-gcm+rsa-pss-sha256" || cert.Alg == "aes-256-gcm+rsa-sha256":
 		return nil, ErrMachineFileNotSupported
-	case cert.Alg != "aes-256-gcm+ed25519":
+	case cert.Alg == "aes-256-gcm+ed25519" || cert.Alg == "aes-256-gcm+ecdsa-secp256r1":
+		break // continue
+	default:
 		return nil, ErrMachineFileNotEncrypted
 	}
 

@@ -18,7 +18,7 @@ var (
 	APIURL = "https://api.keygen.sh"
 
 	// APIVersion is the currently supported API version.
-	APIVersion = "1.7"
+	APIVersion = "1.8"
 
 	// APIPrefix is the major version prefix included in all API URLs.
 	APIPrefix = "v1"
@@ -44,6 +44,10 @@ var (
 	// PublicKey is the Keygen public key used for verifying license keys
 	// and API response signatures.
 	PublicKey string
+
+	// SignatureScheme is the cryptographic scheme to be used for verifying
+	// API response signatures. Either `ed25519` or `ecdsa-secp256r1`.
+	SignatureScheme = "ed25519"
 
 	// UserAgent defines the user-agent string sent to the API backend,
 	// uniquely identifying an integration.

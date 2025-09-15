@@ -18,8 +18,12 @@ func init() {
 	log := Logger.(*logger)
 	log.Level = LogLevelDebug
 
-	if url := os.Getenv("KEYGEN_CUSTOM_DOMAIN"); url != "" {
-		APIURL = url
+	if scheme := os.Getenv("KEYGEN_SIGNATURE_SCHEME"); scheme != "" {
+		SignatureScheme = scheme
+	}
+
+	if host := os.Getenv("KEYGEN_HOST"); host != "" {
+		APIURL = host
 	}
 
 	PublicKey = os.Getenv("KEYGEN_PUBLIC_KEY")

@@ -50,15 +50,16 @@ func (r *Response) tldr() string {
 
 // ClientOptions stores config options used in API requests.
 type ClientOptions struct {
-	Account     string
-	Environment string
-	LicenseKey  string
-	Token       string
-	PublicKey   string
-	UserAgent   string
-	APIVersion  string
-	APIPrefix   string
-	APIURL      string
+	Account         string
+	Environment     string
+	LicenseKey      string
+	Token           string
+	PublicKey       string
+	AcceptSignature string
+	UserAgent       string
+	APIVersion      string
+	APIPrefix       string
+	APIURL          string
 }
 
 // Client represents the internal HTTP client and config used for API requests.
@@ -74,15 +75,16 @@ func NewClient() *Client {
 	client := &Client{
 		HTTPClient,
 		ClientOptions{
-			Account:     Account,
-			Environment: Environment,
-			LicenseKey:  LicenseKey,
-			Token:       Token,
-			PublicKey:   PublicKey,
-			UserAgent:   UserAgent,
-			APIPrefix:   APIPrefix,
-			APIVersion:  APIVersion,
-			APIURL:      APIURL,
+			Account:         Account,
+			Environment:     Environment,
+			LicenseKey:      LicenseKey,
+			Token:           Token,
+			PublicKey:       PublicKey,
+			AcceptSignature: SignatureScheme,
+			UserAgent:       UserAgent,
+			APIPrefix:       APIPrefix,
+			APIVersion:      APIVersion,
+			APIURL:          APIURL,
 		},
 		mutex,
 	}
@@ -95,15 +97,16 @@ func NewClientWithOptions(options *ClientOptions) *Client {
 	client := &Client{
 		HTTPClient,
 		ClientOptions{
-			Account:     options.Account,
-			Environment: options.Environment,
-			LicenseKey:  options.LicenseKey,
-			Token:       options.Token,
-			PublicKey:   options.PublicKey,
-			UserAgent:   options.UserAgent,
-			APIPrefix:   options.APIPrefix,
-			APIVersion:  options.APIVersion,
-			APIURL:      options.APIURL,
+			Account:         options.Account,
+			Environment:     options.Environment,
+			LicenseKey:      options.LicenseKey,
+			Token:           options.Token,
+			PublicKey:       options.PublicKey,
+			AcceptSignature: options.AcceptSignature,
+			UserAgent:       options.UserAgent,
+			APIPrefix:       options.APIPrefix,
+			APIVersion:      options.APIVersion,
+			APIURL:          options.APIURL,
 		},
 		mutex,
 	}
@@ -252,6 +255,10 @@ func (c *Client) new(ctx context.Context, method string, path string, params int
 		req.Header.Add("Keygen-Environment", c.Environment)
 	}
 
+	if c.AcceptSignature != "" {
+		req.Header.Add("Keygen-Accept-Signature", fmt.Sprintf("algorithm=%q", c.AcceptSignature))
+	}
+
 	req.Header.Add("Keygen-Version", c.APIVersion)
 
 	if in.Len() > 0 {
@@ -345,7 +352,7 @@ func (c *Client) send(req *http.Request, model interface{}) (*Response, error) {
 	}
 
 	if c.PublicKey != "" {
-		verifier := &verifier{c.PublicKey}
+		verifier := &verifier{PublicKey: c.PublicKey}
 
 		if err := verifier.VerifyResponse(response); err != nil {
 			Logger.Errorf("Error verifying response signature: id=%s status=%d size=%d body=%s err=%v", response.ID, response.Status, response.Size, response.tldr(), err)

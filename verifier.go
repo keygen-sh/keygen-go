@@ -2,10 +2,14 @@ package keygen
 
 import (
 	"bytes"
+	"crypto"
+	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/sha256"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/pem"
 	"fmt"
 	"io"
 	"net/http"
@@ -24,6 +28,12 @@ func (v *verifier) VerifyLicenseFile(lic *LicenseFile) error {
 		return err
 	}
 
+	msg := []byte("license/" + cert.Enc)
+	sig, err := base64.StdEncoding.DecodeString(cert.Sig)
+	if err != nil {
+		return ErrLicenseFileNotGenuine
+	}
+
 	switch {
 	case cert.Alg == "aes-256-gcm+ed25519" || cert.Alg == "base64+ed25519":
 		publicKey, err := v.publicKeyBytes()
@@ -31,20 +41,26 @@ func (v *verifier) VerifyLicenseFile(lic *LicenseFile) error {
 			return err
 		}
 
-		msg := []byte("license/" + cert.Enc)
-		sig, err := base64.StdEncoding.DecodeString(cert.Sig)
-		if err != nil {
-			return ErrLicenseFileNotGenuine
-		}
-
 		if ok := ed25519.Verify(publicKey, msg, sig); !ok {
 			return ErrLicenseFileNotGenuine
 		}
+	case cert.Alg == "aes-256-gcm+ecdsa-secp256r1" || cert.Alg == "base64+ecdsa-secp256r1":
+		publicKey, err := v.publicKey()
+		if err != nil {
+			return err
+		}
 
-		return nil
+		ecdsaPubKey := publicKey.(*ecdsa.PublicKey)
+		hash := sha256.Sum256(msg)
+
+		if !ecdsa.VerifyASN1(ecdsaPubKey, hash[:], sig) {
+			return ErrLicenseFileNotGenuine
+		}
 	default:
 		return ErrLicenseFileNotSupported
 	}
+
+	return nil
 }
 
 // VerifyMachineFile checks if a license file is genuine.
@@ -54,6 +70,12 @@ func (v *verifier) VerifyMachineFile(lic *MachineFile) error {
 		return err
 	}
 
+	msg := []byte("machine/" + cert.Enc)
+	sig, err := base64.StdEncoding.DecodeString(cert.Sig)
+	if err != nil {
+		return ErrMachineFileNotGenuine
+	}
+
 	switch {
 	case cert.Alg == "aes-256-gcm+ed25519" || cert.Alg == "base64+ed25519":
 		publicKey, err := v.publicKeyBytes()
@@ -61,20 +83,26 @@ func (v *verifier) VerifyMachineFile(lic *MachineFile) error {
 			return err
 		}
 
-		msg := []byte("machine/" + cert.Enc)
-		sig, err := base64.StdEncoding.DecodeString(cert.Sig)
-		if err != nil {
-			return ErrMachineFileNotGenuine
-		}
-
 		if ok := ed25519.Verify(publicKey, msg, sig); !ok {
 			return ErrMachineFileNotGenuine
 		}
+	case cert.Alg == "aes-256-gcm+ecdsa-secp256r1" || cert.Alg == "base64+ecdsa-secp256r1":
+		publicKey, err := v.publicKey()
+		if err != nil {
+			return err
+		}
 
-		return nil
+		ecdsaPubKey := publicKey.(*ecdsa.PublicKey)
+		hash := sha256.Sum256(msg)
+
+		if !ecdsa.VerifyASN1(ecdsaPubKey, hash[:], sig) {
+			return ErrMachineFileNotGenuine
+		}
 	default:
 		return ErrMachineFileNotSupported
 	}
+
+	return nil
 }
 
 // Verify checks if a license key is genuine by cryptographically verifying the
@@ -82,30 +110,18 @@ func (v *verifier) VerifyMachineFile(lic *MachineFile) error {
 // key will be returned. An error will be returned if the key is not genuine or
 // otherwise invalid, e.g. ErrLicenseNotGenuine.
 func (v *verifier) VerifyLicense(license *License) ([]byte, error) {
-	if license.Key == "" {
-		return nil, ErrLicenseKeyMissing
-	}
-
 	if license.Scheme == "" {
 		return nil, ErrLicenseSchemeMissing
 	}
 
-	switch {
-	case license.Scheme == SchemeCodeEd25519:
-		dataset, err := v.verifyKey(license.Key)
-
-		return dataset, err
-	default:
-		return nil, ErrLicenseSchemeNotSupported
+	if license.Key == "" {
+		return nil, ErrLicenseKeyMissing
 	}
+
+	return v.verifyKey(license.Scheme, license.Key)
 }
 
 func (v *verifier) VerifyRequest(request *http.Request) error {
-	publicKey, err := v.publicKeyBytes()
-	if err != nil {
-		return err
-	}
-
 	digestHeader := request.Header.Get("Digest")
 	if digestHeader == "" {
 		return ErrRequestDigestMissing
@@ -158,6 +174,7 @@ func (v *verifier) VerifyRequest(request *http.Request) error {
 	}
 
 	sigParams := parseSignatureHeader(sigHeader)
+	alg := sigParams["algorithm"]
 	sig := sigParams["signature"]
 	msg := fmt.Sprintf(
 		"(request-target): %s %s\nhost: %s\ndate: %s\ndigest: %s",
@@ -174,19 +191,37 @@ func (v *verifier) VerifyRequest(request *http.Request) error {
 		return err
 	}
 
-	if ok := ed25519.Verify(publicKey, msgBytes, sigBytes); !ok {
-		return ErrRequestSignatureInvalid
+	// we only support ed25519 and ecdsa secp256r1 (nist p-256)
+	switch alg {
+	case "ed25519":
+		publicKey, err := v.publicKeyBytes()
+		if err != nil {
+			return err
+		}
+
+		if ok := ed25519.Verify(publicKey, msgBytes, sigBytes); !ok {
+			return ErrResponseSignatureInvalid
+		}
+	case "ecdsa-secp256r1":
+		publicKey, err := v.publicKey()
+		if err != nil {
+			return err
+		}
+
+		ecdsaPub := publicKey.(*ecdsa.PublicKey)
+		hash := sha256.Sum256(msgBytes)
+
+		if !ecdsa.VerifyASN1(ecdsaPub, hash[:], sigBytes) {
+			return ErrResponseSignatureInvalid
+		}
+	default:
+		return ErrResponseSignatureNotSupported
 	}
 
 	return nil
 }
 
 func (v *verifier) VerifyResponse(response *Response) error {
-	publicKey, err := v.publicKeyBytes()
-	if err != nil {
-		return err
-	}
-
 	digestHeader := response.Headers.Get("Digest")
 	if digestHeader == "" {
 		return ErrResponseDigestMissing
@@ -230,6 +265,7 @@ func (v *verifier) VerifyResponse(response *Response) error {
 	}
 
 	sigParams := parseSignatureHeader(sigHeader)
+	alg := sigParams["algorithm"]
 	sig := sigParams["signature"]
 	msg := fmt.Sprintf(
 		"(request-target): %s %s\nhost: %s\ndate: %s\ndigest: %s",
@@ -246,19 +282,37 @@ func (v *verifier) VerifyResponse(response *Response) error {
 		return ErrResponseSignatureInvalid
 	}
 
-	if ok := ed25519.Verify(publicKey, msgBytes, sigBytes); !ok {
-		return ErrResponseSignatureInvalid
+	// we only support ed25519 and ecdsa secp256r1 (nist p-256)
+	switch alg {
+	case "ed25519":
+		publicKey, err := v.publicKeyBytes()
+		if err != nil {
+			return err
+		}
+
+		if ok := ed25519.Verify(publicKey, msgBytes, sigBytes); !ok {
+			return ErrResponseSignatureInvalid
+		}
+	case "ecdsa-secp256r1":
+		publicKey, err := v.publicKey()
+		if err != nil {
+			return err
+		}
+
+		ecdsaPub := publicKey.(*ecdsa.PublicKey)
+		hash := sha256.Sum256(msgBytes)
+
+		if !ecdsa.VerifyASN1(ecdsaPub, hash[:], sigBytes) {
+			return ErrResponseSignatureInvalid
+		}
+	default:
+		return ErrResponseSignatureNotSupported
 	}
 
 	return nil
 }
 
-func (v *verifier) verifyKey(key string) ([]byte, error) {
-	publicKey, err := v.publicKeyBytes()
-	if err != nil {
-		return nil, err
-	}
-
+func (v *verifier) verifyKey(scheme SchemeCode, key string) ([]byte, error) {
 	parts := strings.SplitN(key, ".", 2)
 	signingData := parts[0]
 	encSig := parts[1]
@@ -282,8 +336,30 @@ func (v *verifier) verifyKey(key string) ([]byte, error) {
 		return nil, ErrLicenseKeyNotGenuine
 	}
 
-	if ok := ed25519.Verify(publicKey, msg, sig); !ok {
-		return nil, ErrLicenseKeyNotGenuine
+	switch scheme {
+	case SchemeCodeEd25519:
+		publicKey, err := v.publicKeyBytes()
+		if err != nil {
+			return nil, err
+		}
+
+		if ok := ed25519.Verify(publicKey, msg, sig); !ok {
+			return nil, ErrLicenseKeyNotGenuine
+		}
+	case SchemeCodeECDSASecp256r1:
+		publicKey, err := v.publicKey()
+		if err != nil {
+			return nil, err
+		}
+
+		ecdsaPub := publicKey.(*ecdsa.PublicKey)
+		hash := sha256.Sum256(msg)
+
+		if !ecdsa.VerifyASN1(ecdsaPub, hash[:], sig) {
+			return nil, ErrLicenseKeyNotGenuine
+		}
+	default:
+		return nil, ErrSchemeNotSupported
 	}
 
 	return dataset, nil
@@ -304,6 +380,28 @@ func (v *verifier) publicKeyBytes() ([]byte, error) {
 	}
 
 	return key, nil
+}
+
+func (v *verifier) publicKey() (crypto.PublicKey, error) {
+	if v.PublicKey == "" {
+		return nil, ErrPublicKeyMissing
+	}
+
+	block, _ := pem.Decode([]byte(v.PublicKey))
+	if block == nil {
+		return nil, ErrPublicKeyInvalid
+	}
+
+	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return nil, ErrPublicKeyInvalid
+	}
+
+	if _, ok := pub.(*ecdsa.PublicKey); !ok {
+		return nil, ErrPublicKeyInvalid
+	}
+
+	return pub, nil
 }
 
 func parseSignatureHeader(header string) map[string]string {

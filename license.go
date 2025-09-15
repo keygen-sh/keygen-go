@@ -12,7 +12,8 @@ import (
 type SchemeCode string
 
 const (
-	SchemeCodeEd25519 SchemeCode = "ED25519_SIGN"
+	SchemeCodeEd25519        SchemeCode = "ED25519_SIGN"
+	SchemeCodeECDSASecp256r1 SchemeCode = "ECDSA_SECP256R1_SIGN"
 )
 
 // License represents a Keygen license object.

@@ -44,7 +44,7 @@ func (v *verifier) VerifyLicenseFile(lic *LicenseFile) error {
 		if ok := ed25519.Verify(publicKey, msg, sig); !ok {
 			return ErrLicenseFileNotGenuine
 		}
-	case cert.Alg == "aes-256-gcm+ecdsa-secp256r1" || cert.Alg == "base64+ecdsa-secp256r1":
+	case cert.Alg == "aes-256-gcm+ecdsa-p256" || cert.Alg == "base64+ecdsa-p256":
 		publicKey, err := v.publicKey()
 		if err != nil {
 			return err
@@ -86,7 +86,7 @@ func (v *verifier) VerifyMachineFile(lic *MachineFile) error {
 		if ok := ed25519.Verify(publicKey, msg, sig); !ok {
 			return ErrMachineFileNotGenuine
 		}
-	case cert.Alg == "aes-256-gcm+ecdsa-secp256r1" || cert.Alg == "base64+ecdsa-secp256r1":
+	case cert.Alg == "aes-256-gcm+ecdsa-p256" || cert.Alg == "base64+ecdsa-p256":
 		publicKey, err := v.publicKey()
 		if err != nil {
 			return err
@@ -191,7 +191,7 @@ func (v *verifier) VerifyRequest(request *http.Request) error {
 		return err
 	}
 
-	// we only support ed25519 and ecdsa secp256r1 (nist p-256)
+	// we only support ed25519 and ecdsa p256 (nist p-256)
 	switch alg {
 	case "ed25519":
 		publicKey, err := v.publicKeyBytes()
@@ -202,7 +202,7 @@ func (v *verifier) VerifyRequest(request *http.Request) error {
 		if ok := ed25519.Verify(publicKey, msgBytes, sigBytes); !ok {
 			return ErrResponseSignatureInvalid
 		}
-	case "ecdsa-secp256r1":
+	case "ecdsa-p256":
 		publicKey, err := v.publicKey()
 		if err != nil {
 			return err
@@ -282,7 +282,7 @@ func (v *verifier) VerifyResponse(response *Response) error {
 		return ErrResponseSignatureInvalid
 	}
 
-	// we only support ed25519 and ecdsa secp256r1 (nist p-256)
+	// we only support ed25519 and ecdsa p256 (nist p-256)
 	switch alg {
 	case "ed25519":
 		publicKey, err := v.publicKeyBytes()
@@ -293,7 +293,7 @@ func (v *verifier) VerifyResponse(response *Response) error {
 		if ok := ed25519.Verify(publicKey, msgBytes, sigBytes); !ok {
 			return ErrResponseSignatureInvalid
 		}
-	case "ecdsa-secp256r1":
+	case "ecdsa-p256":
 		publicKey, err := v.publicKey()
 		if err != nil {
 			return err
@@ -346,7 +346,7 @@ func (v *verifier) verifyKey(scheme SchemeCode, key string) ([]byte, error) {
 		if ok := ed25519.Verify(publicKey, msg, sig); !ok {
 			return nil, ErrLicenseKeyNotGenuine
 		}
-	case SchemeCodeECDSASecp256r1:
+	case SchemeCodeECDSAP256:
 		publicKey, err := v.publicKey()
 		if err != nil {
 			return nil, err

@@ -69,7 +69,7 @@ func (lic *LicenseFile) Decrypt(key string) (*LicenseFileDataset, error) {
 	switch {
 	case cert.Alg == "aes-256-gcm+rsa-pss-sha256" || cert.Alg == "aes-256-gcm+rsa-sha256":
 		return nil, ErrLicenseFileNotSupported
-	case cert.Alg == "aes-256-gcm+ed25519" || cert.Alg == "aes-256-gcm+ecdsa-secp256r1":
+	case cert.Alg == "aes-256-gcm+ed25519" || cert.Alg == "aes-256-gcm+ecdsa-p256":
 		break // continue
 	default:
 		return nil, ErrLicenseFileNotEncrypted

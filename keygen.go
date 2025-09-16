@@ -46,7 +46,7 @@ var (
 	PublicKey string
 
 	// SignatureScheme is the cryptographic scheme to be used for verifying
-	// API response signatures. Either `ed25519` or `ecdsa-secp256r1`.
+	// API response signatures. Either `ed25519` or `ecdsa-p256`.
 	SignatureScheme = "ed25519"
 
 	// UserAgent defines the user-agent string sent to the API backend,

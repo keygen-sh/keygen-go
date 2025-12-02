@@ -12,8 +12,8 @@ import (
 type SchemeCode string
 
 const (
-	SchemeCodeEd25519   SchemeCode = "ED25519_SIGN"
-	SchemeCodeECDSAP256 SchemeCode = "ECDSA_P256_SIGN"
+	SchemeCodeEd25519 SchemeCode = "ED25519_SIGN"
+	SchemeCodeP256    SchemeCode = "ECDSA_P256_SIGN"
 )
 
 // License represents a Keygen license object.
@@ -135,12 +135,17 @@ func (l *License) Validate(ctx context.Context, fingerprints ...string) error {
 // key using your PublicKey. If the license is genuine, the decoded dataset from the
 // key will be returned. An error will be returned if the license is not genuine, or
 // if the key is not signed, e.g. ErrLicenseNotGenuine or ErrLicenseNotSigned.
-func (l *License) Verify() ([]byte, error) {
+func (l *License) Verify(options ...VerifyOption) ([]byte, error) {
 	if l.Scheme == "" {
 		return nil, ErrLicenseNotSigned
 	}
 
 	verifier := &verifier{PublicKey: PublicKey}
+	for _, opt := range options {
+		if err := opt(verifier); err != nil {
+			return nil, err
+		}
+	}
 
 	return verifier.VerifyLicense(l)
 }
@@ -225,11 +230,17 @@ func (l *License) Checkout(ctx context.Context, options ...CheckoutOption) (*Lic
 	client := NewClient()
 	lic := &LicenseFile{}
 
-	opts := CheckoutOptions{Encrypt: true, Include: "entitlements"}
+	opts := CheckoutOptions{Algorithm: CheckoutAlgorithmCode(SignatureScheme), Encrypt: true, Include: "entitlements"}
 	for _, opt := range options {
 		if err := opt(&opts); err != nil {
 			return nil, err
 		}
+	}
+
+	if opts.Encrypt {
+		opts.Algorithm = "aes-256-gcm+" + opts.Algorithm
+	} else {
+		opts.Algorithm = "base64+" + opts.Algorithm
 	}
 
 	if _, err := client.Post(ctx, "licenses/"+l.ID+"/actions/check-out", opts, lic); err != nil {

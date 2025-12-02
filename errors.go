@@ -135,6 +135,7 @@ var (
 	ErrProcessNotFound               = errors.New("process no longer exists")
 	ErrMachineFileNotSupported       = errors.New("machine file is not supported")
 	ErrMachineFileNotEncrypted       = errors.New("machine file is not encrypted")
+	ErrMachineFileEncrypted          = errors.New("machine file is encrypted")
 	ErrMachineFileNotGenuine         = errors.New("machine file is not genuine")
 	ErrMachineFileExpired            = errors.New("machine file is expired")
 	ErrComponentNotActivated         = errors.New("component is not activated")
@@ -156,6 +157,7 @@ var (
 	ErrLicenseInvalid                = errors.New("license is invalid")
 	ErrLicenseFileNotSupported       = errors.New("license file is not supported")
 	ErrLicenseFileNotEncrypted       = errors.New("license file is not encrypted")
+	ErrLicenseFileEncrypted          = errors.New("license file is encrypted")
 	ErrLicenseFileNotGenuine         = errors.New("license file is not genuine")
 	ErrLicenseFileExpired            = errors.New("license file is expired")
 	ErrLicenseFileSecretMissing      = errors.New("license file secret is missing")
@@ -163,5 +165,7 @@ var (
 	ErrTokenFormatInvalid            = errors.New("token format is invalid")
 	ErrTokenInvalid                  = errors.New("token is invalid")
 	ErrTokenExpired                  = errors.New("token is expired")
-	ErrSystemClockUnsynced           = errors.New("system clock is out of sync")
+
+	// FIXME(ezekg) rename to ErrSystemClockDesynced?
+	ErrSystemClockUnsynced = errors.New("system clock is out of sync")
 )

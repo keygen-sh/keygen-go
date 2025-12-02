@@ -53,14 +53,60 @@ func (lic *MachineFile) SetRelationships(relationships map[string]interface{}) e
 
 // Decrypt verifies the machine file's signature. It returns any errors
 // that occurred during verification, e.g. ErrMachineFileInvalid.
-func (lic *MachineFile) Verify() error {
+func (lic *MachineFile) Verify(options ...VerifyOption) error {
 	verifier := &verifier{PublicKey: PublicKey}
+	for _, opt := range options {
+		if err := opt(verifier); err != nil {
+			return err
+		}
+	}
 
 	if err := verifier.VerifyMachineFile(lic); err != nil {
 		return &MachineFileError{err}
 	}
 
 	return nil
+}
+
+// Decode decodes the machine file's unencrypted dataset. It returns the decoded dataset
+// and any errors that occurred during decoding, e.g. ErrMachineFileEncrypted.
+func (lic *MachineFile) Decode() (*MachineFileDataset, error) {
+	cert, err := lic.certificate()
+	if err != nil {
+		return nil, err
+	}
+
+	switch cert.Alg {
+	case "base64+rsa-pss-sha256", "base64+rsa-sha256":
+		return nil, ErrMachineFileNotSupported
+	case "base64+ed25519", "base64+ecdsa-p256":
+		break // continue
+	default:
+		return nil, ErrMachineFileEncrypted
+	}
+
+	// Decode
+	data, err := base64.StdEncoding.DecodeString(cert.Enc)
+	if err != nil {
+		return nil, &MachineFileError{err}
+	}
+
+	// Unmarshal
+	dataset := &MachineFileDataset{}
+
+	if _, err := jsonapi.Unmarshal(data, dataset); err != nil {
+		return nil, &MachineFileError{err}
+	}
+
+	if MaxClockDrift >= 0 && time.Until(dataset.Issued) > MaxClockDrift {
+		return dataset, ErrSystemClockUnsynced
+	}
+
+	if dataset.TTL != 0 && time.Now().After(dataset.Expiry) {
+		return dataset, ErrMachineFileExpired
+	}
+
+	return dataset, nil
 }
 
 // Decrypt decrypts the machine file's encrypted dataset. It returns the decrypted dataset
@@ -71,10 +117,10 @@ func (lic *MachineFile) Decrypt(key string) (*MachineFileDataset, error) {
 		return nil, err
 	}
 
-	switch {
-	case cert.Alg == "aes-256-gcm+rsa-pss-sha256" || cert.Alg == "aes-256-gcm+rsa-sha256":
+	switch cert.Alg {
+	case "aes-256-gcm+rsa-pss-sha256", "aes-256-gcm+rsa-sha256":
 		return nil, ErrMachineFileNotSupported
-	case cert.Alg == "aes-256-gcm+ed25519" || cert.Alg == "aes-256-gcm+ecdsa-p256":
+	case "aes-256-gcm+ed25519", "aes-256-gcm+ecdsa-p256":
 		break // continue
 	default:
 		return nil, ErrMachineFileNotEncrypted

@@ -10,7 +10,7 @@ import (
 
 const (
 	// The current version of the SDK.
-	SDKVersion = "3.2.0"
+	SDKVersion = "3.3.0"
 )
 
 var (
@@ -46,7 +46,8 @@ var (
 	PublicKey string
 
 	// SignatureScheme is the cryptographic scheme to be used for verifying
-	// API response signatures. Either `ed25519` or `ecdsa-p256`.
+	// API response signatures, license/machine files, and license keys.
+	// Either `ed25519` or `ecdsa-p256`.
 	SignatureScheme = "ed25519"
 
 	// UserAgent defines the user-agent string sent to the API backend,

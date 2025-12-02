@@ -3,6 +3,7 @@ package keygen
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"io"
 	"net/http"
 	"os"
@@ -14,9 +15,29 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 )
 
+var (
+	PersonalPublicKey string
+	Ed25519PublicKey  string
+	ECDSAPublicKey    string
+)
+
 func init() {
 	log := Logger.(*logger)
 	log.Level = LogLevelDebug
+
+	if key := os.Getenv("PERSONAL_PUBLIC_KEY"); key != "" {
+		PersonalPublicKey = key
+	}
+
+	if key := os.Getenv("KEYGEN_ED25519_PUBLIC_KEY"); key != "" {
+		Ed25519PublicKey = key
+	}
+
+	if enc := os.Getenv("KEYGEN_ECDSA_PUBLIC_KEY"); enc != "" {
+		if dec, err := base64.StdEncoding.DecodeString(enc); err == nil {
+			ECDSAPublicKey = string(dec)
+		}
+	}
 
 	if scheme := os.Getenv("KEYGEN_SIGNATURE_SCHEME"); scheme != "" {
 		SignatureScheme = scheme
@@ -26,7 +47,7 @@ func init() {
 		APIURL = host
 	}
 
-	PublicKey = os.Getenv("KEYGEN_PUBLIC_KEY")
+	PublicKey = Ed25519PublicKey
 	Environment = os.Getenv("KEYGEN_ENVIRONMENT_ID")
 	Account = os.Getenv("KEYGEN_ACCOUNT_ID")
 	Product = os.Getenv("KEYGEN_PRODUCT_ID")
@@ -108,6 +129,10 @@ func TestValidate(t *testing.T) {
 				t.Fatalf("Should not fail genuine check: err=%v", err)
 			}
 
+			if _, err := lic.Decode(); err != ErrLicenseFileEncrypted {
+				t.Fatalf("Should fail decode: err=%v", err)
+			}
+
 			dataset, err := lic.Decrypt(license.Key)
 			if err != nil {
 				t.Fatalf("Should not fail decrypt: err=%v", err)
@@ -133,6 +158,8 @@ func TestValidate(t *testing.T) {
 		{
 			lic, err := license.Checkout(
 				ctx,
+				CheckoutAlgorithm(CheckoutAlgorithmCodeP256),
+				CheckoutEncrypt(false),
 				CheckoutInclude(),
 				CheckoutTTL(24*time.Hour),
 			)
@@ -140,7 +167,7 @@ func TestValidate(t *testing.T) {
 				t.Fatalf("Should not fail checkout: err=%v", err)
 			}
 
-			err = lic.Verify()
+			err = lic.Verify(VerifyPublicKey(ECDSAPublicKey))
 			switch {
 			case err == ErrLicenseFileNotGenuine:
 				t.Fatalf("Should be a genuine license file: err=%v", err)
@@ -148,9 +175,13 @@ func TestValidate(t *testing.T) {
 				t.Fatalf("Should not fail genuine check: err=%v", err)
 			}
 
-			dataset, err := lic.Decrypt(license.Key)
+			if _, err := lic.Decrypt(license.Key); err != ErrLicenseFileNotEncrypted {
+				t.Fatalf("Should fail decrypt: err=%v", err)
+			}
+
+			dataset, err := lic.Decode()
 			if err != nil {
-				t.Fatalf("Should not fail decrypt: err=%v", err)
+				t.Fatalf("Should not fail decode: err=%v", err)
 			}
 
 			switch {
@@ -183,10 +214,14 @@ func TestValidate(t *testing.T) {
 
 			err = mic.Verify()
 			switch {
-			case err == ErrLicenseFileNotGenuine:
+			case err == ErrMachineFileNotGenuine:
 				t.Fatalf("Should be a genuine machine file: err=%v", err)
 			case err != nil:
 				t.Fatalf("Should not fail genuine check: err=%v", err)
+			}
+
+			if _, err := mic.Decode(); err != ErrMachineFileEncrypted {
+				t.Fatalf("Should fail decode: err=%v", err)
 			}
 
 			dataset, err := mic.Decrypt(license.Key + machine.Fingerprint)
@@ -216,6 +251,8 @@ func TestValidate(t *testing.T) {
 		{
 			mic, err := machine.Checkout(
 				ctx,
+				CheckoutAlgorithm(CheckoutAlgorithmCodeP256),
+				CheckoutEncrypt(false),
 				CheckoutInclude("license", "components"),
 				CheckoutTTL(24*time.Hour*365),
 			)
@@ -223,17 +260,21 @@ func TestValidate(t *testing.T) {
 				t.Fatalf("Should not fail checkout: err=%v", err)
 			}
 
-			err = mic.Verify()
+			err = mic.Verify(VerifyPublicKey(ECDSAPublicKey))
 			switch {
-			case err == ErrLicenseFileNotGenuine:
+			case err == ErrMachineFileNotGenuine:
 				t.Fatalf("Should be a genuine machine file: err=%v", err)
 			case err != nil:
 				t.Fatalf("Should not fail genuine check: err=%v", err)
 			}
 
-			dataset, err := mic.Decrypt(license.Key + machine.Fingerprint)
+			if _, err := mic.Decrypt(license.Key + machine.Fingerprint); err != ErrMachineFileNotEncrypted {
+				t.Fatalf("Should fail decrypt: err=%v", err)
+			}
+
+			dataset, err := mic.Decode()
 			if err != nil {
-				t.Fatalf("Should not fail decrypt: err=%v", err)
+				t.Fatalf("Should not fail decode: err=%v", err)
 			}
 
 			switch {
@@ -552,7 +593,7 @@ func TestSignedKey(t *testing.T) {
 func TestUpgrade(t *testing.T) {
 	ctx := context.Background()
 	opts := UpgradeOptions{
-		PublicKey:      os.Getenv("PERSONAL_PUBLIC_KEY"),
+		PublicKey:      PersonalPublicKey,
 		Filename:       `test_{{.platform}}_{{.arch}}{{if .ext}}.{{.ext}}{{end}}`,
 		CurrentVersion: "1.0.0",
 		Channel:        "stable",

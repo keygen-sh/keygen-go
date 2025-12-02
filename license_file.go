@@ -48,14 +48,60 @@ func (lic *LicenseFile) SetRelationships(relationships map[string]interface{}) e
 
 // Decrypt verifies the license file's signature. It returns any errors
 // that occurred during verification, e.g. ErrLicenseFileInvalid.
-func (lic *LicenseFile) Verify() error {
+func (lic *LicenseFile) Verify(options ...VerifyOption) error {
 	verifier := &verifier{PublicKey: PublicKey}
+	for _, opt := range options {
+		if err := opt(verifier); err != nil {
+			return err
+		}
+	}
 
 	if err := verifier.VerifyLicenseFile(lic); err != nil {
 		return &LicenseFileError{err}
 	}
 
 	return nil
+}
+
+// Decode decodes the license file's unencrypted dataset. It returns the decoded dataset
+// and any errors that occurred during decoding, e.g. ErrLicenseFileEncrypted.
+func (lic *LicenseFile) Decode() (*LicenseFileDataset, error) {
+	cert, err := lic.certificate()
+	if err != nil {
+		return nil, err
+	}
+
+	switch cert.Alg {
+	case "base64+rsa-pss-sha256", "base64+rsa-sha256":
+		return nil, ErrLicenseFileNotSupported
+	case "base64+ed25519", "base64+ecdsa-p256":
+		break // continue
+	default:
+		return nil, ErrLicenseFileEncrypted
+	}
+
+	// Decode
+	data, err := base64.StdEncoding.DecodeString(cert.Enc)
+	if err != nil {
+		return nil, &LicenseFileError{err}
+	}
+
+	// Unmarshal
+	dataset := &LicenseFileDataset{}
+
+	if _, err := jsonapi.Unmarshal(data, dataset); err != nil {
+		return nil, &LicenseFileError{err}
+	}
+
+	if MaxClockDrift >= 0 && time.Until(dataset.Issued) > MaxClockDrift {
+		return dataset, ErrSystemClockUnsynced
+	}
+
+	if dataset.TTL != 0 && time.Now().After(dataset.Expiry) {
+		return dataset, ErrLicenseFileExpired
+	}
+
+	return dataset, nil
 }
 
 // Decrypt decrypts the license file's encrypted dataset. It returns the decrypted dataset
@@ -66,10 +112,10 @@ func (lic *LicenseFile) Decrypt(key string) (*LicenseFileDataset, error) {
 		return nil, err
 	}
 
-	switch {
-	case cert.Alg == "aes-256-gcm+rsa-pss-sha256" || cert.Alg == "aes-256-gcm+rsa-sha256":
+	switch cert.Alg {
+	case "aes-256-gcm+rsa-pss-sha256", "aes-256-gcm+rsa-sha256":
 		return nil, ErrLicenseFileNotSupported
-	case cert.Alg == "aes-256-gcm+ed25519" || cert.Alg == "aes-256-gcm+ecdsa-p256":
+	case "aes-256-gcm+ed25519", "aes-256-gcm+ecdsa-p256":
 		break // continue
 	default:
 		return nil, ErrLicenseFileNotEncrypted

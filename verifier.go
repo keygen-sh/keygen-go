@@ -34,8 +34,8 @@ func (v *verifier) VerifyLicenseFile(lic *LicenseFile) error {
 		return ErrLicenseFileNotGenuine
 	}
 
-	switch {
-	case cert.Alg == "aes-256-gcm+ed25519" || cert.Alg == "base64+ed25519":
+	switch cert.Alg {
+	case "aes-256-gcm+ed25519", "base64+ed25519":
 		publicKey, err := v.publicKeyBytes()
 		if err != nil {
 			return err
@@ -44,7 +44,7 @@ func (v *verifier) VerifyLicenseFile(lic *LicenseFile) error {
 		if ok := ed25519.Verify(publicKey, msg, sig); !ok {
 			return ErrLicenseFileNotGenuine
 		}
-	case cert.Alg == "aes-256-gcm+ecdsa-p256" || cert.Alg == "base64+ecdsa-p256":
+	case "aes-256-gcm+ecdsa-p256", "base64+ecdsa-p256":
 		publicKey, err := v.publicKey()
 		if err != nil {
 			return err
@@ -76,8 +76,8 @@ func (v *verifier) VerifyMachineFile(lic *MachineFile) error {
 		return ErrMachineFileNotGenuine
 	}
 
-	switch {
-	case cert.Alg == "aes-256-gcm+ed25519" || cert.Alg == "base64+ed25519":
+	switch cert.Alg {
+	case "aes-256-gcm+ed25519", "base64+ed25519":
 		publicKey, err := v.publicKeyBytes()
 		if err != nil {
 			return err
@@ -86,7 +86,7 @@ func (v *verifier) VerifyMachineFile(lic *MachineFile) error {
 		if ok := ed25519.Verify(publicKey, msg, sig); !ok {
 			return ErrMachineFileNotGenuine
 		}
-	case cert.Alg == "aes-256-gcm+ecdsa-p256" || cert.Alg == "base64+ecdsa-p256":
+	case "aes-256-gcm+ecdsa-p256", "base64+ecdsa-p256":
 		publicKey, err := v.publicKey()
 		if err != nil {
 			return err
@@ -346,7 +346,7 @@ func (v *verifier) verifyKey(scheme SchemeCode, key string) ([]byte, error) {
 		if ok := ed25519.Verify(publicKey, msg, sig); !ok {
 			return nil, ErrLicenseKeyNotGenuine
 		}
-	case SchemeCodeECDSAP256:
+	case SchemeCodeP256:
 		publicKey, err := v.publicKey()
 		if err != nil {
 			return nil, err

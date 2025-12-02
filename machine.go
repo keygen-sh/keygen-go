@@ -167,11 +167,17 @@ func (m *Machine) Checkout(ctx context.Context, options ...CheckoutOption) (*Mac
 	license := &License{}
 	lic := &MachineFile{}
 
-	opts := CheckoutOptions{Encrypt: true, Include: "license,license.entitlements"}
+	opts := CheckoutOptions{Algorithm: CheckoutAlgorithmCode(SignatureScheme), Encrypt: true, Include: "license,license.entitlements"}
 	for _, opt := range options {
 		if err := opt(&opts); err != nil {
 			return nil, err
 		}
+	}
+
+	if opts.Encrypt {
+		opts.Algorithm = "aes-256-gcm+" + opts.Algorithm
+	} else {
+		opts.Algorithm = "base64+" + opts.Algorithm
 	}
 
 	if _, err := client.Get(ctx, "me", nil, license); err != nil {

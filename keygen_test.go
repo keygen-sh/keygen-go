@@ -158,7 +158,7 @@ func TestValidate(t *testing.T) {
 		{
 			lic, err := license.Checkout(
 				ctx,
-				CheckoutAlgorithm(CheckoutAlgorithmCodeP256),
+				CheckoutAlgorithm(SigningAlgorithmP256),
 				CheckoutEncrypt(false),
 				CheckoutInclude(),
 				CheckoutTTL(24*time.Hour),
@@ -251,7 +251,7 @@ func TestValidate(t *testing.T) {
 		{
 			mic, err := machine.Checkout(
 				ctx,
-				CheckoutAlgorithm(CheckoutAlgorithmCodeP256),
+				CheckoutAlgorithm(SigningAlgorithmP256),
 				CheckoutEncrypt(false),
 				CheckoutInclude("license", "components"),
 				CheckoutTTL(24*time.Hour*365),

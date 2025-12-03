@@ -230,7 +230,7 @@ func (l *License) Checkout(ctx context.Context, options ...CheckoutOption) (*Lic
 	client := NewClient()
 	lic := &LicenseFile{}
 
-	opts := CheckoutOptions{Algorithm: CheckoutAlgorithmCode(SignatureScheme), Encrypt: true, Include: "entitlements"}
+	opts := CheckoutOptions{Sign: SignatureScheme, Encrypt: true, Include: "entitlements"}
 	for _, opt := range options {
 		if err := opt(&opts); err != nil {
 			return nil, err
@@ -238,9 +238,9 @@ func (l *License) Checkout(ctx context.Context, options ...CheckoutOption) (*Lic
 	}
 
 	if opts.Encrypt {
-		opts.Algorithm = "aes-256-gcm+" + opts.Algorithm
+		opts.Algorithm = "aes-256-gcm+" + opts.Sign
 	} else {
-		opts.Algorithm = "base64+" + opts.Algorithm
+		opts.Algorithm = "base64+" + opts.Sign
 	}
 
 	if _, err := client.Post(ctx, "licenses/"+l.ID+"/actions/check-out", opts, lic); err != nil {

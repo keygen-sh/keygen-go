@@ -71,13 +71,12 @@ func (lic *LicenseFile) Decode() (*LicenseFileDataset, error) {
 		return nil, err
 	}
 
-	switch cert.Alg {
-	case "base64+rsa-pss-sha256", "base64+rsa-sha256":
-		return nil, ErrLicenseFileNotSupported
-	case "base64+ed25519", "base64+ecdsa-p256":
-		break // continue
-	default:
+	if alg := cert.EncodingAlgorithm(); alg == EncodingAlgorithmAES256 {
 		return nil, ErrLicenseFileEncrypted
+	}
+
+	if alg := cert.SigningAlgorithm(); alg != SigningAlgorithmEd25519 && alg != SigningAlgorithmP256 {
+		return nil, ErrLicenseFileNotSupported
 	}
 
 	// Decode
@@ -112,13 +111,12 @@ func (lic *LicenseFile) Decrypt(key string) (*LicenseFileDataset, error) {
 		return nil, err
 	}
 
-	switch cert.Alg {
-	case "aes-256-gcm+rsa-pss-sha256", "aes-256-gcm+rsa-sha256":
-		return nil, ErrLicenseFileNotSupported
-	case "aes-256-gcm+ed25519", "aes-256-gcm+ecdsa-p256":
-		break // continue
-	default:
+	if alg := cert.EncodingAlgorithm(); alg == EncodingAlgorithmBase64 {
 		return nil, ErrLicenseFileNotEncrypted
+	}
+
+	if alg := cert.SigningAlgorithm(); alg != SigningAlgorithmEd25519 && alg != SigningAlgorithmP256 {
+		return nil, ErrLicenseFileNotSupported
 	}
 
 	// Decrypt

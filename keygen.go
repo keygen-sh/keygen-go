@@ -47,8 +47,8 @@ var (
 
 	// SignatureScheme is the cryptographic scheme to be used for verifying
 	// API response signatures, license/machine files, and license keys.
-	// Either `ed25519` or `ecdsa-p256`.
-	SignatureScheme = "ed25519"
+	// Either ed25519 or ecdsa-p256.
+	SignatureScheme = string(SigningAlgorithmEd25519)
 
 	// UserAgent defines the user-agent string sent to the API backend,
 	// uniquely identifying an integration.

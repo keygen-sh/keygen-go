@@ -5,18 +5,14 @@ import (
 	"time"
 )
 
-type CheckoutAlgorithmCode string
-
-const (
-	CheckoutAlgorithmCodeEd25519 CheckoutAlgorithmCode = "ed25519"
-	CheckoutAlgorithmCodeP256    CheckoutAlgorithmCode = "ecdsa-p256"
-)
-
 type CheckoutOptions struct {
-	Encrypt   bool                  `url:"encrypt"`
-	Algorithm CheckoutAlgorithmCode `url:"algorithm,omitempty"`
-	Include   string                `url:"include,omitempty"`
-	TTL       int                   `url:"ttl,omitempty"`
+	Algorithm string `url:"algorithm,omitempty"`
+	Include   string `url:"include,omitempty"`
+	TTL       int    `url:"ttl,omitempty"`
+
+	// these are mainly used to build up algorithm prior to checkout
+	Encrypt bool   `url:"encrypt"`
+	Sign    string `url:"-"`
 }
 
 type CheckoutOption func(*CheckoutOptions) error
@@ -45,9 +41,9 @@ func CheckoutEncrypt(encrypt bool) CheckoutOption {
 	}
 }
 
-func CheckoutAlgorithm(algorithm CheckoutAlgorithmCode) CheckoutOption {
+func CheckoutAlgorithm(algorithm SigningAlgorithm) CheckoutOption {
 	return func(options *CheckoutOptions) error {
-		options.Algorithm = algorithm
+		options.Sign = string(algorithm)
 
 		return nil
 	}

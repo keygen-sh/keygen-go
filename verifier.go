@@ -17,6 +17,26 @@ import (
 	"time"
 )
 
+const (
+	LicenseFileSigningPrefix = "license/"
+	MachineFileSigningPrefix = "machine/"
+	LicenseKeySigningPrefix  = "key/"
+)
+
+type EncodingAlgorithm string
+
+const (
+	EncodingAlgorithmAES256 EncodingAlgorithm = "aes-256-gcm"
+	EncodingAlgorithmBase64 EncodingAlgorithm = "base64"
+)
+
+type SigningAlgorithm string
+
+const (
+	SigningAlgorithmEd25519 SigningAlgorithm = "ed25519"
+	SigningAlgorithmP256    SigningAlgorithm = "ecdsa-p256"
+)
+
 type verifier struct {
 	PublicKey string
 }
@@ -28,14 +48,14 @@ func (v *verifier) VerifyLicenseFile(lic *LicenseFile) error {
 		return err
 	}
 
-	msg := []byte("license/" + cert.Enc)
+	msg := []byte(LicenseFileSigningPrefix + cert.Enc)
 	sig, err := base64.StdEncoding.DecodeString(cert.Sig)
 	if err != nil {
 		return ErrLicenseFileNotGenuine
 	}
 
-	switch cert.Alg {
-	case "aes-256-gcm+ed25519", "base64+ed25519":
+	switch cert.SigningAlgorithm() {
+	case SigningAlgorithmEd25519:
 		publicKey, err := v.publicKeyBytes()
 		if err != nil {
 			return err
@@ -44,7 +64,7 @@ func (v *verifier) VerifyLicenseFile(lic *LicenseFile) error {
 		if ok := ed25519.Verify(publicKey, msg, sig); !ok {
 			return ErrLicenseFileNotGenuine
 		}
-	case "aes-256-gcm+ecdsa-p256", "base64+ecdsa-p256":
+	case SigningAlgorithmP256:
 		publicKey, err := v.publicKey()
 		if err != nil {
 			return err
@@ -70,14 +90,14 @@ func (v *verifier) VerifyMachineFile(lic *MachineFile) error {
 		return err
 	}
 
-	msg := []byte("machine/" + cert.Enc)
+	msg := []byte(MachineFileSigningPrefix + cert.Enc)
 	sig, err := base64.StdEncoding.DecodeString(cert.Sig)
 	if err != nil {
 		return ErrMachineFileNotGenuine
 	}
 
-	switch cert.Alg {
-	case "aes-256-gcm+ed25519", "base64+ed25519":
+	switch cert.SigningAlgorithm() {
+	case SigningAlgorithmEd25519:
 		publicKey, err := v.publicKeyBytes()
 		if err != nil {
 			return err
@@ -86,7 +106,7 @@ func (v *verifier) VerifyMachineFile(lic *MachineFile) error {
 		if ok := ed25519.Verify(publicKey, msg, sig); !ok {
 			return ErrMachineFileNotGenuine
 		}
-	case "aes-256-gcm+ecdsa-p256", "base64+ecdsa-p256":
+	case SigningAlgorithmP256:
 		publicKey, err := v.publicKey()
 		if err != nil {
 			return err
@@ -192,8 +212,8 @@ func (v *verifier) VerifyRequest(request *http.Request) error {
 	}
 
 	// we only support ed25519 and ecdsa p256 (nist p-256)
-	switch alg {
-	case "ed25519":
+	switch SigningAlgorithm(alg) {
+	case SigningAlgorithmEd25519:
 		publicKey, err := v.publicKeyBytes()
 		if err != nil {
 			return err
@@ -202,7 +222,7 @@ func (v *verifier) VerifyRequest(request *http.Request) error {
 		if ok := ed25519.Verify(publicKey, msgBytes, sigBytes); !ok {
 			return ErrResponseSignatureInvalid
 		}
-	case "ecdsa-p256":
+	case SigningAlgorithmP256:
 		publicKey, err := v.publicKey()
 		if err != nil {
 			return err
@@ -283,8 +303,8 @@ func (v *verifier) VerifyResponse(response *Response) error {
 	}
 
 	// we only support ed25519 and ecdsa p256 (nist p-256)
-	switch alg {
-	case "ed25519":
+	switch SigningAlgorithm(alg) {
+	case SigningAlgorithmEd25519:
 		publicKey, err := v.publicKeyBytes()
 		if err != nil {
 			return err
@@ -293,7 +313,7 @@ func (v *verifier) VerifyResponse(response *Response) error {
 		if ok := ed25519.Verify(publicKey, msgBytes, sigBytes); !ok {
 			return ErrResponseSignatureInvalid
 		}
-	case "ecdsa-p256":
+	case SigningAlgorithmP256:
 		publicKey, err := v.publicKey()
 		if err != nil {
 			return err
@@ -325,7 +345,7 @@ func (v *verifier) verifyKey(scheme SchemeCode, key string) ([]byte, error) {
 		return nil, ErrLicenseKeyNotGenuine
 	}
 
-	msg := []byte("key/" + encDataset)
+	msg := []byte(LicenseKeySigningPrefix + encDataset)
 	sig, err := base64.URLEncoding.DecodeString(encSig)
 	if err != nil {
 		return nil, ErrLicenseKeyNotGenuine

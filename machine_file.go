@@ -76,13 +76,12 @@ func (lic *MachineFile) Decode() (*MachineFileDataset, error) {
 		return nil, err
 	}
 
-	switch cert.Alg {
-	case "base64+rsa-pss-sha256", "base64+rsa-sha256":
-		return nil, ErrMachineFileNotSupported
-	case "base64+ed25519", "base64+ecdsa-p256":
-		break // continue
-	default:
+	if alg := cert.EncodingAlgorithm(); alg == EncodingAlgorithmAES256 {
 		return nil, ErrMachineFileEncrypted
+	}
+
+	if alg := cert.SigningAlgorithm(); alg != SigningAlgorithmEd25519 && alg != SigningAlgorithmP256 {
+		return nil, ErrMachineFileNotSupported
 	}
 
 	// Decode
@@ -117,13 +116,12 @@ func (lic *MachineFile) Decrypt(key string) (*MachineFileDataset, error) {
 		return nil, err
 	}
 
-	switch cert.Alg {
-	case "aes-256-gcm+rsa-pss-sha256", "aes-256-gcm+rsa-sha256":
-		return nil, ErrMachineFileNotSupported
-	case "aes-256-gcm+ed25519", "aes-256-gcm+ecdsa-p256":
-		break // continue
-	default:
+	if alg := cert.EncodingAlgorithm(); alg == EncodingAlgorithmBase64 {
 		return nil, ErrMachineFileNotEncrypted
+	}
+
+	if alg := cert.SigningAlgorithm(); alg != SigningAlgorithmEd25519 && alg != SigningAlgorithmP256 {
+		return nil, ErrMachineFileNotSupported
 	}
 
 	// Decrypt
